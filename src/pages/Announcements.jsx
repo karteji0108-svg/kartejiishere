@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 
 const Announcements = () => {
@@ -125,9 +126,9 @@ const Announcements = () => {
         </main>
 
         {/* Floating Action Button (FAB) - Only for Admin/Secretary */}
-        <button className="absolute bottom-24 right-4 z-40 bg-primary hover:bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary active:scale-95">
+        <Link to="/announcements/create" className="absolute bottom-24 right-4 z-40 bg-primary hover:bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary active:scale-95">
           <span className="material-icons-round text-2xl">add</span>
-        </button>
+        </Link>
 
         <BottomNav />
       </div>

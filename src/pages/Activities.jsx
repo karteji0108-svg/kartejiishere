@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 
 const Activities = () => {
@@ -70,10 +71,10 @@ const Activities = () => {
                   Balai Desa
                 </div>
               </div>
-              <button className="w-full py-2.5 bg-primary hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2">
+              <Link to="/activities/1" className="w-full py-2.5 bg-primary hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2">
                 <span>Lihat Detail</span>
                 <span className="material-icons text-sm">arrow_forward</span>
-              </button>
+              </Link>
             </div>
           </div>
 

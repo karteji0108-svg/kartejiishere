@@ -101,12 +101,12 @@ const Dashboard = () => {
             </div>
             <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Info<br/>Baru</span>
           </Link>
-          <button className="flex flex-col items-center gap-2 group">
+          <Link to="/gallery" className="flex flex-col items-center gap-2 group">
             <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform">
-              <span className="material-icons-round">qr_code_scanner</span>
+              <span className="material-icons-round">collections</span>
             </div>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Scan<br/>QR</span>
-          </button>
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Galeri<br/>Foto</span>
+          </Link>
         </section>
 
         {/* Recent Updates Section */}

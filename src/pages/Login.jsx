@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -123,9 +123,9 @@ const Login = () => {
       <footer className="py-8 text-center px-6">
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Join the movement.
-          <a className="font-semibold text-primary hover:text-primary/80 transition-colors ml-1" href="#">
+          <Link to="/register" className="font-semibold text-primary hover:text-primary/80 transition-colors ml-1">
             Register Here
-          </a>
+          </Link>
         </p>
         <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
       </footer>
