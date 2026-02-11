@@ -1,118 +1,121 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { uploadToCloudinary } from '../utils/cloudinary';
 
 const CreateAnnouncement = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState('Info');
+  const [type, setType] = useState('Penting');
+  const [image, setImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate save
-    alert('Pengumuman berhasil dibuat!');
-    navigate('/announcements');
+    setUploading(true);
+
+    try {
+      let imageURL = null;
+      if (image) {
+        imageURL = await uploadToCloudinary(image);
+      }
+
+      await addDoc(collection(db, 'announcements'), {
+        title,
+        content,
+        type,
+        imageURL,
+        createdAt: new Date().toISOString(),
+      });
+
+      navigate('/announcements');
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      alert('Gagal membuat pengumuman');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 min-h-screen flex justify-center">
-      <div className="w-full max-w-md bg-background-light dark:bg-background-dark min-h-screen shadow-2xl relative flex flex-col">
-        {/* Header */}
-        <header className="bg-white dark:bg-gray-900 px-5 pt-4 pb-4 sticky top-0 z-40 shadow-sm flex items-center gap-4">
+    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col">
+      {/* Header */}
+      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <span className="material-icons">arrow_back</span>
+        </button>
+        <h1 className="text-lg font-bold">Buat Pengumuman</h1>
+      </header>
+
+      <main className="flex-1 p-5 max-w-md mx-auto w-full">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Judul</label>
+            <input
+              type="text"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-primary focus:border-primary p-3"
+              placeholder="Contoh: Rapat Bulanan"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Type */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Jenis</label>
+            <select
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-primary focus:border-primary p-3"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+            >
+              <option value="Penting">Penting</option>
+              <option value="Kegiatan">Kegiatan</option>
+              <option value="Rapat">Rapat</option>
+              <option value="Umum">Umum</option>
+            </select>
+          </div>
+
+          {/* Content */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Isi Pengumuman</label>
+            <textarea
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-primary focus:border-primary p-3 h-32"
+              placeholder="Tulis detail pengumuman..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              required
+            ></textarea>
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Gambar (Opsional)</label>
+            <div className="flex items-center justify-center w-full">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <span className="material-icons text-gray-400 mb-2">cloud_upload</span>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {image ? image.name : 'Klik untuk upload gambar'}
+                        </p>
+                    </div>
+                    <input type="file" className="hidden" onChange={(e) => setImage(e.target.files[0])} accept="image/*" />
+                </label>
+            </div>
+          </div>
+
           <button
-            onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-300"
+            type="submit"
+            disabled={uploading}
+            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-colors ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            <span className="material-icons-round">arrow_back</span>
+            {uploading ? 'Mengirim...' : 'Kirim Pengumuman'}
           </button>
-          <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Buat Pengumuman</h1>
-        </header>
-
-        {/* Main Form */}
-        <main className="flex-1 overflow-y-auto no-scrollbar p-5 pb-24">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-
-            {/* Title Field */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" htmlFor="title">
-                Judul Pengumuman
-              </label>
-              <input
-                className="block w-full px-4 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm"
-                id="title"
-                name="title"
-                placeholder="Contoh: Rapat Rutin Bulanan"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Category Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Kategori
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {['Penting', 'Kegiatan', 'Info', 'Rapat'].map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
-                      category === cat
-                        ? 'bg-primary text-white border-primary shadow-md shadow-primary/30'
-                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Content Field */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" htmlFor="content">
-                Isi Pengumuman
-              </label>
-              <textarea
-                className="block w-full px-4 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm h-40 resize-none"
-                id="content"
-                name="content"
-                placeholder="Tulis detail pengumuman di sini..."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                required
-              ></textarea>
-            </div>
-
-            {/* Date Info (Auto-generated usually, but editable here for demo) */}
-            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-900/50">
-              <div className="flex items-center gap-3">
-                <span className="material-icons-round text-primary">event_available</span>
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Tanggal Posting</p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Hari Ini</p>
-                </div>
-              </div>
-              <span className="text-xs text-primary font-medium">Ubah</span>
-            </div>
-
-            {/* Submit Button */}
-            <div className="pt-4">
-              <button
-                type="submit"
-                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-primary/30 text-sm font-bold text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform active:scale-[0.98]"
-              >
-                Terbitkan Pengumuman
-              </button>
-            </div>
-
-          </form>
-        </main>
-      </div>
+        </form>
+      </main>
     </div>
   );
 };

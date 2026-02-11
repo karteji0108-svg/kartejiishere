@@ -14,7 +14,7 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
     }
 
     if (!currentUser) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
 
     // Check role based access

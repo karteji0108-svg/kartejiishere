@@ -1,176 +1,133 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { uploadToCloudinary } from '../utils/cloudinary';
 
 const AddMember = () => {
   const navigate = useNavigate();
+  const [fullName, setFullName] = useState('');
+  const [role, setRole] = useState('Anggota');
+  const [phone, setPhone] = useState('');
+  const [status, setStatus] = useState('active');
+  const [photo, setPhoto] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleBack = () => {
-    navigate(-1);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate save
-    alert('Anggota baru berhasil ditambahkan!');
-    navigate('/members');
+    setLoading(true);
+
+    try {
+      let photoURL = null;
+      if (photo) {
+        photoURL = await uploadToCloudinary(photo);
+      }
+
+      // Note: This only creates the Firestore document for display in the member list.
+      // It does NOT create a Firebase Auth user account. The user must register themselves
+      // via the Registration page to actually log in.
+      // Alternatively, an admin function (Cloud Function) would be needed to create Auth users.
+      // For this frontend-only scope, we just add to the 'users' collection or a separate 'members' collection
+      // if 'users' is strictly for auth. The prompt implies 'users' stores profile.
+      // Let's assume we are adding to 'users' effectively pre-seeding or adding manual members.
+
+      await addDoc(collection(db, 'users'), {
+        fullName,
+        role,
+        phone,
+        status,
+        photoURL,
+        createdAt: new Date().toISOString(),
+        isManualEntry: true // Flag to distinguish from registered users if needed
+      });
+
+      navigate('/members');
+    } catch (error) {
+      console.error("Error adding member: ", error);
+      alert("Gagal menambahkan anggota.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 min-h-screen flex justify-center">
-      <div className="w-full max-w-md bg-background-light dark:bg-background-dark min-h-screen shadow-2xl relative flex flex-col">
-        {/* Header */}
-        <header className="bg-white dark:bg-gray-900 px-5 pt-4 pb-4 sticky top-0 z-40 shadow-sm flex items-center gap-4">
+    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col">
+      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <span className="material-icons">arrow_back</span>
+        </button>
+        <h1 className="text-lg font-bold">Tambah Anggota</h1>
+      </header>
+
+      <main className="flex-1 p-5 max-w-md mx-auto w-full">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium mb-1">Nama Lengkap</label>
+            <input
+              type="text"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Jabatan</label>
+            <select
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="Anggota">Anggota</option>
+              <option value="Ketua">Ketua</option>
+              <option value="Wakil Ketua">Wakil Ketua</option>
+              <option value="Sekretaris">Sekretaris</option>
+              <option value="Bendahara">Bendahara</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">No. Telepon</label>
+            <input
+              type="tel"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Status</label>
+            <select
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="active">Aktif</option>
+              <option value="inactive">Tidak Aktif</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Foto Profil</label>
+            <input
+              type="file"
+              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+              onChange={(e) => setPhoto(e.target.files[0])}
+              accept="image/*"
+            />
+          </div>
+
           <button
-            onClick={handleBack}
-            className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-300"
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-colors ${loading ? 'opacity-70' : ''}`}
           >
-            <span className="material-icons-round">arrow_back</span>
+            {loading ? 'Menyimpan...' : 'Simpan Anggota'}
           </button>
-          <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Tambah Anggota</h1>
-        </header>
-
-        {/* Main Form */}
-        <main className="flex-1 overflow-y-auto no-scrollbar p-5 pb-24">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-
-            {/* Photo Upload Section */}
-            <div className="flex flex-col items-center justify-center mb-6">
-              <div className="relative group cursor-pointer">
-                <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center hover:border-primary transition-colors">
-                  <span className="material-icons-round text-3xl text-gray-400 group-hover:text-primary">add_a_photo</span>
-                </div>
-                <div className="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-sm">
-                  <span className="material-icons-round text-xs">edit</span>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">Upload Foto Profil</p>
-            </div>
-
-            {/* Personal Info */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" htmlFor="fullName">
-                  Nama Lengkap
-                </label>
-                <input
-                  className="block w-full px-4 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm"
-                  id="fullName"
-                  name="fullName"
-                  placeholder="Contoh: Budi Santoso"
-                  type="text"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" htmlFor="nik">
-                  NIK (Nomor Induk Kependudukan)
-                </label>
-                <input
-                  className="block w-full px-4 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm"
-                  id="nik"
-                  name="nik"
-                  placeholder="16 digit angka"
-                  type="number"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" htmlFor="email">
-                  Email
-                </label>
-                <input
-                  className="block w-full px-4 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm"
-                  id="email"
-                  name="email"
-                  placeholder="email@contoh.com"
-                  type="email"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" htmlFor="phone">
-                  Nomor WhatsApp
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 text-sm font-medium">+62</span>
-                  </div>
-                  <input
-                    className="block w-full pl-12 pr-4 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm"
-                    id="phone"
-                    name="phone"
-                    placeholder="812-3456-7890"
-                    type="tel"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Organization Info */}
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-4">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white">Informasi Organisasi</h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" htmlFor="role">
-                    Jabatan
-                  </label>
-                  <div className="relative">
-                    <select
-                      className="block w-full pl-4 pr-10 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm appearance-none"
-                      id="role"
-                      name="role"
-                    >
-                      <option value="Anggota">Anggota</option>
-                      <option value="Ketua">Ketua</option>
-                      <option value="Wakil Ketua">Wakil Ketua</option>
-                      <option value="Sekretaris">Sekretaris</option>
-                      <option value="Bendahara">Bendahara</option>
-                      <option value="Humas">Humas</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                      <span className="material-icons-round text-gray-400">expand_more</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" htmlFor="status">
-                    Status
-                  </label>
-                  <div className="relative">
-                    <select
-                      className="block w-full pl-4 pr-10 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm appearance-none"
-                      id="status"
-                      name="status"
-                    >
-                      <option value="Active">Aktif</option>
-                      <option value="Inactive">Tidak Aktif</option>
-                      <option value="Pending">Menunggu</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                      <span className="material-icons-round text-gray-400">expand_more</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="pt-6">
-              <button
-                type="submit"
-                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-primary/30 text-sm font-bold text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform active:scale-[0.98]"
-              >
-                Simpan Anggota Baru
-              </button>
-            </div>
-
-          </form>
-        </main>
-      </div>
+        </form>
+      </main>
     </div>
   );
 };

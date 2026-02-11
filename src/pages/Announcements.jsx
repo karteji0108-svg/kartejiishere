@@ -1,11 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 const Announcements = () => {
   const [notifications, setNotifications] = useState(true);
   const { isRamadan } = useRamadan();
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      setLoading(true);
+      try {
+        const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setAnnouncements(data);
+      } catch (error) {
+        console.error("Error fetching announcements: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnnouncements();
+  }, []);
+
+  const getBadgeColor = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'urgent':
+      case 'penting':
+        return isRamadan ? 'bg-ramadan-gold text-white' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+      case 'activity':
+      case 'kegiatan':
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
+      case 'meeting':
+      case 'rapat':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    // Handle Firestore Timestamp if needed, but assuming ISO string for now
+    const date = new Date(dateString);
+    // Determine if it's today
+    const today = new Date();
+    if (date.toDateString() === today.toDateString()) {
+      return `Hari ini, ${date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
 
   return (
     <div className={`font-display text-gray-900 dark:text-gray-100 min-h-screen flex justify-center transition-colors duration-500
@@ -51,88 +104,51 @@ const Announcements = () => {
           <div className="space-y-4">
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Terbaru</h3>
 
-            {/* Card 1: Urgent */}
-            <article className={`group rounded-xl p-4 shadow-sm border-l-4 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden
-              ${isRamadan ? 'bg-white dark:bg-slate-800 border-l-ramadan-gold ring-1 ring-ramadan-gold/20' : 'bg-surface-light dark:bg-surface-dark border-l-red-500'}`}>
-              <div className="flex justify-between items-start mb-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                  ${isRamadan ? 'bg-ramadan-gold text-white' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}>
-                  {isRamadan ? 'Info Ramadhan' : 'Penting'}
-                </span>
-                <span className="text-xs text-gray-400 font-medium">Hari ini, 10:00</span>
-              </div>
-              <h3 className={`text-base font-bold mb-1 leading-tight transition-colors ${isRamadan ? 'text-ramadan-primary dark:text-emerald-400' : 'text-gray-900 dark:text-white group-hover:text-primary'}`}>
-                 {isRamadan ? 'Jadwal Imsakiyah & Kajian' : 'Perubahan Jadwal Rapat Besar'}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
-                {isRamadan
-                  ? 'Berikut adalah jadwal imsakiyah untuk wilayah kita serta jadwal kajian rutin setiap bakda Ashar di Masjid Al-Ikhlas.'
-                  : 'Dikarenakan cuaca buruk yang diperkirakan terjadi nanti malam, rapat akbar bulan ini akan dipindahkan ke Balai Warga RW 05. Harap maklum.'}
-              </p>
-              <div className={`mt-3 flex items-center text-xs font-medium cursor-pointer ${isRamadan ? 'text-ramadan-accent' : 'text-primary'}`}>
-                Baca selengkapnya <span className="material-icons-round text-sm ml-1">arrow_forward</span>
-              </div>
-            </article>
-
-            {/* Card 2: Social/Activity */}
-            <article className="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex justify-between items-start mb-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                  Kegiatan
-                </span>
-                <span className="text-xs text-gray-400 font-medium">Kemarin</span>
-              </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 leading-tight group-hover:text-primary transition-colors">Kerja Bakti Minggu Ini</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
-                Mari berkumpul di balai desa jam 7 pagi untuk membersihkan lingkungan sekitar sungai. Peralatan kebersihan akan disediakan oleh panitia.
-              </p>
-            </article>
-
-            {/* Card 3: Meeting */}
-            <article className="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex justify-between items-start mb-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                  Rapat
-                </span>
-                <span className="text-xs text-gray-400 font-medium">10 Okt 2023</span>
-              </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 leading-tight group-hover:text-primary transition-colors">Evaluasi Program Kerja Triwulan</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
-                Diundang kepada seluruh pengurus inti untuk menghadiri rapat evaluasi kinerja triwulan ke-3. Agenda meliputi laporan keuangan dan progres divisi.
-              </p>
-            </article>
-
-            {/* Card 4: General Info with Image */}
-            <article className="group bg-surface-light dark:bg-surface-dark rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="h-32 bg-gray-200 dark:bg-gray-700 relative">
-                <img
-                  alt="Diverse group of young people working together on laptops"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNdHYD50mziqeXJHp6_YtnGaH46GCL3fL7CIM0UL-urKCbwh4_53OGE84M-fyPn5p9lzCOq4LZsuy5y_nEOTx-0ntJB6qypZvFQJA3Im3ChN3AeJZgeL43MRMsgpG9Q46Uh8RK1w26_l7pxp5kDOgPThWea2sgDClj5_fh_93_KKz-yI-5MUnIn50ikmikqxtXA9RDE3dYCLAEzBLkMDy30EOu1QV3DL1m5BUiLX91ExSRnZdx9AEpNn6VKD1jI1h6r1ACNu5LBlg"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div className="absolute bottom-2 left-4 right-4 flex justify-between items-end">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary text-white shadow-sm">
-                    Umum
-                  </span>
+            {loading ? (
+                <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-1">
-                  <span className="text-xs text-gray-400 font-medium">5 Okt 2023</span>
-                </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 leading-tight group-hover:text-primary transition-colors">Pendaftaran Anggota Baru Dibuka</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
-                  Ajak teman-teman pemuda di lingkunganmu untuk bergabung dengan Karang Taruna. Pendaftaran dibuka hingga akhir bulan ini.
-                </p>
-              </div>
-            </article>
+            ) : announcements.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">Belum ada pengumuman.</div>
+            ) : (
+                announcements.map((item) => (
+                    <article key={item.id} className={`group rounded-xl p-4 shadow-sm border-l-4 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden
+                        ${isRamadan ? 'bg-white dark:bg-slate-800 border-l-ramadan-gold ring-1 ring-ramadan-gold/20' : `bg-surface-light dark:bg-surface-dark ${item.type === 'Penting' ? 'border-l-red-500' : 'border-l-primary'}`}`}>
+
+                        {item.imageURL && (
+                            <div className="mb-3 h-32 rounded-lg overflow-hidden relative">
+                                <img src={item.imageURL} alt="Announcement" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/10"></div>
+                            </div>
+                        )}
+
+                        <div className="flex justify-between items-start mb-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            ${getBadgeColor(item.type)}`}>
+                            {item.type}
+                            </span>
+                            <span className="text-xs text-gray-400 font-medium">{formatDate(item.createdAt)}</span>
+                        </div>
+                        <h3 className={`text-base font-bold mb-1 leading-tight transition-colors ${isRamadan ? 'text-ramadan-primary dark:text-emerald-400' : 'text-gray-900 dark:text-white group-hover:text-primary'}`}>
+                            {item.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
+                            {item.content}
+                        </p>
+                        <div className={`mt-3 flex items-center text-xs font-medium cursor-pointer ${isRamadan ? 'text-ramadan-accent' : 'text-primary'}`}>
+                            Baca selengkapnya <span className="material-icons-round text-sm ml-1">arrow_forward</span>
+                        </div>
+                    </article>
+                ))
+            )}
           </div>
 
           {/* End of List Indicator */}
-          <div className="py-6 text-center">
-            <p className="text-xs text-gray-400">Tidak ada pengumuman lainnya</p>
-          </div>
+          {!loading && (
+            <div className="py-6 text-center">
+                <p className="text-xs text-gray-400">Tidak ada pengumuman lainnya</p>
+            </div>
+          )}
         </main>
 
         {/* Floating Action Button (FAB) - Only for Admin/Secretary */}

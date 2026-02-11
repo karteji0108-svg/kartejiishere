@@ -1,117 +1,141 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { useRamadan } from '../context/RamadanContext';
 
 const ActivityDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const { isRamadan } = useRamadan();
+  const [activity, setActivity] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - in a real app, fetch based on ID
-  const activity = {
-    id: id,
-    title: 'Gotong Royong Bersih Desa',
-    date: '12 Oktober 2023',
-    time: '07:00 - 10:00 WIB',
-    location: 'Balai Desa & Lingkungan Sekitar',
-    description: 'Mari bersama-sama membersihkan lingkungan balai desa dan sekitarnya untuk kenyamanan bersama. Kegiatan ini akan melibatkan seluruh pemuda dan warga desa untuk menciptakan lingkungan yang bersih, sehat, dan asri. Harap membawa peralatan kebersihan masing-masing jika ada (sapu lidi, sabit, cangkul). Konsumsi akan disediakan oleh panitia.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuASy66xcZSwNkxy2SHzPIGF0WyTcwUM1u9NMutAmqoU27cbo76c99aPz66bsU2JXx0rJ2JI85fjWqogTE3Mt_hf39-FHza1AQXUGG2-2mlLoS3n6-PDOjBThDG_kNPWDhWaIbiohI9I5hytmXRWgsVgZdmCZjpzqnUMQGC3P00e_beYu6ZQ76Kh5Y9ixmU9WrZ83YqyB2tI1RoGzNTXQYZvleubGK8oSacpB2BlFXQDuKdnKkSFZlby0yuPBCT6_f2HDmNtlV15wQg',
-    status: 'Open',
-    organizer: 'Divisi Lingkungan Hidup',
-    contact: '0812-3456-7890 (Budi)'
-  };
+  useEffect(() => {
+    const fetchActivity = async () => {
+      setLoading(true);
+      try {
+        const docRef = doc(db, 'activities', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setActivity({ id: docSnap.id, ...docSnap.data() });
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error getting document:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+    fetchActivity();
+  }, [id]);
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-screen bg-background-light dark:bg-background-dark">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>
+  );
+
+  if (!activity) return (
+    <div className="h-screen flex flex-col justify-center items-center bg-background-light dark:bg-background-dark text-slate-800 dark:text-white">
+        <p>Kegiatan tidak ditemukan.</p>
+        <Link to="/activities" className="mt-4 text-primary font-semibold">Kembali ke Kegiatan</Link>
+    </div>
+  );
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 min-h-screen flex justify-center">
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 min-h-screen shadow-2xl relative flex flex-col">
-        {/* Image Header with Back Button */}
-        <div className="relative h-64 shrink-0">
-          <img
-            alt={activity.title}
-            className="w-full h-full object-cover"
-            src={activity.image}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+    <div className={`min-h-screen bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-100 pb-20 transition-colors duration-500
+       ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/20' : ''}`}>
 
-          <button
-            onClick={handleBack}
-            className="absolute top-4 left-4 p-2 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 transition-colors z-20"
-          >
-            <span className="material-icons-round">arrow_back</span>
-          </button>
-
-          <div className="absolute bottom-4 left-4 right-4 text-white">
-            <span className="inline-block px-2 py-1 bg-green-500 rounded-lg text-xs font-bold mb-2 shadow-sm">
-              {activity.status}
-            </span>
-            <h1 className="text-2xl font-bold leading-tight shadow-black drop-shadow-sm">{activity.title}</h1>
-          </div>
-        </div>
-
-        {/* Content Body */}
-        <main className="flex-1 overflow-y-auto no-scrollbar p-5 pb-24">
-          {/* Info Chips */}
-          <div className="flex flex-wrap gap-3 mb-6">
-            <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700">
-              <span className="material-icons-round text-primary text-base mr-2">event</span>
-              {activity.date}
+      {/* Header Image */}
+      <div className="relative h-64 md:h-80 w-full overflow-hidden">
+        {activity.imageURL ? (
+            <img src={activity.imageURL} alt={activity.title} className="w-full h-full object-cover" />
+        ) : (
+            <div className={`w-full h-full flex items-center justify-center ${isRamadan ? 'bg-ramadan-primary' : 'bg-primary'}`}>
+                <span className="material-icons text-6xl text-white opacity-50">event</span>
             </div>
-            <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700">
-              <span className="material-icons-round text-primary text-base mr-2">schedule</span>
-              {activity.time}
-            </div>
-          </div>
+        )}
+        <Link to="/activities" className="absolute top-4 left-4 p-2 bg-black/30 hover:bg-black/50 rounded-full text-white backdrop-blur-sm transition-colors">
+          <span className="material-icons">arrow_back</span>
+        </Link>
+      </div>
 
-          <div className="space-y-6">
-            {/* Location Section */}
-            <div>
-              <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">Lokasi</h2>
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-full text-primary shrink-0">
-                  <span className="material-icons-round">place</span>
+      <div className="max-w-3xl mx-auto px-5 -mt-8 relative z-10">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6">
+          <div className="flex justify-between items-start mb-4">
+             <div>
+                <h1 className={`text-2xl font-bold mb-2 ${isRamadan ? 'text-ramadan-primary dark:text-white' : 'text-slate-900 dark:text-white'}`}>
+                    {activity.title}
+                </h1>
+                <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 gap-4">
+                    <div className="flex items-center">
+                        <span className="material-icons text-sm mr-1">calendar_today</span>
+                        {new Date(activity.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </div>
+                    {activity.time && (
+                        <div className="flex items-center">
+                            <span className="material-icons text-sm mr-1">schedule</span>
+                            {activity.time}
+                        </div>
+                    )}
                 </div>
-                <div>
-                  <p className="text-base font-medium text-gray-900 dark:text-white">{activity.location}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Klik untuk lihat di peta</p>
-                </div>
-              </div>
-              {/* Fake Map Placeholder */}
-              <div className="mt-3 w-full h-32 bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden relative flex items-center justify-center">
-                <span className="material-icons-round text-4xl text-gray-400">map</span>
-                <div className="absolute inset-0 bg-gray-500/10"></div>
-              </div>
-            </div>
-
-            {/* Description Section */}
-            <div>
-              <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">Deskripsi</h2>
-              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                {activity.description}
-              </p>
-            </div>
-
-            {/* Organizer Info */}
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Diselenggarakan oleh</p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{activity.organizer}</p>
-                </div>
-                <button className="text-primary text-sm font-medium hover:underline">
-                  Hubungi Panitia
-                </button>
-              </div>
-            </div>
+             </div>
+             {/* Status Badge */}
+             {activity.status && (
+                 <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
+                     activity.status === 'open'
+                     ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                     : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                 }`}>
+                     {activity.status}
+                 </span>
+             )}
           </div>
-        </main>
 
-        {/* Bottom Action Bar */}
-        <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 p-4 safe-area-bottom z-30">
-          <button className="w-full py-3.5 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all active:scale-[0.98]">
-            Ikuti Kegiatan
-          </button>
+          <hr className="border-slate-100 dark:border-slate-800 my-4" />
+
+          {/* Details */}
+          <div className="space-y-4">
+             <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Lokasi</h3>
+                <p className="text-slate-600 dark:text-slate-300 flex items-start">
+                    <span className="material-icons text-sm mr-2 mt-0.5 text-primary">location_on</span>
+                    {activity.location || 'Online / TBD'}
+                </p>
+             </div>
+
+             <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Deskripsi</h3>
+                <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                    {activity.description}
+                </p>
+             </div>
+
+             {/* Additional Info / Organizer */}
+             {activity.organizer && (
+                 <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg flex items-center gap-3">
+                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                         {activity.organizer.substring(0,2).toUpperCase()}
+                     </div>
+                     <div>
+                         <p className="text-xs text-slate-500">Diselenggarakan oleh</p>
+                         <p className="text-sm font-medium text-slate-900 dark:text-white">{activity.organizer}</p>
+                     </div>
+                 </div>
+             )}
+          </div>
+
+          {/* Action Button */}
+          {activity.status === 'open' && (
+              <div className="mt-8">
+                  <button className={`w-full py-3 rounded-xl font-semibold text-white shadow-lg transition-transform active:scale-[0.98]
+                      ${isRamadan ? 'bg-gradient-to-r from-ramadan-primary to-emerald-600 hover:to-emerald-700' : 'bg-primary hover:bg-blue-600'}`}>
+                      Daftar Sekarang
+                  </button>
+              </div>
+          )}
         </div>
       </div>
     </div>
