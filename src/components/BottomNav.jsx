@@ -7,7 +7,7 @@ const BottomNav = () => {
     { name: 'Anggota', path: '/members', icon: 'groups' },
     { name: 'Kegiatan', path: '/activities', icon: 'event' },
     { name: 'Keuangan', path: '/finance', icon: 'account_balance_wallet' },
-    { name: 'Info', path: '/announcements', icon: 'campaign' },
+    { name: 'Profil', path: '/profile', icon: 'person' },
   ];
 
   return (
