@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import BottomNav from '../components/BottomNav';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { Link } from 'react-router-dom';
 
 const Finance = () => {
   const [transactions, setTransactions] = useState([]);
@@ -34,7 +35,7 @@ const Finance = () => {
         setSummary({
           income: inc,
           expense: exp,
-          balance: inc - exp // Assuming balance is derived, or fetch actual balance if stored separately
+          balance: inc - exp
         });
 
       } catch (error) {
@@ -168,9 +169,9 @@ const Finance = () => {
       </main>
 
       {/* Floating Action Button (FAB) */}
-      <button className="fixed right-5 bottom-24 z-30 h-14 w-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center hover:bg-primary-dark transition-colors transform hover:scale-105 active:scale-95">
+      <Link to="/finance/add" className="fixed right-5 bottom-24 z-30 h-14 w-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center hover:bg-primary-dark transition-colors transform hover:scale-105 active:scale-95">
         <span className="material-icons text-2xl">add</span>
-      </button>
+      </Link>
 
       <BottomNav />
     </div>

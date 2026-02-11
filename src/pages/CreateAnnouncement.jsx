@@ -10,7 +10,16 @@ const CreateAnnouncement = () => {
   const [content, setContent] = useState('');
   const [type, setType] = useState('Penting');
   const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        setImage(file);
+        setPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,16 +104,29 @@ const CreateAnnouncement = () => {
           <div>
             <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Gambar (Opsional)</label>
             <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <span className="material-icons text-gray-400 mb-2">cloud_upload</span>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {image ? image.name : 'Klik untuk upload gambar'}
-                        </p>
-                    </div>
-                    <input type="file" className="hidden" onChange={(e) => setImage(e.target.files[0])} accept="image/*" />
+                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 relative overflow-hidden">
+                    {preview ? (
+                        <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <span className="material-icons text-gray-400 mb-2">cloud_upload</span>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Klik untuk upload gambar
+                            </p>
+                        </div>
+                    )}
+                    <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
                 </label>
             </div>
+            {preview && (
+                <button
+                    type="button"
+                    onClick={() => { setImage(null); setPreview(null); }}
+                    className="mt-2 text-sm text-red-500 hover:text-red-700"
+                >
+                    Hapus Gambar
+                </button>
+            )}
           </div>
 
           <button

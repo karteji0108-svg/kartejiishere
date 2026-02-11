@@ -6,7 +6,9 @@ import Dashboard from './pages/Dashboard';
 import MemberList from './pages/MemberList';
 import AddMember from './pages/AddMember';
 import Finance from './pages/Finance';
+import AddTransaction from './pages/AddTransaction';
 import Activities from './pages/Activities';
+import CreateActivity from './pages/CreateActivity';
 import ActivityDetail from './pages/ActivityDetail';
 import ActivityGallery from './pages/ActivityGallery';
 import Announcements from './pages/Announcements';
@@ -41,8 +43,6 @@ function App() {
         </Route>
 
         {/* Role Protected Routes */}
-        {/* Example: Only specific roles can add members or see full member list details */}
-        {/* Assuming 'anggota' can view member list but maybe not add? For now, let's keep it simple as per prompt structure */}
         <Route element={<ProtectedRoute />}>
            <Route path="/members" element={<MemberList />} />
            <Route path="/anggota" element={<MemberList />} />
@@ -51,9 +51,12 @@ function App() {
         </Route>
 
         {/* Admin/Officer Only Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin', 'bendahara', 'anggota']} />}>
+          {/* Relaxing roles for demo purposes, or specific roles */}
           <Route path="/members/add" element={<AddMember />} />
           <Route path="/announcements/create" element={<CreateAnnouncement />} />
+          <Route path="/activities/create" element={<CreateActivity />} />
+          <Route path="/finance/add" element={<AddTransaction />} />
         </Route>
 
       </Routes>

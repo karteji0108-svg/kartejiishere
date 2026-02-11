@@ -24,7 +24,6 @@ const Activities = () => {
         setActivities(activityData);
       } catch (error) {
         console.error("Error fetching activities: ", error);
-        // Fallback to empty if error (or permission issue)
         setActivities([]);
       } finally {
         setLoading(false);
@@ -58,7 +57,7 @@ const Activities = () => {
   };
 
   return (
-    <div className={`font-display min-h-screen flex flex-col items-center justify-center transition-colors duration-500
+    <div className={`font-display min-h-screen flex flex-col items-center justify-center transition-colors duration-500 relative
       ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/20 text-slate-800 dark:text-slate-100' : 'bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100'}`}>
       {/* Mobile Container */}
       <div className="w-full max-w-md h-screen bg-white dark:bg-slate-900 shadow-2xl overflow-hidden flex flex-col relative">
@@ -105,7 +104,7 @@ const Activities = () => {
           ) : (
             filteredActivities.map((activity, index) => (
               <div key={activity.id}>
-                 {/* Show Month Header if it's the first item or different from previous */}
+                 {/* Show Month Header */}
                  {(index === 0 || getMonthName(activity.date) !== getMonthName(filteredActivities[index-1].date)) && (
                     <div className="flex items-center space-x-2 pb-1 pt-2">
                       <span className="material-icons text-primary text-sm">event</span>
@@ -119,7 +118,7 @@ const Activities = () => {
                  <div className={`group rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-300 mt-3
                     ${isRamadan ? 'bg-white dark:bg-slate-800 border-ramadan-gold/30 ring-1 ring-ramadan-gold/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}>
 
-                    {/* Image Section (Optional if exists) */}
+                    {/* Image Section */}
                     {activity.imageURL && (
                       <div className="relative h-40 overflow-hidden">
                         <img
@@ -144,7 +143,7 @@ const Activities = () => {
                       </div>
                     )}
 
-                    {/* Content Section (Different layout if no image) */}
+                    {/* Content Section */}
                     <div className={activity.imageURL ? 'p-4' : 'flex'}>
                         {!activity.imageURL && (
                            <div className="w-24 bg-primary/10 dark:bg-primary/20 flex flex-col items-center justify-center p-2 border-r border-slate-100 dark:border-slate-700 shrink-0">
@@ -196,6 +195,11 @@ const Activities = () => {
             <p className="text-xs text-slate-400">Anda telah mencapai akhir daftar.</p>
           </div>
         </main>
+
+        {/* FAB for Adding Activity */}
+        <Link to="/activities/create" className="fixed right-5 bottom-24 bg-primary hover:bg-blue-600 text-white p-4 rounded-full shadow-lg shadow-primary/40 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-40">
+            <span className="material-icons">add</span>
+        </Link>
 
         <BottomNav />
       </div>

@@ -8,9 +8,10 @@ import { db } from '../config/firebase';
 
 const Dashboard = () => {
   const { isRamadan } = useRamadan();
-  const { currentUser, userRole } = useAuth(); // Assume we might want to display name properly later
+  const { currentUser, userRole } = useAuth();
   const [timeLeft, setTimeLeft] = useState('00:00:00');
   const [nextPrayer, setNextPrayer] = useState('Maghrib');
+  const [userLocation, setUserLocation] = useState('Jakarta Selatan'); // Default fallback
 
   // Data States
   const [stats, setStats] = useState({
@@ -20,6 +21,29 @@ const Dashboard = () => {
   });
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Get User Location
+  useEffect(() => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                // Fetch simple reverse geocode
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.address) {
+                            // Prefer city, town, or county
+                            const city = data.address.city || data.address.town || data.address.county || data.address.state_district;
+                            if (city) setUserLocation(city);
+                        }
+                    })
+                    .catch(err => console.log("Loc error", err));
+            },
+            () => console.log("Geo permission denied")
+        );
+    }
+  }, []);
 
   // Ramadan Timer Logic
   useEffect(() => {
@@ -68,19 +92,14 @@ const Dashboard = () => {
         });
 
         // 3. Fetch Upcoming Activities Count
-        const today = new Date().toISOString().split('T')[0]; // Simple date comparison
-        // Note: Firestore string filtering is simple, but ideally use Timestamps.
-        // Assuming date stored as string YYYY-MM-DD or ISO
+        const today = new Date().toISOString().split('T')[0];
         const activitiesQ = query(collection(db, 'activities'), where('date', '>=', today));
         const activitiesSnap = await getDocs(activitiesQ);
         const activityCount = activitiesSnap.size;
 
         setStats({ balance, memberCount, activityCount });
 
-        // 4. Fetch Recent Updates (Mix of Activities and Announcements for demo)
-        // Let's just fetch latest 3 activities for simplicity as "Updates"
-        // Or better: mix 1 latest activity, 1 latest announcement
-
+        // 4. Fetch Recent Updates
         const updates = [];
 
         // Latest Activity
@@ -125,7 +144,7 @@ const Dashboard = () => {
         <header className="flex items-center justify-between mb-8 pt-2">
           <div className="flex items-center gap-3">
             <div className="relative">
-              {/* Fallback avatar logic needed if no user photo */}
+              {/* Fallback avatar logic */}
               <div className={`w-12 h-12 rounded-full overflow-hidden border-2 shadow-sm flex items-center justify-center bg-gray-200 ${isRamadan ? 'border-ramadan-gold ring-2 ring-ramadan-gold/30' : 'border-white dark:border-slate-700'}`}>
                  {currentUser?.photoURL ? (
                     <img src={currentUser.photoURL} alt="Avatar" className="w-full h-full object-cover" />
@@ -139,7 +158,6 @@ const Dashboard = () => {
               <p className={`text-sm font-medium ${isRamadan ? 'text-ramadan-primary dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
                 {isRamadan ? 'Marhaban ya Ramadhan,' : 'Selamat Pagi,'}
               </p>
-              {/* We might need to fetch the user's name from Firestore profile if not in auth object, but auth object usually has displayName */}
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">{currentUser?.displayName || 'Pengguna'}</h1>
             </div>
           </div>
@@ -166,7 +184,7 @@ const Dashboard = () => {
                   <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider mb-1">Menuju {nextPrayer}</p>
                   <h2 className="text-3xl font-bold font-mono tracking-wide">{timeLeft}</h2>
                   <p className="text-emerald-100 text-sm mt-1 flex items-center gap-1">
-                    <span className="material-icons-round text-sm">location_on</span> Jakarta Selatan
+                    <span className="material-icons-round text-sm">location_on</span> {userLocation}
                   </p>
                 </div>
                 <div className="text-right">
@@ -195,7 +213,6 @@ const Dashboard = () => {
                 <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
                   <span className="material-icons-round text-white">account_balance_wallet</span>
                 </div>
-                {/* <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full backdrop-blur-sm">+12% bln ini</span> */}
               </div>
               <div className="relative z-10">
                 <p className="text-blue-100 text-sm mb-1">Saldo Kas Aktif</p>
@@ -237,17 +254,17 @@ const Dashboard = () => {
             </div>
             <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Tambah<br/>Anggota</span>
           </Link>
-          <Link to="/announcements/create" className="flex flex-col items-center gap-2 group">
+          <Link to="/activities/create" className="flex flex-col items-center gap-2 group">
             <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform">
               <span className="material-icons-round">post_add</span>
             </div>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Buat<br/>Info</span>
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Buat<br/>Kegiatan</span>
           </Link>
-          <Link to="/announcements" className="flex flex-col items-center gap-2 group">
+          <Link to="/announcements/create" className="flex flex-col items-center gap-2 group">
             <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform">
               <span className="material-icons-round">campaign</span>
             </div>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Info<br/>Baru</span>
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Buat<br/>Info</span>
           </Link>
           <Link to="/gallery" className="flex flex-col items-center gap-2 group">
             <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform">

@@ -11,7 +11,16 @@ const AddMember = () => {
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState('active');
   const [photo, setPhoto] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        setPhoto(file);
+        setPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,14 +32,6 @@ const AddMember = () => {
         photoURL = await uploadToCloudinary(photo);
       }
 
-      // Note: This only creates the Firestore document for display in the member list.
-      // It does NOT create a Firebase Auth user account. The user must register themselves
-      // via the Registration page to actually log in.
-      // Alternatively, an admin function (Cloud Function) would be needed to create Auth users.
-      // For this frontend-only scope, we just add to the 'users' collection or a separate 'members' collection
-      // if 'users' is strictly for auth. The prompt implies 'users' stores profile.
-      // Let's assume we are adding to 'users' effectively pre-seeding or adding manual members.
-
       await addDoc(collection(db, 'users'), {
         fullName,
         role,
@@ -38,7 +39,7 @@ const AddMember = () => {
         status,
         photoURL,
         createdAt: new Date().toISOString(),
-        isManualEntry: true // Flag to distinguish from registered users if needed
+        isManualEntry: true
       });
 
       navigate('/members');
@@ -111,12 +112,30 @@ const AddMember = () => {
 
           <div>
             <label className="block text-sm font-medium mb-1">Foto Profil</label>
-            <input
-              type="file"
-              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-              onChange={(e) => setPhoto(e.target.files[0])}
-              accept="image/*"
-            />
+            <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center border border-gray-300 dark:border-gray-600">
+                    {preview ? (
+                        <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                        <span className="material-icons text-gray-400 text-3xl">person</span>
+                    )}
+                </div>
+                <label className="flex-1">
+                    <span className="sr-only">Choose profile photo</span>
+                    <input
+                      type="file"
+                      className="block w-full text-sm text-slate-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-primary/10 file:text-primary
+                        hover:file:bg-primary/20
+                      "
+                      onChange={handlePhotoChange}
+                      accept="image/*"
+                    />
+                </label>
+            </div>
           </div>
 
           <button
