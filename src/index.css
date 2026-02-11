@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
+  .no-scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+  }
+  .safe-area-top {
+      padding-top: env(safe-area-inset-top, 20px);
+  }
+  .safe-area-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+}
+
+@layer components {
+  /* iOS-like toggle switch */
+  .toggle-checkbox:checked {
+      right: 0;
+      @apply border-primary;
+  }
+  .toggle-checkbox:checked + .toggle-label {
+      @apply bg-primary;
+  }
+}
