@@ -1,17 +1,26 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import { useRamadan } from '../context/RamadanContext';
 
 const Activities = () => {
+  const { isRamadan } = useRamadan();
+
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display min-h-screen flex flex-col items-center justify-center">
+    <div className={`font-display min-h-screen flex flex-col items-center justify-center transition-colors duration-500
+      ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/20 text-slate-800 dark:text-slate-100' : 'bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100'}`}>
       {/* Mobile Container */}
       <div className="w-full max-w-md h-screen bg-white dark:bg-slate-900 shadow-2xl overflow-hidden flex flex-col relative">
         {/* Header */}
-        <header className="bg-white dark:bg-slate-900 px-5 pt-12 pb-4 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <header className={`px-5 pt-12 pb-4 sticky top-0 z-20 border-b flex justify-between items-center transition-colors
+          ${isRamadan ? 'bg-emerald-50/90 dark:bg-emerald-900/90 border-ramadan-gold/20 backdrop-blur-md' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Kegiatan</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Agenda Karang Taruna</p>
+            <h1 className={`text-2xl font-bold tracking-tight ${isRamadan ? 'text-ramadan-primary dark:text-white' : 'text-slate-900 dark:text-white'}`}>
+              Kegiatan {isRamadan && 'Ramadhan'}
+            </h1>
+            <p className={`text-sm ${isRamadan ? 'text-ramadan-accent' : 'text-slate-500 dark:text-slate-400'}`}>
+              Agenda Karang Taruna
+            </p>
           </div>
           <button className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
             <span className="material-icons">filter_list</span>
@@ -39,7 +48,8 @@ const Activities = () => {
           </div>
 
           {/* Card 1: Upcoming/Featured */}
-          <div className="group bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-md transition-all duration-300">
+          <div className={`group rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-300
+            ${isRamadan ? 'bg-white dark:bg-slate-800 border-ramadan-gold/30 ring-1 ring-ramadan-gold/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}>
             <div className="relative h-40 overflow-hidden">
               <img
                 alt="Group of people cleaning a park"
@@ -48,18 +58,27 @@ const Activities = () => {
               />
               <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 rounded-lg flex flex-col items-center shadow-sm">
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Okt</span>
-                <span className="text-xl font-bold text-primary leading-none">12</span>
+                <span className={`text-xl font-bold leading-none ${isRamadan ? 'text-ramadan-primary' : 'text-primary'}`}>12</span>
               </div>
-              <div className="absolute top-3 right-3">
+              <div className="absolute top-3 right-3 flex gap-2">
+                {isRamadan && (
+                  <span className="bg-ramadan-gold text-white text-xs px-2.5 py-1 rounded-full font-medium shadow-sm">
+                    Special
+                  </span>
+                )}
                 <span className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 text-xs px-2.5 py-1 rounded-full font-medium">Open</span>
               </div>
             </div>
             <div className="p-4">
               <div className="flex items-start justify-between mb-2">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">Gotong Royong Bersih Desa</h3>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
+                  {isRamadan ? 'Buka Puasa Bersama & Santunan' : 'Gotong Royong Bersih Desa'}
+                </h3>
               </div>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
-                Mari bersama-sama membersihkan lingkungan balai desa dan sekitarnya untuk kenyamanan bersama.
+                {isRamadan
+                  ? 'Kegiatan buka puasa bersama pemuda dan santunan anak yatim di Aula Balai Desa.'
+                  : 'Mari bersama-sama membersihkan lingkungan balai desa dan sekitarnya untuk kenyamanan bersama.'}
               </p>
               <div className="flex items-center text-xs text-slate-400 dark:text-slate-500 mb-4 space-x-3">
                 <div className="flex items-center">
@@ -71,7 +90,8 @@ const Activities = () => {
                   Balai Desa
                 </div>
               </div>
-              <Link to="/activities/1" className="w-full py-2.5 bg-primary hover:bg-blue-600 active:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2">
+              <Link to="/activities/1" className={`w-full py-2.5 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2
+                ${isRamadan ? 'bg-ramadan-primary hover:bg-emerald-600' : 'bg-primary hover:bg-blue-600'}`}>
                 <span>Lihat Detail</span>
                 <span className="material-icons text-sm">arrow_forward</span>
               </Link>

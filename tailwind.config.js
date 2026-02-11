@@ -17,6 +17,12 @@ export default {
         "surface-dark": "#1c2630",
         "neutral-surface": "#ffffff",
         "neutral-surface-dark": "#1a2632",
+
+        // Ramadan Theme Colors
+        "ramadan-primary": "#10B981", // Emerald 500
+        "ramadan-gold": "#F59E0B",    // Amber 500
+        "ramadan-accent": "#D97706",  // Amber 600
+        "ramadan-bg": "#064E3B",      // Emerald 900 (for deep backgrounds)
       },
       fontFamily: {
         "display": ["Inter", "sans-serif"]
@@ -28,6 +34,16 @@ export default {
         "2xl": "1rem",
         "3xl": "1.5rem",
         "full": "9999px"
+      },
+      keyframes: {
+        swing: {
+          '0%, 100%': { transform: 'rotate(-5deg)' },
+          '50%': { transform: 'rotate(5deg)' },
+        },
+      },
+      animation: {
+        swing: 'swing 3s ease-in-out infinite',
+        'swing-slow': 'swing 5s ease-in-out infinite',
       },
     },
   },

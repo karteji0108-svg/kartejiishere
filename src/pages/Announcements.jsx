@@ -1,19 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import { useRamadan } from '../context/RamadanContext';
 
 const Announcements = () => {
+  const [notifications, setNotifications] = useState(true);
+  const { isRamadan } = useRamadan();
+
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 min-h-screen flex justify-center">
+    <div className={`font-display text-gray-900 dark:text-gray-100 min-h-screen flex justify-center transition-colors duration-500
+      ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/20' : 'bg-background-light dark:bg-background-dark'}`}>
       {/* Mobile Container */}
-      <div className="w-full max-w-md bg-background-light dark:bg-background-dark min-h-screen shadow-2xl relative flex flex-col">
+      <div className="w-full max-w-md bg-transparent min-h-screen shadow-2xl relative flex flex-col">
         {/* Header / Navigation Bar */}
-        <header className="bg-surface-light dark:bg-surface-dark sticky top-0 z-30 shadow-sm safe-area-top px-4 pb-3">
+        <header className={`sticky top-0 z-30 shadow-sm safe-area-top px-4 pb-3 transition-colors
+          ${isRamadan ? 'bg-emerald-50/90 dark:bg-emerald-900/90 backdrop-blur-md border-b border-ramadan-gold/20' : 'bg-surface-light dark:bg-surface-dark'}`}>
           <div className="flex items-center justify-between pt-3">
             <button className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <span className="material-icons-round text-gray-600 dark:text-gray-300">arrow_back_ios_new</span>
             </button>
-            <h1 className="text-lg font-bold text-center flex-1 pr-8">Pengumuman</h1>
+            <h1 className={`text-lg font-bold text-center flex-1 pr-8 ${isRamadan ? 'text-ramadan-primary dark:text-emerald-400' : ''}`}>
+              Pengumuman {isRamadan && 'Ramadhan'}
+            </h1>
             {/* Placeholder for balance layout */}
             <div className="w-2"></div>
           </div>
@@ -28,19 +36,15 @@ const Announcements = () => {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Dapatkan info terbaru langsung di HP Anda.</p>
             </div>
             {/* iOS Style Toggle */}
-            <div className="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-              <input
-                defaultChecked
-                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:border-primary transition-all duration-300 left-0 checked:left-6 top-0"
-                id="notification-toggle"
-                name="toggle"
-                type="checkbox"
-              />
-              <label
-                className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-300"
-                htmlFor="notification-toggle"
-              ></label>
-            </div>
+            <button
+                onClick={() => setNotifications(!notifications)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${notifications ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
+            >
+                <span className="sr-only">Toggle Notifications</span>
+                <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${notifications ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+            </button>
           </div>
 
           {/* Announcement List (Feed) */}
@@ -48,18 +52,24 @@ const Announcements = () => {
             <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Terbaru</h3>
 
             {/* Card 1: Urgent */}
-            <article className="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border-l-4 border-red-500 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden">
+            <article className={`group rounded-xl p-4 shadow-sm border-l-4 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden
+              ${isRamadan ? 'bg-white dark:bg-slate-800 border-l-ramadan-gold ring-1 ring-ramadan-gold/20' : 'bg-surface-light dark:bg-surface-dark border-l-red-500'}`}>
               <div className="flex justify-between items-start mb-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                  Penting
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                  ${isRamadan ? 'bg-ramadan-gold text-white' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}>
+                  {isRamadan ? 'Info Ramadhan' : 'Penting'}
                 </span>
                 <span className="text-xs text-gray-400 font-medium">Hari ini, 10:00</span>
               </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 leading-tight group-hover:text-primary transition-colors">Perubahan Jadwal Rapat Besar</h3>
+              <h3 className={`text-base font-bold mb-1 leading-tight transition-colors ${isRamadan ? 'text-ramadan-primary dark:text-emerald-400' : 'text-gray-900 dark:text-white group-hover:text-primary'}`}>
+                 {isRamadan ? 'Jadwal Imsakiyah & Kajian' : 'Perubahan Jadwal Rapat Besar'}
+              </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
-                Dikarenakan cuaca buruk yang diperkirakan terjadi nanti malam, rapat akbar bulan ini akan dipindahkan ke Balai Warga RW 05. Harap maklum.
+                {isRamadan
+                  ? 'Berikut adalah jadwal imsakiyah untuk wilayah kita serta jadwal kajian rutin setiap bakda Ashar di Masjid Al-Ikhlas.'
+                  : 'Dikarenakan cuaca buruk yang diperkirakan terjadi nanti malam, rapat akbar bulan ini akan dipindahkan ke Balai Warga RW 05. Harap maklum.'}
               </p>
-              <div className="mt-3 flex items-center text-xs font-medium text-primary cursor-pointer">
+              <div className={`mt-3 flex items-center text-xs font-medium cursor-pointer ${isRamadan ? 'text-ramadan-accent' : 'text-primary'}`}>
                 Baca selengkapnya <span className="material-icons-round text-sm ml-1">arrow_forward</span>
               </div>
             </article>

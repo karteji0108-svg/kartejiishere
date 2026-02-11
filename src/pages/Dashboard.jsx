@@ -1,10 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import { useRamadan } from '../context/RamadanContext';
 
 const Dashboard = () => {
+  const { isRamadan } = useRamadan();
+  const [timeLeft, setTimeLeft] = useState('00:00:00');
+  const [nextPrayer, setNextPrayer] = useState('Maghrib');
+
+  useEffect(() => {
+    if (!isRamadan) return;
+
+    // Simple countdown simulation to 18:00 (Maghrib)
+    const timer = setInterval(() => {
+      const now = new Date();
+      const target = new Date();
+      target.setHours(18, 0, 0, 0);
+
+      if (now > target) {
+        // If past Maghrib, count to Imsak (04:30 next day)
+        target.setDate(target.getDate() + 1);
+        target.setHours(4, 30, 0, 0);
+        setNextPrayer('Imsak');
+      } else {
+        setNextPrayer('Maghrib');
+      }
+
+      const diff = target - now;
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isRamadan]);
+
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-100 h-screen overflow-hidden flex flex-col relative">
+    <div className={`font-display text-slate-800 dark:text-slate-100 h-screen overflow-hidden flex flex-col relative transition-colors duration-500
+      ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-background-light dark:bg-background-dark'}`}>
       {/* Top Status Bar Area (Simulated for iOS) */}
       <div className="h-12 w-full shrink-0"></div>
 
@@ -16,13 +51,15 @@ const Dashboard = () => {
             <div className="relative">
               <img
                 alt="Admin Avatar"
-                className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm"
+              className={`w-12 h-12 rounded-full object-cover border-2 shadow-sm ${isRamadan ? 'border-ramadan-gold ring-2 ring-ramadan-gold/30' : 'border-white dark:border-slate-700'}`}
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-su39Htc4wi3TEewyRyPHSAqUFOG3GpB2xCageLYkYvMgZG5tM2dYwAXhVxKLEpWpMX1Zw7JvNeZRCA00kptWVYJKM6m7HbPr6vUcTQOAfM7WLd6xk4pFbDIuoBZkZn9-Qi_xYHAM6Fx0Fq5gb9BSrV6iyE9S-_rU9ZZVqTx9nhUwqsoLMKizjmQ6un-qrBVHInm_NCdIn9eNxLqsgGAKOUNlPUhmXyclEAfe1IfK7SvzDBIxq4yzV8aAjFJeFGCEeIaWVrPcNlo"
               />
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-background-dark"></div>
             </div>
             <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Selamat Pagi,</p>
+            <p className={`text-sm font-medium ${isRamadan ? 'text-ramadan-primary dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
+              {isRamadan ? 'Marhaban ya Ramadhan,' : 'Selamat Pagi,'}
+            </p>
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">Budi Santoso</h1>
             </div>
           </div>
@@ -31,6 +68,37 @@ const Dashboard = () => {
             <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
           </button>
         </header>
+
+      {/* Ramadan Special Section */}
+      {isRamadan && (
+        <section className="mb-8">
+          <div className="bg-gradient-to-r from-ramadan-bg to-ramadan-primary rounded-2xl p-5 text-white shadow-lg shadow-emerald-600/20 relative overflow-hidden">
+             {/* Decor */}
+            <div className="absolute top-0 right-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+               <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
+                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fillOpacity="0"/>
+                 <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
+               </svg>
+            </div>
+
+            <div className="relative z-10 flex justify-between items-center">
+              <div>
+                <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider mb-1">Menuju {nextPrayer}</p>
+                <h2 className="text-3xl font-bold font-mono tracking-wide">{timeLeft}</h2>
+                <p className="text-emerald-100 text-sm mt-1 flex items-center gap-1">
+                  <span className="material-icons-round text-sm">location_on</span> Jakarta Selatan
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-2 ml-auto">
+                   <span className="material-icons-round text-2xl">{nextPrayer === 'Maghrib' ? 'nights_stay' : 'wb_twilight'}</span>
+                </div>
+                <p className="text-xs font-medium">Jadwal Sholat</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
         {/* Summary Cards Section */}
         <section className="mb-8">

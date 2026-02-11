@@ -1,8 +1,11 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
+import { useRamadan } from '../context/RamadanContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { isRamadan } = useRamadan();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -10,12 +13,24 @@ const Login = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display antialiased h-screen flex flex-col justify-between selection:bg-primary/20 selection:text-primary">
+    <div className={`font-display antialiased h-screen flex flex-col justify-between relative transition-colors duration-500
+      ${isRamadan
+        ? 'bg-gradient-to-b from-ramadan-bg to-emerald-900 text-white selection:bg-ramadan-gold/30 selection:text-ramadan-gold'
+        : 'bg-background-light dark:bg-background-dark selection:bg-primary/20 selection:text-primary'
+      }`}
+    >
+
+      {/* Theme Toggle - Absolute Top Right */}
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
+
       {/* Header / Branding Section */}
       <header className="flex-1 flex flex-col items-center justify-end pb-8 px-6">
         <div className="w-full max-w-sm mx-auto text-center space-y-6">
           {/* Logo Container */}
-          <div className="relative w-24 h-24 mx-auto rounded-2xl bg-white dark:bg-gray-800 shadow-xl shadow-primary/10 flex items-center justify-center transform transition-transform hover:scale-105 duration-300">
+          <div className={`relative w-24 h-24 mx-auto rounded-2xl shadow-xl flex items-center justify-center transform transition-transform hover:scale-105 duration-300
+            ${isRamadan ? 'bg-white/10 shadow-ramadan-gold/20 backdrop-blur-sm border border-ramadan-gold/30' : 'bg-white dark:bg-gray-800 shadow-primary/10'}`}>
             <img
               alt="Karang Taruna Logo Symbol"
               className="w-16 h-16 object-contain opacity-90"
@@ -23,10 +38,15 @@ const Login = () => {
             />
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            {isRamadan && (
+              <p className="text-ramadan-gold font-semibold tracking-wide uppercase text-xs animate-pulse">
+                Marhaban ya Ramadhan
+              </p>
+            )}
+            <h1 className={`text-3xl font-bold tracking-tight ${isRamadan ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
               Karang Taruna
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+            <p className={`text-sm font-medium ${isRamadan ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'}`}>
               Manage your organization effectively.
             </p>
           </div>
@@ -85,7 +105,11 @@ const Login = () => {
           </div>
           {/* Submit Button */}
           <button
-            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-primary/20 text-sm font-semibold text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform active:scale-[0.98] mt-4"
+            className={`w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 transform active:scale-[0.98] mt-4
+              ${isRamadan
+                ? 'bg-gradient-to-r from-ramadan-primary to-ramadan-bg border-ramadan-gold/30 hover:from-emerald-500 hover:to-emerald-800 focus:ring-ramadan-gold shadow-ramadan-gold/20'
+                : 'bg-primary hover:bg-blue-600 focus:ring-primary shadow-primary/20'
+              }`}
             type="submit"
           >
             Log In

@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import { useTheme } from '../context/ThemeContext';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => {
     // In a real app, clear auth tokens here
@@ -11,9 +13,9 @@ const Profile = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 min-h-screen flex flex-col justify-between">
+    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 h-screen overflow-hidden flex flex-col justify-between">
       {/* Top Status Bar Area (Simulated for iOS) */}
-      <div className="h-12 w-full bg-background-light dark:bg-background-dark sticky top-0 z-50"></div>
+      <div className="h-12 w-full bg-background-light dark:bg-background-dark shrink-0"></div>
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto no-scrollbar pb-24 px-5">
@@ -78,6 +80,34 @@ const Profile = () => {
             <span className="material-icons-round text-gray-400">chevron_right</span>
           </button>
 
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1 mt-6 mb-2">Tampilan</h3>
+
+          <div className="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-500">
+                <span className="material-icons-round">
+                    {theme === 'dark' ? 'dark_mode' : 'light_mode'}
+                </span>
+              </div>
+              <div className="text-left">
+                  <span className="block font-medium text-gray-900 dark:text-white">Tema Gelap</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {theme === 'dark' ? 'Aktif' : 'Tidak aktif'}
+                  </span>
+              </div>
+            </div>
+            {/* Toggle Switch */}
+            <button
+                onClick={toggleTheme}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${theme === 'dark' ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
+            >
+                <span className="sr-only">Toggle Dark Mode</span>
+                <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+            </button>
+          </div>
+
           <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1 mt-6 mb-2">Lainnya</h3>
 
           <button className="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group">
@@ -106,6 +136,9 @@ const Profile = () => {
         <div className="text-center mt-8 text-xs text-gray-400">
           Versi Aplikasi 1.0.0
         </div>
+
+        {/* Bottom Spacer to ensure content isn't hidden by nav */}
+        <div className="h-8"></div>
       </main>
 
       <BottomNav />

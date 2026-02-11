@@ -12,10 +12,12 @@ import ActivityGallery from './pages/ActivityGallery';
 import Announcements from './pages/Announcements';
 import CreateAnnouncement from './pages/CreateAnnouncement';
 import Profile from './pages/Profile';
+import RamadanDecorations from './components/RamadanDecorations';
 
 function App() {
   return (
     <Router>
+      <RamadanDecorations />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
