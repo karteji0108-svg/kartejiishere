@@ -1,15 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
 import { useRamadan } from '../context/RamadanContext';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const { isRamadan } = useRamadan();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/dashboard');
+    setError('');
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to log in. Please check your email and password.');
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -56,6 +74,11 @@ const Login = () => {
       {/* Form Section */}
       <main className="flex-1 px-6 w-full max-w-sm mx-auto">
         <form className="space-y-5" onSubmit={handleSubmit}>
+          {error && (
+             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{error}</span>
+             </div>
+          )}
           {/* Email Field */}
           <div className="space-y-1.5">
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1" htmlFor="email">
@@ -71,6 +94,9 @@ const Login = () => {
                 name="email"
                 placeholder="member@karangtaruna.org"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
           </div>
@@ -94,6 +120,9 @@ const Login = () => {
                 name="password"
                 placeholder="••••••••"
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
               />
               <button
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer focus:outline-none"
@@ -109,10 +138,11 @@ const Login = () => {
               ${isRamadan
                 ? 'bg-gradient-to-r from-ramadan-primary to-ramadan-bg border-ramadan-gold/30 hover:from-emerald-500 hover:to-emerald-800 focus:ring-ramadan-gold shadow-ramadan-gold/20'
                 : 'bg-primary hover:bg-blue-600 focus:ring-primary shadow-primary/20'
-              }`}
+              } ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
             type="submit"
+            disabled={loading}
           >
-            Log In
+            {loading ? 'Loading...' : 'Log In'}
           </button>
         </form>
 
