@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import { useAuth } from '../context/AuthContext';
 
 const CreateActivity = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
@@ -65,6 +67,10 @@ const CreateActivity = () => {
     setLoading(true);
 
     try {
+      if (!currentUser) {
+          throw new Error("Anda harus login untuk membuat kegiatan.");
+      }
+
       let imageURL = null;
       if (image) {
         imageURL = await uploadToCloudinary(image);
@@ -79,12 +85,14 @@ const CreateActivity = () => {
         imageURL,
         status: 'open', // Default status
         createdAt: new Date().toISOString(),
+        createdBy: currentUser.uid,
+        createdByName: currentUser.displayName || currentUser.email
       });
 
       navigate('/activities');
     } catch (error) {
       console.error("Error adding activity: ", error);
-      alert("Gagal membuat kegiatan.");
+      alert(`Gagal membuat kegiatan: ${error.message}`);
     } finally {
       setLoading(false);
     }

@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import { useAuth } from '../context/AuthContext';
 
 const CreateAnnouncement = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [type, setType] = useState('Penting');
@@ -26,6 +28,10 @@ const CreateAnnouncement = () => {
     setUploading(true);
 
     try {
+      if (!currentUser) {
+          throw new Error("Anda harus login untuk membuat pengumuman.");
+      }
+
       let imageURL = null;
       if (image) {
         imageURL = await uploadToCloudinary(image);
@@ -37,12 +43,14 @@ const CreateAnnouncement = () => {
         type,
         imageURL,
         createdAt: new Date().toISOString(),
+        createdBy: currentUser.uid,
+        createdByName: currentUser.displayName || currentUser.email
       });
 
       navigate('/announcements');
     } catch (error) {
       console.error("Error adding document: ", error);
-      alert('Gagal membuat pengumuman');
+      alert(`Gagal membuat pengumuman: ${error.message}`);
     } finally {
       setUploading(false);
     }

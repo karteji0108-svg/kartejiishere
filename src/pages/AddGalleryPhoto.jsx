@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import { useAuth } from '../context/AuthContext';
 
 const AddGalleryPhoto = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [title, setTitle] = useState('');
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -29,17 +31,23 @@ const AddGalleryPhoto = () => {
     setUploading(true);
 
     try {
+      if (!currentUser) {
+          throw new Error("Anda harus login untuk mengupload foto.");
+      }
+
       const imageURL = await uploadToCloudinary(image);
       await addDoc(collection(db, 'gallery'), {
         title,
         imageURL,
         date,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        createdBy: currentUser.uid,
+        createdByName: currentUser.displayName || currentUser.email
       });
       navigate('/gallery');
     } catch (error) {
       console.error("Error adding photo: ", error);
-      alert('Gagal mengupload foto');
+      alert(`Gagal mengupload foto: ${error.message}`);
     } finally {
       setUploading(false);
     }

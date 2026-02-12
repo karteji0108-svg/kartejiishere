@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { useAuth } from '../context/AuthContext';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState('expense');
@@ -17,18 +19,26 @@ const AddTransaction = () => {
     setLoading(true);
 
     try {
-      await addDoc(collection(db, 'finance'), {
+      if (!currentUser) {
+          throw new Error("Anda harus login untuk menambah transaksi.");
+      }
+
+      const transactionData = {
         title,
         amount: Number(amount),
         type,
         category,
         date,
-        createdAt: new Date().toISOString()
-      });
+        createdAt: new Date().toISOString(),
+        createdBy: currentUser.uid,
+        createdByName: currentUser.displayName || currentUser.email
+      };
+
+      await addDoc(collection(db, 'finance'), transactionData);
       navigate('/finance');
     } catch (error) {
       console.error("Error adding transaction: ", error);
-      alert("Gagal menambahkan transaksi.");
+      alert(`Gagal menambahkan transaksi: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -93,6 +103,7 @@ const AddTransaction = () => {
               className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
+              required
             >
               <option value="">Pilih Kategori</option>
               {type === 'income' ? (
