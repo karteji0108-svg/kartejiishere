@@ -41,6 +41,8 @@ const AddGalleryPhoto = () => {
         title,
         imageURL,
         date,
+        description: '', // Adding empty description just in case
+        status: 'active', // Adding status just in case
         createdAt: new Date().toISOString(),
         createdBy: currentUser.uid,
         createdByName: currentUser.displayName || currentUser.email
