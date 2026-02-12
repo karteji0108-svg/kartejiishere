@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import toast from 'react-hot-toast';
 
 const AddMember = () => {
   const navigate = useNavigate();
@@ -42,10 +43,11 @@ const AddMember = () => {
         isManualEntry: true
       });
 
+      toast.success("Anggota berhasil ditambahkan!");
       navigate('/members');
     } catch (error) {
       console.error("Error adding member: ", error);
-      alert("Gagal menambahkan anggota.");
+      toast.error(`Gagal menambahkan anggota: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -53,20 +55,20 @@ const AddMember = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col">
-      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
+      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10 animate-fade-in-down">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <span className="material-icons">arrow_back</span>
         </button>
         <h1 className="text-lg font-bold">Tambah Anggota</h1>
       </header>
 
-      <main className="flex-1 p-5 max-w-md mx-auto w-full">
+      <main className="flex-1 p-5 max-w-md mx-auto w-full animate-fade-in-up">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium mb-1">Nama Lengkap</label>
             <input
               type="text"
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
@@ -76,7 +78,7 @@ const AddMember = () => {
           <div>
             <label className="block text-sm font-medium mb-1">Jabatan</label>
             <select
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
@@ -92,7 +94,7 @@ const AddMember = () => {
             <label className="block text-sm font-medium mb-1">No. Telepon</label>
             <input
               type="tel"
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
@@ -101,7 +103,7 @@ const AddMember = () => {
           <div>
             <label className="block text-sm font-medium mb-1">Status</label>
             <select
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
@@ -113,14 +115,14 @@ const AddMember = () => {
           <div>
             <label className="block text-sm font-medium mb-1">Foto Profil</label>
             <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center border border-gray-300 dark:border-gray-600">
+                <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden flex items-center justify-center border border-gray-300 dark:border-slate-600 shadow-sm">
                     {preview ? (
                         <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                         <span className="material-icons text-gray-400 text-3xl">person</span>
                     )}
                 </div>
-                <label className="flex-1">
+                <label className="flex-1 cursor-pointer">
                     <span className="sr-only">Choose profile photo</span>
                     <input
                       type="file"
@@ -130,6 +132,7 @@ const AddMember = () => {
                         file:text-sm file:font-semibold
                         file:bg-primary/10 file:text-primary
                         hover:file:bg-primary/20
+                        transition-colors
                       "
                       onChange={handlePhotoChange}
                       accept="image/*"
@@ -141,7 +144,7 @@ const AddMember = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-colors ${loading ? 'opacity-70' : ''}`}
+            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-transform active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {loading ? 'Menyimpan...' : 'Simpan Anggota'}
           </button>
