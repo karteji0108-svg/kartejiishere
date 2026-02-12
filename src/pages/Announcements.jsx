@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 const Announcements = () => {
@@ -12,25 +12,37 @@ const Announcements = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAnnouncements = async () => {
-      setLoading(true);
-      try {
-        const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setAnnouncements(data);
-      } catch (error) {
-        console.error("Error fetching announcements: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAnnouncements();
   }, []);
+
+  const fetchAnnouncements = async () => {
+    setLoading(true);
+    try {
+      const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setAnnouncements(data);
+    } catch (error) {
+      console.error("Error fetching announcements: ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus pengumuman ini?")) {
+      try {
+        await deleteDoc(doc(db, 'announcements', id));
+        fetchAnnouncements(); // Refresh list
+      } catch (error) {
+        console.error("Error deleting announcement: ", error);
+        alert("Gagal menghapus pengumuman.");
+      }
+    }
+  };
 
   const getBadgeColor = (type) => {
     if (isRamadan) return 'bg-ramadan-gold text-white';
@@ -124,9 +136,18 @@ const Announcements = () => {
                 <div className="text-center py-8 text-gray-500">Belum ada pengumuman.</div>
             ) : (
                 announcements.map((item) => (
-                    <article key={item.id} className={`group rounded-xl p-4 shadow-sm border-l-4 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden
+                    <article key={item.id} className={`group rounded-xl p-4 shadow-sm border-l-4 hover:shadow-md transition-shadow relative overflow-hidden
                         ${isRamadan ? 'bg-white dark:bg-slate-800 ring-1 ring-ramadan-gold/20' : 'bg-surface-light dark:bg-surface-dark'}
                         ${getBorderColor(item.type)}`}>
+
+                        {/* Delete Button (Absolute Top Right) */}
+                        <button
+                             onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                             className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-red-50 text-red-500 dark:bg-black/20 dark:hover:bg-red-900/30 z-10 transition-colors shadow-sm"
+                             title="Hapus Pengumuman"
+                        >
+                             <span className="material-icons text-sm">delete</span>
+                        </button>
 
                         {item.imageURL && (
                             <div className="mb-3 h-32 rounded-lg overflow-hidden relative">
@@ -135,7 +156,7 @@ const Announcements = () => {
                             </div>
                         )}
 
-                        <div className="flex justify-between items-start mb-2">
+                        <div className="flex justify-between items-start mb-2 pr-8">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                             ${getBadgeColor(item.type)}`}>
                             {item.type || 'Umum'}

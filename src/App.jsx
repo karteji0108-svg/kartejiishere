@@ -11,6 +11,7 @@ import Activities from './pages/Activities';
 import CreateActivity from './pages/CreateActivity';
 import ActivityDetail from './pages/ActivityDetail';
 import ActivityGallery from './pages/ActivityGallery';
+import AddGalleryPhoto from './pages/AddGalleryPhoto';
 import Announcements from './pages/Announcements';
 import CreateAnnouncement from './pages/CreateAnnouncement';
 import Profile from './pages/Profile';
@@ -57,6 +58,7 @@ function App() {
           <Route path="/announcements/create" element={<CreateAnnouncement />} />
           <Route path="/activities/create" element={<CreateActivity />} />
           <Route path="/finance/add" element={<AddTransaction />} />
+          <Route path="/gallery/add" element={<AddGalleryPhoto />} />
         </Route>
 
       </Routes>

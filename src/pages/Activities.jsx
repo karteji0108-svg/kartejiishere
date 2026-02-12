@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 const Activities = () => {
@@ -12,26 +12,38 @@ const Activities = () => {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const fetchActivities = async () => {
-      setLoading(true);
-      try {
-        const q = query(collection(db, 'activities'), orderBy('date', 'asc'));
-        const querySnapshot = await getDocs(q);
-        const activityData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setActivities(activityData);
-      } catch (error) {
-        console.error("Error fetching activities: ", error);
-        setActivities([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchActivities();
   }, []);
+
+  const fetchActivities = async () => {
+    setLoading(true);
+    try {
+      const q = query(collection(db, 'activities'), orderBy('date', 'asc'));
+      const querySnapshot = await getDocs(q);
+      const activityData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setActivities(activityData);
+    } catch (error) {
+      console.error("Error fetching activities: ", error);
+      setActivities([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus kegiatan ini?")) {
+      try {
+        await deleteDoc(doc(db, 'activities', id));
+        fetchActivities(); // Refresh list
+      } catch (error) {
+        console.error("Error deleting activity: ", error);
+        alert("Gagal menghapus kegiatan.");
+      }
+    }
+  };
 
   const filteredActivities = activities.filter(activity =>
     activity.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -115,8 +127,17 @@ const Activities = () => {
                  )}
 
                  {/* Activity Card */}
-                 <div className={`group rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-300 mt-3
+                 <div className={`group rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-300 mt-3 relative
                     ${isRamadan ? 'bg-white dark:bg-slate-800 border-ramadan-gold/30 ring-1 ring-ramadan-gold/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}>
+
+                    {/* Delete Button (Absolute) */}
+                    <button
+                         onClick={(e) => { e.preventDefault(); handleDelete(activity.id); }}
+                         className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-red-50 text-red-500 dark:bg-black/20 dark:hover:bg-red-900/30 z-20 transition-colors shadow-sm"
+                         title="Hapus Kegiatan"
+                    >
+                         <span className="material-icons text-sm">delete</span>
+                    </button>
 
                     {/* Image Section */}
                     {activity.imageURL ? (
@@ -136,7 +157,6 @@ const Activities = () => {
                               Special
                             </span>
                           )}
-                          <span className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 text-xs px-2.5 py-1 rounded-full font-medium">Open</span>
                         </div>
                       </div>
                     ) : (
@@ -146,7 +166,7 @@ const Activities = () => {
                             <span className="text-2xl font-bold text-primary">{getDay(activity.date)}</span>
                          </div>
                          <div className="p-3 flex-1 flex flex-col justify-between">
-                             <div>
+                             <div className="pr-8">
                                 <div className="flex justify-between items-start mb-2">
                                   <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
                                     {activity.title}
@@ -167,7 +187,7 @@ const Activities = () => {
                     {/* Content Section for Image Card */}
                     {activity.imageURL && (
                       <div className="p-4">
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-start justify-between mb-2 pr-8">
                            <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
                              {activity.title}
                            </h3>

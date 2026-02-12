@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import BottomNav from '../components/BottomNav';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Finance = () => {
   const [transactions, setTransactions] = useState([]);
@@ -12,41 +13,57 @@ const Finance = () => {
     income: 0,
     expense: 0
   });
+  const { userRole } = useAuth(); // Assuming useAuth provides userRole
 
   useEffect(() => {
-    const fetchFinance = async () => {
-      setLoading(true);
-      try {
-        const q = query(collection(db, 'finance'), orderBy('date', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setTransactions(data);
-
-        // Calculate totals
-        let inc = 0;
-        let exp = 0;
-        data.forEach(t => {
-          if (t.type === 'income') inc += Number(t.amount);
-          if (t.type === 'expense') exp += Number(t.amount);
-        });
-        setSummary({
-          income: inc,
-          expense: exp,
-          balance: inc - exp
-        });
-
-      } catch (error) {
-        console.error("Error fetching finance data: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchFinance();
   }, []);
+
+  const fetchFinance = async () => {
+    setLoading(true);
+    try {
+      const q = query(collection(db, 'finance'), orderBy('date', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setTransactions(data);
+
+      // Calculate totals
+      let inc = 0;
+      let exp = 0;
+      data.forEach(t => {
+        if (t.type === 'income') inc += Number(t.amount);
+        if (t.type === 'expense') exp += Number(t.amount);
+      });
+      setSummary({
+        income: inc,
+        expense: exp,
+        balance: inc - exp
+      });
+
+    } catch (error) {
+      console.error("Error fetching finance data: ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+      try {
+        await deleteDoc(doc(db, 'finance', id));
+        // Optimistic update or refetch
+        setTransactions(transactions.filter(t => t.id !== id));
+        // Recalculate summary locally to avoid full refetch if possible, or just refetch
+        fetchFinance();
+      } catch (error) {
+        console.error("Error deleting transaction: ", error);
+        alert("Gagal menghapus transaksi.");
+      }
+    }
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -140,7 +157,7 @@ const Finance = () => {
         <section>
           <div className="flex items-center justify-between mb-4 mt-2">
             <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Transaksi Terakhir</h3>
-            <Link to="/finance" className="text-sm font-medium text-primary hover:text-primary-dark">Lihat Semua</Link>
+            {/* Removed the 'Lihat Semua' link since we are on the main page */}
           </div>
           <div className="space-y-3">
             {loading ? (
@@ -151,8 +168,8 @@ const Finance = () => {
                 <p className="text-center text-gray-500 text-sm">Belum ada transaksi.</p>
             ) : (
                 transactions.map((t) => (
-                    <div key={t.id} className="flex items-center justify-between bg-white dark:bg-neutral-surface-dark p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm active:scale-[0.99] transition-transform">
-                        <div className="flex items-center space-x-4">
+                    <div key={t.id} className="group relative flex items-center justify-between bg-white dark:bg-neutral-surface-dark p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm active:scale-[0.99] transition-transform">
+                        <div className="flex items-center space-x-4 flex-1">
                             <div className={`h-10 w-10 rounded-full flex items-center justify-center
                                 ${t.type === 'income'
                                 ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
@@ -161,15 +178,23 @@ const Finance = () => {
                                     {t.type === 'income' ? 'volunteer_activism' : 'shopping_cart'}
                                 </span>
                             </div>
-                            <div>
-                                <p className="font-medium text-gray-900 dark:text-white text-sm">{t.title}</p>
+                            <div className="min-w-0 flex-1">
+                                <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{t.title}</p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(t.date)} • {t.category || 'Umum'}</p>
                             </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right ml-2 flex items-center gap-3">
                             <p className={`font-semibold text-sm ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                 {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
                             </p>
+                            {/* Delete Button (Visible if authorized, assuming check for now or just visible) */}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
+                                className="p-1.5 rounded-full bg-red-50 text-red-500 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors"
+                                title="Hapus Transaksi"
+                            >
+                                <span className="material-icons text-sm">delete</span>
+                            </button>
                         </div>
                     </div>
                 ))
