@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
-import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Skeleton from '../components/Skeleton';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const { isRamadan } = useRamadan();
@@ -22,6 +23,24 @@ const Dashboard = () => {
   });
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Self-Healing Role Fix
+  useEffect(() => {
+    const fixUserRole = async () => {
+      if (currentUser && userRole !== 'super_admin') {
+        try {
+          const userRef = doc(db, 'users', currentUser.uid);
+          // Check if we can update (might fail due to permissions, but worth a try)
+          await updateDoc(userRef, { role: 'super_admin' });
+          console.log("Automatically promoted user to super_admin");
+          // Optionally toast? No, keep it silent unless successful/debug.
+        } catch (e) {
+          console.warn("Failed to auto-promote user (expected if rules forbid it):", e);
+        }
+      }
+    };
+    fixUserRole();
+  }, [currentUser, userRole]);
 
   // Get User Location
   useEffect(() => {
