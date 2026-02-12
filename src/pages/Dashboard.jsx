@@ -5,6 +5,7 @@ import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
 import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import Skeleton from '../components/Skeleton';
 
 const Dashboard = () => {
   const { isRamadan } = useRamadan();
@@ -206,7 +207,7 @@ const Dashboard = () => {
           {/* Horizontal Scroll Container */}
           <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-5 px-5 snap-x">
             {/* Balance Card (Primary) */}
-            <div className="snap-start shrink-0 w-[280px] bg-gradient-to-br from-primary to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
+            <div className="snap-start shrink-0 w-[280px] bg-gradient-to-br from-primary to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden transition-transform hover:scale-[1.02]">
               <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
               <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-black opacity-10 rounded-full blur-xl"></div>
               <div className="flex items-start justify-between mb-6 relative z-10">
@@ -216,30 +217,42 @@ const Dashboard = () => {
               </div>
               <div className="relative z-10">
                 <p className="text-blue-100 text-sm mb-1">Saldo Kas Aktif</p>
-                <h3 className="text-2xl font-bold tracking-tight">{loading ? '...' : formatCurrency(stats.balance)}</h3>
+                {loading ? (
+                  <Skeleton className="h-8 w-32 bg-white/30" />
+                ) : (
+                  <h3 className="text-2xl font-bold tracking-tight">{formatCurrency(stats.balance)}</h3>
+                )}
               </div>
             </div>
             {/* Members Card */}
-            <div className="snap-start shrink-0 w-[160px] bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div className="snap-start shrink-0 w-[160px] bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-2">
                 <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-primary">
                   <span className="material-icons-round">groups</span>
                 </div>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{loading ? '...' : stats.memberCount}</h3>
+                {loading ? (
+                  <Skeleton className="h-8 w-16 mb-1" />
+                ) : (
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{stats.memberCount}</h3>
+                )}
                 <p className="text-sm text-slate-500 dark:text-slate-400">Total Anggota</p>
               </div>
             </div>
             {/* Activities Card */}
-            <div className="snap-start shrink-0 w-[160px] bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div className="snap-start shrink-0 w-[160px] bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-2">
                 <div className="p-2 bg-orange-50 dark:bg-orange-900/30 rounded-lg text-orange-500">
                   <span className="material-icons-round">event_note</span>
                 </div>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{loading ? '...' : stats.activityCount}</h3>
+                {loading ? (
+                  <Skeleton className="h-8 w-16 mb-1" />
+                ) : (
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{stats.activityCount}</h3>
+                )}
                 <p className="text-sm text-slate-500 dark:text-slate-400">Agenda Baru</p>
               </div>
             </div>
@@ -249,25 +262,25 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <section className="mb-8 grid grid-cols-4 gap-3">
           <Link to="/members/add" className="flex flex-col items-center gap-2 group">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform">
+            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform hover:shadow-md hover:border-primary/30">
               <span className="material-icons-round">person_add</span>
             </div>
             <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Tambah<br/>Anggota</span>
           </Link>
           <Link to="/activities/create" className="flex flex-col items-center gap-2 group">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform">
+            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform hover:shadow-md hover:border-primary/30">
               <span className="material-icons-round">post_add</span>
             </div>
             <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Buat<br/>Kegiatan</span>
           </Link>
           <Link to="/announcements/create" className="flex flex-col items-center gap-2 group">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform">
+            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform hover:shadow-md hover:border-primary/30">
               <span className="material-icons-round">campaign</span>
             </div>
             <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Buat<br/>Info</span>
           </Link>
           <Link to="/gallery" className="flex flex-col items-center gap-2 group">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform">
+            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform hover:shadow-md hover:border-primary/30">
               <span className="material-icons-round">collections</span>
             </div>
             <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Galeri<br/>Foto</span>
@@ -282,12 +295,18 @@ const Dashboard = () => {
           </div>
           <div className="flex flex-col gap-3">
             {loading ? (
-               <p className="text-center text-gray-500 text-sm py-4">Memuat data...</p>
+               <>
+                 <Skeleton className="h-20 w-full rounded-xl" />
+                 <Skeleton className="h-20 w-full rounded-xl" />
+               </>
             ) : recentUpdates.length === 0 ? (
                <p className="text-center text-gray-500 text-sm py-4">Belum ada update terbaru.</p>
             ) : (
-               recentUpdates.map(item => (
-                  <div key={item.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-start gap-4">
+               recentUpdates.map((item, index) => (
+                  <div key={item.id}
+                       className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-start gap-4 hover:shadow-md transition-all animate-fade-in-up"
+                       style={{ animationDelay: `${index * 100}ms` }}
+                  >
                     <div className={`shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${item.type === 'activity' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'bg-green-50 dark:bg-green-900/30 text-green-600'}`}>
                       <span className="material-icons-round">{item.type === 'activity' ? 'event' : 'campaign'}</span>
                     </div>

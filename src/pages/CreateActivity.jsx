@@ -4,6 +4,7 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const CreateActivity = () => {
   const navigate = useNavigate();
@@ -23,20 +24,11 @@ const CreateActivity = () => {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
-                // Ideally, we'd reverse geocode this coordinates to an address string using an API.
-                // For this implementation, we will store the coordinates text or try to open a map link.
-                // Or just simulate "Current Location" if no API key for Geocoding (Google Maps API usually requires key).
-                // Let's just put lat/long string for now, or a placeholder if we can't reverse geocode without extra API keys.
-                // But the user asked to "ambil lokasi sesuai real tempat lokasi".
-
-                // Let's try to fetch from a free openstreetmap API (Nominatim)
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
                     .then(res => res.json())
                     .then(data => {
                         if (data && data.display_name) {
-                            // Simplify address
                             const parts = data.display_name.split(',');
-                            // Take first 2-3 parts
                             const simpleAddress = parts.slice(0, 3).join(',');
                             setLocation(simpleAddress);
                         } else {
@@ -52,12 +44,12 @@ const CreateActivity = () => {
             },
             (error) => {
                 console.error(error);
-                alert("Gagal mengambil lokasi. Pastikan GPS aktif.");
+                toast.error("Gagal mengambil lokasi. Pastikan GPS aktif.");
                 setLocationLoading(false);
             }
         );
     } else {
-        alert("Geolocation tidak didukung oleh browser ini.");
+        toast.error("Geolocation tidak didukung oleh browser ini.");
         setLocationLoading(false);
     }
   };
@@ -83,16 +75,17 @@ const CreateActivity = () => {
         time,
         location,
         imageURL,
-        status: 'open', // Default status
+        status: 'open',
         createdAt: new Date().toISOString(),
         createdBy: currentUser.uid,
         createdByName: currentUser.displayName || currentUser.email
       });
 
+      toast.success('Kegiatan berhasil dibuat!');
       navigate('/activities');
     } catch (error) {
       console.error("Error adding activity: ", error);
-      alert(`Gagal membuat kegiatan: ${error.message}`);
+      toast.error(`Gagal membuat kegiatan: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -100,20 +93,20 @@ const CreateActivity = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col">
-      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
+      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10 animate-fade-in-down">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <span className="material-icons">arrow_back</span>
         </button>
         <h1 className="text-lg font-bold">Buat Kegiatan Baru</h1>
       </header>
 
-      <main className="flex-1 p-5 max-w-md mx-auto w-full pb-24">
+      <main className="flex-1 p-5 max-w-md mx-auto w-full pb-24 animate-fade-in-up">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium mb-1">Judul Kegiatan</label>
             <input
               type="text"
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -123,7 +116,7 @@ const CreateActivity = () => {
           <div>
             <label className="block text-sm font-medium mb-1">Deskripsi</label>
             <textarea
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 h-24"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 h-24 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
@@ -135,7 +128,7 @@ const CreateActivity = () => {
                 <label className="block text-sm font-medium mb-1">Tanggal</label>
                 <input
                 type="date"
-                className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+                className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
@@ -145,7 +138,7 @@ const CreateActivity = () => {
                 <label className="block text-sm font-medium mb-1">Jam</label>
                 <input
                 type="time"
-                className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+                className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 required
@@ -158,7 +151,7 @@ const CreateActivity = () => {
             <div className="flex gap-2">
                 <input
                 type="text"
-                className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3"
+                className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Nama tempat / Alamat"
@@ -168,7 +161,7 @@ const CreateActivity = () => {
                     type="button"
                     onClick={handleGetLocation}
                     disabled={locationLoading}
-                    className="bg-gray-100 dark:bg-slate-700 p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-w-[50px]"
+                    className="bg-gray-100 dark:bg-slate-700 p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-w-[50px] active:scale-95 transform"
                     title="Ambil Lokasi Saat Ini"
                 >
                     {locationLoading ? (
@@ -184,7 +177,7 @@ const CreateActivity = () => {
             <label className="block text-sm font-medium mb-1">Poster Kegiatan</label>
             <input
               type="file"
-              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer"
               onChange={(e) => setImage(e.target.files[0])}
               accept="image/*"
             />
@@ -193,7 +186,7 @@ const CreateActivity = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-colors ${loading ? 'opacity-70' : ''}`}
+            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-transform active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {loading ? 'Memproses...' : 'Buat Kegiatan'}
           </button>

@@ -3,7 +3,7 @@ import BottomNav from '../components/BottomNav';
 import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import Skeleton from '../components/Skeleton';
 
 const Finance = () => {
   const [transactions, setTransactions] = useState([]);
@@ -13,7 +13,6 @@ const Finance = () => {
     income: 0,
     expense: 0
   });
-  const { userRole } = useAuth(); // Assuming useAuth provides userRole
 
   useEffect(() => {
     fetchFinance();
@@ -54,9 +53,7 @@ const Finance = () => {
     if (window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
       try {
         await deleteDoc(doc(db, 'finance', id));
-        // Optimistic update or refetch
         setTransactions(transactions.filter(t => t.id !== id));
-        // Recalculate summary locally to avoid full refetch if possible, or just refetch
         fetchFinance();
       } catch (error) {
         console.error("Error deleting transaction: ", error);
@@ -87,7 +84,7 @@ const Finance = () => {
       <div className="h-12 w-full bg-background-light dark:bg-background-dark sticky top-0 z-50"></div>
 
       {/* Header Section */}
-      <header className="px-5 pt-2 pb-6 flex items-center justify-between sticky top-12 z-40 bg-background-light dark:bg-background-dark transition-colors duration-300">
+      <header className="px-5 pt-2 pb-6 flex items-center justify-between sticky top-12 z-40 bg-background-light dark:bg-background-dark transition-colors duration-300 animate-fade-in-down">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Keuangan</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Ringkasan Bendahara</p>
@@ -103,7 +100,7 @@ const Finance = () => {
       {/* Main Content */}
       <main className="px-5 space-y-6">
         {/* Balance Card */}
-        <section className="relative overflow-hidden bg-primary rounded-xl p-6 shadow-lg shadow-primary/30 text-white">
+        <section className="relative overflow-hidden bg-primary rounded-xl p-6 shadow-lg shadow-primary/30 text-white animate-fade-in-up">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-xl"></div>
           <div className="relative z-10">
@@ -111,28 +108,32 @@ const Finance = () => {
               <span className="text-primary-100 text-sm font-medium opacity-90">Saldo Total</span>
               <span className="material-icons text-white/80">account_balance_wallet</span>
             </div>
-            <h2 className="text-3xl font-bold mb-6 tracking-tight">{formatCurrency(summary.balance)}</h2>
+            {loading ? (
+                <Skeleton className="h-10 w-48 bg-white/30 mb-6" />
+            ) : (
+                <h2 className="text-3xl font-bold mb-6 tracking-tight">{formatCurrency(summary.balance)}</h2>
+            )}
             <div className="grid grid-cols-2 gap-4 border-t border-white/20 pt-4">
               <div>
                 <div className="flex items-center space-x-1 mb-1 text-primary-100/80 text-xs uppercase font-semibold tracking-wider">
                   <span className="material-icons text-sm">arrow_downward</span>
                   <span>Pemasukan</span>
                 </div>
-                <p className="text-lg font-semibold text-white">{formatCurrency(summary.income)}</p>
+                {loading ? <Skeleton className="h-6 w-24 bg-white/30" /> : <p className="text-lg font-semibold text-white">{formatCurrency(summary.income)}</p>}
               </div>
               <div>
                 <div className="flex items-center space-x-1 mb-1 text-primary-100/80 text-xs uppercase font-semibold tracking-wider">
                   <span className="material-icons text-sm">arrow_upward</span>
                   <span>Pengeluaran</span>
                 </div>
-                <p className="text-lg font-semibold text-white">{formatCurrency(summary.expense)}</p>
+                {loading ? <Skeleton className="h-6 w-24 bg-white/30" /> : <p className="text-lg font-semibold text-white">{formatCurrency(summary.expense)}</p>}
               </div>
             </div>
           </div>
         </section>
 
         {/* Analytics Chart Section Placeholder */}
-        <section className="bg-white dark:bg-neutral-surface-dark rounded-xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+        <section className="bg-white dark:bg-neutral-surface-dark rounded-xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm animate-fade-in-up">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900 dark:text-white">Arus Kas</h3>
             <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">Mingguan</span>
@@ -157,18 +158,22 @@ const Finance = () => {
         <section>
           <div className="flex items-center justify-between mb-4 mt-2">
             <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Transaksi Terakhir</h3>
-            {/* Removed the 'Lihat Semua' link since we are on the main page */}
           </div>
           <div className="space-y-3">
             {loading ? (
-                <div className="flex justify-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                </div>
+                <>
+                    <Skeleton className="h-16 w-full rounded-xl" />
+                    <Skeleton className="h-16 w-full rounded-xl" />
+                    <Skeleton className="h-16 w-full rounded-xl" />
+                </>
             ) : transactions.length === 0 ? (
-                <p className="text-center text-gray-500 text-sm">Belum ada transaksi.</p>
+                <p className="text-center text-gray-500 text-sm animate-fade-in-up">Belum ada transaksi.</p>
             ) : (
-                transactions.map((t) => (
-                    <div key={t.id} className="group relative flex items-center justify-between bg-white dark:bg-neutral-surface-dark p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm active:scale-[0.99] transition-transform">
+                transactions.map((t, index) => (
+                    <div key={t.id}
+                         className="group relative flex items-center justify-between bg-white dark:bg-neutral-surface-dark p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm active:scale-[0.99] transition-transform animate-fade-in-up"
+                         style={{ animationDelay: `${index * 50}ms` }}
+                    >
                         <div className="flex items-center space-x-4 flex-1">
                             <div className={`h-10 w-10 rounded-full flex items-center justify-center
                                 ${t.type === 'income'
@@ -187,7 +192,7 @@ const Finance = () => {
                             <p className={`font-semibold text-sm ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                 {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
                             </p>
-                            {/* Delete Button (Visible if authorized, assuming check for now or just visible) */}
+                            {/* Delete Button */}
                             <button
                                 onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
                                 className="p-1.5 rounded-full bg-red-50 text-red-500 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors"

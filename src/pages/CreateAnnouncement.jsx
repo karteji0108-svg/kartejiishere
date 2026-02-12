@@ -4,6 +4,7 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const CreateAnnouncement = () => {
   const navigate = useNavigate();
@@ -47,10 +48,11 @@ const CreateAnnouncement = () => {
         createdByName: currentUser.displayName || currentUser.email
       });
 
+      toast.success('Pengumuman berhasil dibuat!');
       navigate('/announcements');
     } catch (error) {
       console.error("Error adding document: ", error);
-      alert(`Gagal membuat pengumuman: ${error.message}`);
+      toast.error(`Gagal membuat pengumuman: ${error.message}`);
     } finally {
       setUploading(false);
     }
@@ -59,21 +61,21 @@ const CreateAnnouncement = () => {
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col">
       {/* Header */}
-      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
+      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10 animate-fade-in-down">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <span className="material-icons">arrow_back</span>
         </button>
         <h1 className="text-lg font-bold">Buat Pengumuman</h1>
       </header>
 
-      <main className="flex-1 p-5 max-w-md mx-auto w-full">
+      <main className="flex-1 p-5 max-w-md mx-auto w-full animate-fade-in-up">
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Title */}
           <div>
             <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Judul</label>
             <input
               type="text"
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-primary focus:border-primary p-3"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-transparent p-3 transition-shadow"
               placeholder="Contoh: Rapat Bulanan"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -85,7 +87,7 @@ const CreateAnnouncement = () => {
           <div>
             <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Jenis</label>
             <select
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-primary focus:border-primary p-3"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-transparent p-3 transition-shadow"
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
@@ -100,7 +102,7 @@ const CreateAnnouncement = () => {
           <div>
             <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Isi Pengumuman</label>
             <textarea
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-primary focus:border-primary p-3 h-32"
+              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-transparent p-3 h-32 transition-shadow"
               placeholder="Tulis detail pengumuman..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -112,7 +114,7 @@ const CreateAnnouncement = () => {
           <div>
             <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Gambar (Opsional)</label>
             <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 relative overflow-hidden">
+                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 relative overflow-hidden transition-colors">
                     {preview ? (
                         <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
@@ -130,7 +132,7 @@ const CreateAnnouncement = () => {
                 <button
                     type="button"
                     onClick={() => { setImage(null); setPreview(null); }}
-                    className="mt-2 text-sm text-red-500 hover:text-red-700"
+                    className="mt-2 text-sm text-red-500 hover:text-red-700 font-medium"
                 >
                     Hapus Gambar
                 </button>
@@ -140,7 +142,7 @@ const CreateAnnouncement = () => {
           <button
             type="submit"
             disabled={uploading}
-            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-colors ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-transform active:scale-[0.98] ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {uploading ? 'Mengirim...' : 'Kirim Pengumuman'}
           </button>

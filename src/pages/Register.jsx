@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useRamadan } from '../context/RamadanContext';
+import toast from 'react-hot-toast';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -12,27 +13,24 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
     if (password !== confirmPassword) {
-      return setError('Password dan Konfirmasi Password tidak sama.');
+      return toast.error('Password dan Konfirmasi Password tidak sama.');
     }
 
     setLoading(true);
 
     try {
       await signup(email, password, name);
-      // Registration successful, redirect to login or dashboard
-      // Usually signup logs them in automatically in Firebase
+      toast.success('Registrasi berhasil! Selamat datang.');
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      setError('Gagal melakukan registrasi. Email mungkin sudah terdaftar.');
+      toast.error('Gagal melakukan registrasi. Email mungkin sudah terdaftar.');
     }
 
     setLoading(false);
@@ -46,7 +44,7 @@ const Register = () => {
       }`}
     >
       {/* Header / Branding Section */}
-      <header className="flex-1 flex flex-col items-center justify-end py-8 px-6 min-h-[160px]">
+      <header className="flex-1 flex flex-col items-center justify-end py-8 px-6 min-h-[160px] animate-fade-in-down">
         <div className="w-full max-w-sm mx-auto text-center space-y-6">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">
@@ -60,14 +58,8 @@ const Register = () => {
       </header>
 
       {/* Form Section */}
-      <main className="flex-1 px-6 w-full max-w-sm mx-auto pb-10">
+      <main className="flex-1 px-6 w-full max-w-sm mx-auto pb-10 animate-fade-in-up">
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {error && (
-             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <span className="block sm:inline">{error}</span>
-             </div>
-          )}
-
           {/* Name Field */}
           <div className="space-y-1.5">
             <label className={`block text-sm font-semibold ml-1 ${isRamadan ? 'text-emerald-100' : 'text-gray-700 dark:text-gray-300'}`} htmlFor="name">
@@ -103,7 +95,7 @@ const Register = () => {
                 className="block w-full pl-10 pr-3 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm"
                 id="email"
                 name="email"
-                placeholder="member@karangtaruna.org"
+                placeholder="member@karteji.org"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

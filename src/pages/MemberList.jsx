@@ -3,6 +3,7 @@ import BottomNav from '../components/BottomNav';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Link } from 'react-router-dom';
+import Skeleton from '../components/Skeleton';
 
 const MemberList = () => {
   const [members, setMembers] = useState([]);
@@ -72,7 +73,7 @@ const MemberList = () => {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto no-scrollbar pb-24 relative">
         {/* Header Section */}
-        <header className="bg-white dark:bg-gray-900 px-5 pt-4 pb-4 sticky top-0 z-40 shadow-sm">
+        <header className="bg-white dark:bg-gray-900 px-5 pt-4 pb-4 sticky top-0 z-40 shadow-sm animate-fade-in-down">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Daftar Anggota</h1>
             <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-primary">
@@ -113,16 +114,22 @@ const MemberList = () => {
         {/* Member List */}
         <div className="px-5 py-4 space-y-3">
           {loading ? (
-             <div className="flex justify-center py-10">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-             </div>
+             <>
+                <Skeleton className="h-20 w-full rounded-xl" />
+                <Skeleton className="h-20 w-full rounded-xl" />
+                <Skeleton className="h-20 w-full rounded-xl" />
+             </>
           ) : filteredMembers.length === 0 ? (
-             <div className="text-center py-10 text-gray-500">
+             <div className="text-center py-10 text-gray-500 animate-fade-in-up">
                 Tidak ada anggota ditemukan.
              </div>
           ) : (
-            filteredMembers.map((member) => (
-              <div key={member.id} className={`group relative bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between hover:border-primary/30 transition-all cursor-pointer ${member.status === 'inactive' ? 'opacity-75' : ''}`}>
+            filteredMembers.map((member, index) => (
+              <div
+                key={member.id}
+                className={`group relative bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between hover:border-primary/30 transition-all cursor-pointer animate-fade-in-up ${member.status === 'inactive' ? 'opacity-75' : ''}`}
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
                 <div className="flex items-center gap-4">
                   <div className="relative shrink-0">
                     {member.photoURL ? (

@@ -3,6 +3,8 @@ import BottomNav from '../components/BottomNav';
 import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Link } from 'react-router-dom';
+import Skeleton from '../components/Skeleton';
+import toast from 'react-hot-toast';
 
 const ActivityGallery = () => {
   const [images, setImages] = useState([]);
@@ -61,7 +63,7 @@ const ActivityGallery = () => {
 
   const handleDelete = async (id, source) => {
       if (source !== 'gallery') {
-          alert("Foto dari kegiatan hanya bisa dihapus dengan menghapus kegiatannya.");
+          toast.error("Foto dari kegiatan hanya bisa dihapus dengan menghapus kegiatannya.");
           return;
       }
 
@@ -69,33 +71,40 @@ const ActivityGallery = () => {
           try {
               await deleteDoc(doc(db, 'gallery', id));
               fetchGallery();
+              toast.success("Foto berhasil dihapus.");
           } catch (error) {
               console.error("Error deleting photo: ", error);
-              alert("Gagal menghapus foto");
+              toast.error("Gagal menghapus foto");
           }
       }
   };
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 min-h-screen pb-24 relative">
-       <header className="bg-white dark:bg-slate-900 px-5 pt-12 pb-4 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 shadow-sm">
+       <header className="bg-white dark:bg-slate-900 px-5 pt-12 pb-4 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 shadow-sm animate-fade-in-down">
           <h1 className="text-2xl font-bold tracking-tight">Galeri Kegiatan</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">Dokumentasi Karang Taruna</p>
        </header>
 
        <main className="p-4 grid grid-cols-2 gap-4">
           {loading ? (
-             <div className="col-span-2 flex justify-center py-10">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-             </div>
+             <>
+               <Skeleton className="aspect-square rounded-xl" />
+               <Skeleton className="aspect-square rounded-xl" />
+               <Skeleton className="aspect-square rounded-xl" />
+               <Skeleton className="aspect-square rounded-xl" />
+             </>
           ) : images.length === 0 ? (
-             <div className="col-span-2 text-center py-10 text-gray-500">
+             <div className="col-span-2 text-center py-10 text-gray-500 animate-fade-in-up">
                 Belum ada foto dokumentasi.
              </div>
           ) : (
-             images.map((img) => (
-                <div key={`${img.source}-${img.id}`} className="relative rounded-xl overflow-hidden aspect-square group shadow-sm hover:shadow-md transition-all">
-                   <img src={img.url} alt={img.title} className="w-full h-full object-cover" />
+             images.map((img, index) => (
+                <div key={`${img.source}-${img.id}`}
+                     className="relative rounded-xl overflow-hidden aspect-square group shadow-sm hover:shadow-md transition-all animate-fade-in-up"
+                     style={{ animationDelay: `${index * 50}ms` }}
+                >
+                   <img src={img.url} alt={img.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
 
                    {/* Delete Button for Gallery Source */}
                    {img.source === 'gallery' && (

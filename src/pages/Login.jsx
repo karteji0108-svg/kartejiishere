@@ -4,6 +4,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo.png';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,21 +13,20 @@ const Login = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
       await login(email, password);
+      toast.success('Login successful!');
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      setError('Failed to log in. Please check your email and password.');
+      toast.error('Failed to log in. Please check your credentials.');
     }
 
     setLoading(false);
@@ -46,7 +46,7 @@ const Login = () => {
       </div>
 
       {/* Header / Branding Section */}
-      <header className="flex-1 flex flex-col items-center justify-end pb-8 px-6">
+      <header className="flex-1 flex flex-col items-center justify-end pb-8 px-6 animate-fade-in-down">
         <div className="w-full max-w-sm mx-auto text-center space-y-6">
           {/* Logo Container */}
           <div className={`relative w-24 h-24 mx-auto rounded-2xl shadow-xl flex items-center justify-center transform transition-transform hover:scale-105 duration-300
@@ -74,13 +74,8 @@ const Login = () => {
       </header>
 
       {/* Form Section */}
-      <main className="flex-1 px-6 w-full max-w-sm mx-auto">
+      <main className="flex-1 px-6 w-full max-w-sm mx-auto animate-fade-in-up">
         <form className="space-y-5" onSubmit={handleSubmit}>
-          {error && (
-             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <span className="block sm:inline">{error}</span>
-             </div>
-          )}
           {/* Email Field */}
           <div className="space-y-1.5">
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1" htmlFor="email">

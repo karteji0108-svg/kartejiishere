@@ -4,6 +4,7 @@ import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
 import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import Skeleton from '../components/Skeleton';
 
 const Activities = () => {
   const { isRamadan } = useRamadan();
@@ -74,7 +75,7 @@ const Activities = () => {
       {/* Mobile Container */}
       <div className="w-full max-w-md h-screen bg-white dark:bg-slate-900 shadow-2xl overflow-hidden flex flex-col relative">
         {/* Header */}
-        <header className={`px-5 pt-12 pb-4 sticky top-0 z-20 border-b flex justify-between items-center transition-colors
+        <header className={`px-5 pt-12 pb-4 sticky top-0 z-20 border-b flex justify-between items-center transition-colors animate-fade-in-down
           ${isRamadan ? 'bg-emerald-50/90 dark:bg-emerald-900/90 border-ramadan-gold/20 backdrop-blur-md' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}>
           <div>
             <h1 className={`text-2xl font-bold tracking-tight ${isRamadan ? 'text-ramadan-primary dark:text-white' : 'text-slate-900 dark:text-white'}`}>
@@ -106,11 +107,12 @@ const Activities = () => {
           </div>
 
           {loading ? (
-             <div className="flex justify-center py-10">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-             </div>
+             <>
+               <Skeleton className="h-32 w-full rounded-xl" />
+               <Skeleton className="h-32 w-full rounded-xl" />
+             </>
           ) : filteredActivities.length === 0 ? (
-             <div className="text-center py-10 text-gray-500">
+             <div className="text-center py-10 text-gray-500 animate-fade-in-up">
                 Tidak ada kegiatan ditemukan.
              </div>
           ) : (
@@ -118,7 +120,7 @@ const Activities = () => {
               <div key={activity.id}>
                  {/* Show Month Header */}
                  {(index === 0 || getMonthName(activity.date) !== getMonthName(filteredActivities[index-1].date)) && (
-                    <div className="flex items-center space-x-2 pb-1 pt-2">
+                    <div className="flex items-center space-x-2 pb-1 pt-2 animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
                       <span className="material-icons text-primary text-sm">event</span>
                       <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         {getMonthName(activity.date)}
@@ -127,8 +129,10 @@ const Activities = () => {
                  )}
 
                  {/* Activity Card */}
-                 <div className={`group rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-300 mt-3 relative
-                    ${isRamadan ? 'bg-white dark:bg-slate-800 border-ramadan-gold/30 ring-1 ring-ramadan-gold/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}>
+                 <div className={`group rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-300 mt-3 relative animate-fade-in-up
+                    ${isRamadan ? 'bg-white dark:bg-slate-800 border-ramadan-gold/30 ring-1 ring-ramadan-gold/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}
+                    style={{ animationDelay: `${index * 50 + 50}ms` }}
+                 >
 
                     {/* Delete Button (Absolute) */}
                     <button
