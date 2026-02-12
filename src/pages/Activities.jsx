@@ -119,7 +119,7 @@ const Activities = () => {
                     ${isRamadan ? 'bg-white dark:bg-slate-800 border-ramadan-gold/30 ring-1 ring-ramadan-gold/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}>
 
                     {/* Image Section */}
-                    {activity.imageURL && (
+                    {activity.imageURL ? (
                       <div className="relative h-40 overflow-hidden">
                         <img
                           alt={activity.title}
@@ -136,55 +136,66 @@ const Activities = () => {
                               Special
                             </span>
                           )}
-                          {activity.status === 'open' && (
-                             <span className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 text-xs px-2.5 py-1 rounded-full font-medium">Open</span>
-                          )}
+                          <span className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 text-xs px-2.5 py-1 rounded-full font-medium">Open</span>
                         </div>
+                      </div>
+                    ) : (
+                      <div className="flex">
+                         <div className="w-24 bg-primary/10 dark:bg-primary/20 flex flex-col items-center justify-center p-2 border-r border-slate-100 dark:border-slate-700 shrink-0">
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{getMonthShort(activity.date)}</span>
+                            <span className="text-2xl font-bold text-primary">{getDay(activity.date)}</span>
+                         </div>
+                         <div className="p-3 flex-1 flex flex-col justify-between">
+                             <div>
+                                <div className="flex justify-between items-start mb-2">
+                                  <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
+                                    {activity.title}
+                                  </h3>
+                                </div>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
+                                  {activity.description}
+                                </p>
+                             </div>
+                             <Link to={`/activities/${activity.id}`} className={`text-primary text-xs font-semibold hover:text-blue-600 transition-colors flex items-center`}>
+                                Detail
+                                <span className="material-icons text-sm ml-0.5">chevron_right</span>
+                             </Link>
+                         </div>
                       </div>
                     )}
 
-                    {/* Content Section */}
-                    <div className={activity.imageURL ? 'p-4' : 'flex'}>
-                        {!activity.imageURL && (
-                           <div className="w-24 bg-primary/10 dark:bg-primary/20 flex flex-col items-center justify-center p-2 border-r border-slate-100 dark:border-slate-700 shrink-0">
-                              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{getMonthShort(activity.date)}</span>
-                              <span className="text-2xl font-bold text-primary">{getDay(activity.date)}</span>
-                           </div>
-                        )}
-
-                        <div className="p-3 flex-1 flex flex-col justify-between">
-                           <div>
-                              <div className="flex justify-between items-start mb-2">
-                                <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
-                                  {activity.title}
-                                </h3>
-                              </div>
-                              <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
-                                {activity.description}
-                              </p>
-                              <div className="flex items-center text-xs text-slate-400 dark:text-slate-500 mb-4 space-x-3">
-                                {activity.time && (
-                                  <div className="flex items-center">
-                                    <span className="material-icons text-sm mr-1">schedule</span>
-                                    {activity.time}
-                                  </div>
-                                )}
-                                {activity.location && (
-                                  <div className="flex items-center">
-                                    <span className="material-icons text-sm mr-1">place</span>
-                                    {activity.location}
-                                  </div>
-                                )}
-                              </div>
-                           </div>
-
-                           <Link to={`/activities/${activity.id}`} className={`w-full py-2.5 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm
-                              ${isRamadan ? 'bg-ramadan-primary hover:bg-emerald-600' : 'bg-primary hover:bg-blue-600'}`}>
-                              <span>Lihat Detail</span>
-                              <span className="material-icons text-sm">arrow_forward</span>
-                           </Link>
+                    {/* Content Section for Image Card */}
+                    {activity.imageURL && (
+                      <div className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                           <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
+                             {activity.title}
+                           </h3>
                         </div>
-                    </div>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
+                          {activity.description}
+                        </p>
+                        <div className="flex items-center text-xs text-slate-400 dark:text-slate-500 mb-4 space-x-3">
+                           {activity.time && (
+                             <div className="flex items-center">
+                               <span className="material-icons text-sm mr-1">schedule</span>
+                               {activity.time}
+                             </div>
+                           )}
+                           {activity.location && (
+                             <div className="flex items-center">
+                               <span className="material-icons text-sm mr-1">place</span>
+                               {activity.location}
+                             </div>
+                           )}
+                        </div>
+                        <Link to={`/activities/${activity.id}`} className={`w-full py-2.5 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm
+                           ${isRamadan ? 'bg-ramadan-primary hover:bg-emerald-600' : 'bg-primary hover:bg-blue-600'}`}>
+                           <span>Lihat Detail</span>
+                           <span className="material-icons text-sm">arrow_forward</span>
+                        </Link>
+                      </div>
+                    )}
                  </div>
               </div>
             ))

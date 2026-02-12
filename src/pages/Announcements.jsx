@@ -33,10 +33,12 @@ const Announcements = () => {
   }, []);
 
   const getBadgeColor = (type) => {
+    if (isRamadan) return 'bg-ramadan-gold text-white';
+
     switch (type?.toLowerCase()) {
       case 'urgent':
       case 'penting':
-        return isRamadan ? 'bg-ramadan-gold text-white' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
       case 'activity':
       case 'kegiatan':
         return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
@@ -44,15 +46,25 @@ const Announcements = () => {
       case 'rapat':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        return 'bg-primary text-white'; // General/Umum
+    }
+  };
+
+  const getBorderColor = (type) => {
+    if (isRamadan) return 'border-l-ramadan-gold';
+
+    switch (type?.toLowerCase()) {
+      case 'urgent':
+      case 'penting':
+        return 'border-l-red-500';
+      default:
+        return 'border-l-primary'; // Default border color
     }
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    // Handle Firestore Timestamp if needed, but assuming ISO string for now
     const date = new Date(dateString);
-    // Determine if it's today
     const today = new Date();
     if (date.toDateString() === today.toDateString()) {
       return `Hari ini, ${date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
@@ -88,7 +100,7 @@ const Announcements = () => {
               <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Notifikasi</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Dapatkan info terbaru langsung di HP Anda.</p>
             </div>
-            {/* iOS Style Toggle */}
+            {/* iOS Style Toggle (React Implementation) */}
             <button
                 onClick={() => setNotifications(!notifications)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${notifications ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
@@ -113,7 +125,8 @@ const Announcements = () => {
             ) : (
                 announcements.map((item) => (
                     <article key={item.id} className={`group rounded-xl p-4 shadow-sm border-l-4 hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden
-                        ${isRamadan ? 'bg-white dark:bg-slate-800 border-l-ramadan-gold ring-1 ring-ramadan-gold/20' : `bg-surface-light dark:bg-surface-dark ${item.type === 'Penting' ? 'border-l-red-500' : 'border-l-primary'}`}`}>
+                        ${isRamadan ? 'bg-white dark:bg-slate-800 ring-1 ring-ramadan-gold/20' : 'bg-surface-light dark:bg-surface-dark'}
+                        ${getBorderColor(item.type)}`}>
 
                         {item.imageURL && (
                             <div className="mb-3 h-32 rounded-lg overflow-hidden relative">
@@ -125,7 +138,7 @@ const Announcements = () => {
                         <div className="flex justify-between items-start mb-2">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                             ${getBadgeColor(item.type)}`}>
-                            {item.type}
+                            {item.type || 'Umum'}
                             </span>
                             <span className="text-xs text-gray-400 font-medium">{formatDate(item.createdAt)}</span>
                         </div>
@@ -151,7 +164,7 @@ const Announcements = () => {
           )}
         </main>
 
-        {/* Floating Action Button (FAB) - Only for Admin/Secretary */}
+        {/* Floating Action Button (FAB) */}
         <Link to="/announcements/create" className="absolute bottom-24 right-4 z-40 bg-primary hover:bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary active:scale-95">
           <span className="material-icons-round text-2xl">add</span>
         </Link>

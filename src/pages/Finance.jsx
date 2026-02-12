@@ -57,6 +57,13 @@ const Finance = () => {
     return new Date(dateString).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+  // Helper for chart bars opacity
+  const getBarClass = (index) => {
+      if (index === 3) return 'bg-primary'; // Peak
+      if (index % 2 === 0) return 'bg-primary/60';
+      return 'bg-primary/40';
+  };
+
   return (
     <div className="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 font-display min-h-screen pb-24 relative overflow-x-hidden selection:bg-primary selection:text-white">
       {/* Top Safe Area (Simulated for iOS) */}
@@ -118,7 +125,10 @@ const Finance = () => {
              {[40, 25, 60, 85, 45, 30, 20].map((h, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 group w-full">
                     <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t-sm relative h-24 flex items-end justify-center overflow-hidden">
-                        <div className={`w-full bg-primary${i===3?'': i%2===0?'/60':'/40'} h-[${h}%] group-hover:bg-primary/80 transition-all duration-300`} style={{height: `${h}%`}}></div>
+                        <div
+                            className={`w-full ${getBarClass(i)} group-hover:bg-primary/80 transition-all duration-300`}
+                            style={{height: `${h}%`}}
+                        ></div>
                     </div>
                     <span className="text-[10px] text-gray-400">{['Sen','Sel','Rab','Kam','Jum','Sab','Min'][i]}</span>
                 </div>
@@ -130,7 +140,7 @@ const Finance = () => {
         <section>
           <div className="flex items-center justify-between mb-4 mt-2">
             <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Transaksi Terakhir</h3>
-            <a className="text-sm font-medium text-primary hover:text-primary-dark" href="#">Lihat Semua</a>
+            <Link to="/finance" className="text-sm font-medium text-primary hover:text-primary-dark">Lihat Semua</Link>
           </div>
           <div className="space-y-3">
             {loading ? (
@@ -148,7 +158,7 @@ const Finance = () => {
                                 ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
                                 : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'}`}>
                                 <span className="material-icons text-xl">
-                                    {t.type === 'income' ? 'arrow_downward' : 'shopping_cart'}
+                                    {t.type === 'income' ? 'volunteer_activism' : 'shopping_cart'}
                                 </span>
                             </div>
                             <div>

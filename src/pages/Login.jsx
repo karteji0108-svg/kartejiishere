@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/logo.png';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,9 +52,9 @@ const Login = () => {
           <div className={`relative w-24 h-24 mx-auto rounded-2xl shadow-xl flex items-center justify-center transform transition-transform hover:scale-105 duration-300
             ${isRamadan ? 'bg-white/10 shadow-ramadan-gold/20 backdrop-blur-sm border border-ramadan-gold/30' : 'bg-white dark:bg-gray-800 shadow-primary/10'}`}>
             <img
-              alt="Karang Taruna Logo Symbol"
+              alt="KARTEJI Logo Symbol"
               className="w-16 h-16 object-contain opacity-90"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGPNKMhtQ05Nd5l6ftQ3sOYPJfcvj-tEFcFR53DVmyhz2oxREHQvJ5LpdtIhtUNBvf7AJAyIQ1TwZbVitVa0vYWQloUwoWMKTv0kIK8lX4n26i3PXMTHdMS6hc7klEyt1Hx510kh4NL9OtQpyTvy0g2dLcqKkGlytIbUYWor0-lX4-bcV9JT2_jqkU6QpjUEz5NKfmu52iyskGk7y2hD5jcfv1PD-cJxPsDMkw7gW_uWaXfs9SVw9HbjDsenillz3DBolucCWSWkc"
+              src={logo}
             />
           </div>
           <div className="space-y-2">
@@ -62,7 +64,7 @@ const Login = () => {
               </p>
             )}
             <h1 className={`text-3xl font-bold tracking-tight ${isRamadan ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-              Karang Taruna
+              KARTEJI
             </h1>
             <p className={`text-sm font-medium ${isRamadan ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'}`}>
               Manage your organization effectively.
@@ -92,7 +94,7 @@ const Login = () => {
                 className="block w-full pl-10 pr-3 py-3 border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 text-sm"
                 id="email"
                 name="email"
-                placeholder="member@karangtaruna.org"
+                placeholder="member@karteji.org"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -119,7 +121,7 @@ const Login = () => {
                 id="password"
                 name="password"
                 placeholder="••••••••"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -127,8 +129,9 @@ const Login = () => {
               <button
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer focus:outline-none"
                 type="button"
+                onClick={() => setShowPassword(!showPassword)}
               >
-                <span className="material-icons-round text-xl">visibility_off</span>
+                <span className="material-icons-round text-xl">{showPassword ? 'visibility' : 'visibility_off'}</span>
               </button>
             </div>
           </div>
@@ -181,6 +184,7 @@ const Login = () => {
             Register Here
           </Link>
         </p>
+        {/* Bottom Pattern Decor (Subtle) */}
         <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
       </footer>
     </div>
