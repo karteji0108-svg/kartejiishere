@@ -42,7 +42,6 @@ const CreateActivity = () => {
                 }
             },
             (error) => {
-                console.error(error);
                 toast.error("Gagal mengambil lokasi. Pastikan GPS aktif.");
                 setLocationLoading(false);
             }
@@ -83,7 +82,6 @@ const CreateActivity = () => {
       toast.success('Kegiatan berhasil dibuat!');
       navigate('/activities');
     } catch (error) {
-      console.error("Error adding activity: ", error);
       toast.error(`Gagal membuat kegiatan: ${error.message}`);
     } finally {
       setLoading(false);
