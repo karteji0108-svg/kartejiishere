@@ -11,7 +11,13 @@ def run():
         # But we can verify that the dashboard loads the "loading" state or redirection logic
 
         page.goto("http://localhost:5173/dashboard")
-        time.sleep(3)
+        try:
+            # Wait for redirection away from dashboard (e.g. to /login or /).
+            # We use a timeout of 3000ms (matching the original sleep duration)
+            # but this will return much faster if the redirect happens quickly.
+            page.wait_for_url(lambda u: "/dashboard" not in u, timeout=3000)
+        except Exception:
+            print("Timeout waiting for redirect from /dashboard")
 
         url = page.url
         print(f"Current URL: {url}")
