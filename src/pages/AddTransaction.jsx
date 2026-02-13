@@ -32,6 +32,7 @@ const AddTransaction = () => {
         date,
         createdAt: new Date().toISOString(),
         createdBy: currentUser.uid,
+        uid: currentUser.uid, // Added for potential security rule requirements
         createdByName: currentUser.displayName || currentUser.email
       };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import BottomNav from '../components/BottomNav';
 import { useAuth } from '../context/AuthContext';
 import { useRamadan } from '../context/RamadanContext';
+import { useTheme } from '../context/ThemeContext';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +13,7 @@ import Skeleton from '../components/Skeleton';
 const Profile = () => {
   const { currentUser, logout, userRole } = useAuth();
   const { isRamadan, setIsRamadan } = useRamadan();
+  const { theme, toggleTheme } = useTheme();
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -296,26 +298,52 @@ const Profile = () => {
                      <h3 className="font-semibold text-xs uppercase tracking-wider text-gray-400">Pengaturan Aplikasi</h3>
                  </div>
 
-                 <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isRamadan ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
-                            <span className="material-icons text-lg">{isRamadan ? 'nights_stay' : 'wb_sunny'}</span>
+                 <div className="space-y-4">
+                     {/* Ramadan Toggle */}
+                     <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700/50">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isRamadan ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                                <span className="material-icons text-lg">{isRamadan ? 'nights_stay' : 'wb_sunny'}</span>
+                            </div>
+                            <div>
+                                <p className="font-medium text-slate-900 dark:text-white text-sm">Mode Ramadan</p>
+                                <p className="text-xs text-slate-500">Tampilkan jadwal sholat & tema khusus</p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="font-medium text-slate-900 dark:text-white text-sm">Mode Ramadan</p>
-                            <p className="text-xs text-slate-500">Tampilkan jadwal sholat & tema khusus</p>
-                        </div>
-                    </div>
 
-                    <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={isRamadan}
-                            onChange={() => setIsRamadan(!isRamadan)}
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
-                    </label>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={isRamadan}
+                                onChange={() => setIsRamadan(!isRamadan)}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                        </label>
+                     </div>
+
+                     {/* Dark Mode Toggle */}
+                     <div className="flex items-center justify-between py-2">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-indigo-900/30 text-indigo-400' : 'bg-slate-100 text-slate-500'}`}>
+                                <span className="material-icons text-lg">dark_mode</span>
+                            </div>
+                            <div>
+                                <p className="font-medium text-slate-900 dark:text-white text-sm">Mode Gelap</p>
+                                <p className="text-xs text-slate-500">Tampilan nyaman untuk mata</p>
+                            </div>
+                        </div>
+
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={theme === 'dark'}
+                                onChange={toggleTheme}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        </label>
+                     </div>
                  </div>
               </div>
 
