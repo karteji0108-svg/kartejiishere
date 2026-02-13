@@ -1,6 +1,10 @@
 // Cloudinary Configuration
-const CLOUD_NAME = 'dbxktcwug';
-const UPLOAD_PRESET = 'Karteji';
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+if (!CLOUD_NAME || !UPLOAD_PRESET) {
+    console.error('Missing Cloudinary configuration. Please check your .env file.');
+}
 
 /**
  * Uploads a file to Cloudinary.
@@ -10,6 +14,10 @@ const UPLOAD_PRESET = 'Karteji';
 export const uploadToCloudinary = async (file) => {
     if (!file) {
         throw new Error('No file provided');
+    }
+
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+        throw new Error('Missing Cloudinary configuration');
     }
 
     const formData = new FormData();
