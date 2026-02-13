@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
 
 const Profile = () => {
-  const { currentUser, logout, userRole } = useAuth();
+  const { currentUser, logout } = useAuth();
   const { isRamadan, setIsRamadan } = useRamadan();
   const { theme, toggleTheme } = useTheme();
   const [profile, setProfile] = useState(null);
@@ -114,7 +114,7 @@ const Profile = () => {
 
   if (dataLoading) {
       return (
-        <div className="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col items-center justify-center p-6 relative">
+        <div className="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col items-center justify-center p-6 relative transition-colors duration-500">
             <Skeleton className="w-full max-w-md h-48 rounded-b-3xl absolute top-0" />
             <div className="z-10 flex flex-col items-center w-full mt-24">
                 <Skeleton className="w-28 h-28 rounded-full border-4 border-white dark:border-slate-900" />
@@ -128,20 +128,21 @@ const Profile = () => {
   }
 
   return (
-    <div className={`font-display text-gray-900 dark:text-gray-100 min-h-screen flex flex-col items-center overflow-x-hidden transition-colors duration-500
-        ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/20' : 'bg-background-light dark:bg-background-dark'}`}>
+    <div className={`font-display min-h-screen relative overflow-x-hidden selection:bg-primary selection:text-white transition-colors duration-500
+        ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-background-light dark:bg-background-dark'}`}>
 
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl min-h-screen flex flex-col relative pb-safe">
+      {/* Top Safe Area */}
+      <div className={`h-12 w-full sticky top-0 z-50 transition-colors duration-500 bg-inherit`}></div>
 
-        {/* Header/Cover */}
-        <div className={`h-48 relative rounded-b-[2.5rem] shadow-lg animate-fade-in-down transition-colors duration-500
-            ${isRamadan ? 'bg-gradient-to-br from-emerald-600 via-teal-500 to-green-600' : 'bg-gradient-to-br from-primary via-blue-500 to-indigo-600'}`}>
+      {/* Header / Cover */}
+      <header className="relative">
+          <div className={`h-48 rounded-b-[2.5rem] shadow-lg transition-colors duration-500 relative overflow-hidden
+              ${isRamadan ? 'bg-gradient-to-br from-emerald-600 via-teal-500 to-green-600' : 'bg-gradient-to-br from-primary via-blue-500 to-indigo-600'}`}>
+              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+          </div>
 
-           {/* Pattern Overlay */}
-           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-
-           <div className="absolute -bottom-14 left-1/2 transform -translate-x-1/2 group">
-              <div className="relative">
+          <div className="absolute -bottom-14 left-1/2 transform -translate-x-1/2 group">
+             <div className="relative">
                 {preview || profile?.photoURL ? (
                     <img
                         src={preview || profile?.photoURL}
@@ -149,69 +150,55 @@ const Profile = () => {
                         className="w-28 h-28 rounded-full border-[6px] border-white dark:border-slate-900 object-cover shadow-2xl transition-transform hover:scale-105"
                     />
                 ) : (
-                    <div className="w-28 h-28 rounded-full border-[6px] border-white dark:border-slate-900 bg-gradient-to-tr from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center text-3xl font-bold text-slate-500 shadow-2xl">
-                        {getInitials(profile?.fullName || currentUser?.email)}
+                    <div className={`w-28 h-28 rounded-full border-[6px] border-white dark:border-slate-900 flex items-center justify-center text-3xl font-bold shadow-2xl transition-colors
+                        ${isRamadan ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'}`}>
+                        {getInitials(profile?.fullName || currentUser?.displayName)}
                     </div>
                 )}
 
                 {isEditing && (
-                    <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm">
-                        <span className="material-icons text-white text-3xl drop-shadow-lg">camera_alt</span>
-                        <input type="file" className="hidden" onChange={handlePhotoChange} accept="image/*" />
+                    <label className="absolute bottom-0 right-0 bg-white dark:bg-slate-700 p-2 rounded-full shadow-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors border border-gray-200 dark:border-slate-600">
+                        <span className="material-icons text-primary text-sm">photo_camera</span>
+                        <input type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
                     </label>
                 )}
-              </div>
-           </div>
-        </div>
+             </div>
+          </div>
+      </header>
 
-        {/* Content */}
-        <div className="pt-16 px-6 pb-24 flex-1 animate-fade-in-up">
-           <div className="text-center mb-6">
-               {isEditing ? (
-                   <div className="flex flex-col items-center gap-2">
-                        <input
-                            type="text"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            className="text-xl font-bold bg-transparent border-b-2 border-primary/50 focus:border-primary focus:outline-none text-center w-full pb-1 text-slate-900 dark:text-white"
-                            placeholder="Nama Lengkap"
-                        />
-                   </div>
-               ) : (
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{profile?.fullName || 'Pengguna'}</h1>
-               )}
+      {/* Main Content */}
+      <main className="px-5 pt-20 pb-28 space-y-6 max-w-lg mx-auto w-full">
+          <div className="text-center mb-8 animate-fade-in-up">
+             {isEditing ? (
+                 <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    className="bg-transparent border-b-2 border-primary text-center text-2xl font-bold text-gray-900 dark:text-white focus:outline-none w-full pb-1"
+                    placeholder="Nama Lengkap"
+                 />
+             ) : (
+                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white capitalize">{profile?.fullName || currentUser?.displayName}</h2>
+             )}
+             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Anggota Karang Taruna</p>
+          </div>
 
-               <div className="flex items-center justify-center gap-2 mt-2">
-                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
-                       userRole === 'super_admin'
-                       ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
-                       : 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
-                   }`}>
-                       {userRole === 'super_admin' ? 'Super Admin' : profile?.role || 'Member'}
-                   </span>
-                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
-                       {profile?.status || 'Active'}
-                   </span>
-               </div>
-               <p className="text-xs text-gray-400 mt-2">{currentUser?.email}</p>
-           </div>
-
-           {/* Action Buttons */}
-           <div className="flex justify-center gap-3 mb-8">
+          {/* Action Buttons */}
+          <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '100ms' }}>
               {isEditing ? (
                   <>
                       <button
-                        onClick={() => { setIsEditing(false); setPreview(null); }}
-                        className="px-6 py-2.5 rounded-xl font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors shadow-sm text-sm"
+                        onClick={() => setIsEditing(false)}
+                        className="px-6 py-2.5 rounded-xl font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors mr-3 text-sm"
                         disabled={loading}
                       >
                         Batal
                       </button>
                       <button
                         onClick={handleSave}
-                        className="px-6 py-2.5 rounded-xl font-medium text-white bg-primary hover:bg-blue-600 shadow-lg shadow-blue-500/30 transition-all transform active:scale-95 text-sm flex items-center gap-2"
                         disabled={loading}
+                        className="px-6 py-2.5 rounded-xl font-medium text-white bg-primary hover:bg-blue-600 shadow-lg shadow-blue-500/30 transition-all transform active:scale-95 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                       >
                         {loading && <span className="material-icons animate-spin text-sm">refresh</span>}
                         {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
@@ -220,7 +207,8 @@ const Profile = () => {
               ) : (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="px-6 py-2.5 rounded-xl font-medium text-white bg-primary hover:bg-blue-600 shadow-lg shadow-blue-500/30 transition-all transform active:scale-95 text-sm flex items-center gap-2"
+                    className={`px-6 py-2.5 rounded-xl font-medium text-white shadow-lg transition-all transform active:scale-95 text-sm flex items-center gap-2
+                        ${isRamadan ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30' : 'bg-primary hover:bg-blue-600 shadow-blue-500/30'}`}
                   >
                     <span className="material-icons text-sm">edit</span>
                     Edit Profil
@@ -228,7 +216,7 @@ const Profile = () => {
               )}
            </div>
 
-           <div className="space-y-4">
+           <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
               {/* Contact Info Card */}
               <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                  <div className="flex items-center gap-2 mb-4">
@@ -238,7 +226,7 @@ const Profile = () => {
 
                  <div className="space-y-5">
                     <div className="flex items-start gap-4">
-                       <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 shrink-0">
+                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-500'}`}>
                            <span className="material-icons text-lg">phone_iphone</span>
                        </div>
                        <div className="flex-1 border-b border-slate-50 dark:border-slate-700/50 pb-3">
@@ -259,7 +247,7 @@ const Profile = () => {
                     </div>
 
                     <div className="flex items-start gap-4">
-                       <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-orange-500 shrink-0">
+                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isRamadan ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-500' : 'bg-orange-50 dark:bg-orange-900/20 text-orange-500'}`}>
                            <span className="material-icons text-lg">location_on</span>
                        </div>
                        <div className="flex-1 border-b border-slate-50 dark:border-slate-700/50 pb-3">
@@ -280,7 +268,7 @@ const Profile = () => {
                     </div>
 
                     <div className="flex items-start gap-4">
-                       <div className="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-500 shrink-0">
+                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isRamadan ? 'bg-green-50 dark:bg-green-900/20 text-green-500' : 'bg-green-50 dark:bg-green-900/20 text-green-500'}`}>
                            <span className="material-icons text-lg">event_available</span>
                        </div>
                        <div className="flex-1">
@@ -357,13 +345,10 @@ const Profile = () => {
                     Keluar Aplikasi
                 </button>
               )}
-
-              <div className="h-8"></div>
            </div>
-        </div>
+      </main>
 
-        <BottomNav />
-      </div>
+      <BottomNav />
     </div>
   );
 };
