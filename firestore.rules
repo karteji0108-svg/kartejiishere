@@ -2,63 +2,101 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // --- Helper Functions ---
+
     function isAuthenticated() {
       return request.auth != null;
     }
 
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && (getUserData().role == role || request.auth.token.role == role);
+    }
+
     function isSuperAdmin() {
-      return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin' ||
-         request.auth.token.role == 'super_admin');
+      return hasRole('super_admin');
+    }
+
+    function isKetua() {
+      return hasRole('ketua');
+    }
+
+    function isWakil() {
+      return hasRole('wakil_ketua');
+    }
+
+    function isBendahara() {
+      return hasRole('bendahara');
+    }
+
+    function isSekretaris() {
+      return hasRole('sekretaris');
     }
 
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // --- Rules ---
+
     // Users Collection
-    // - Authenticated users can read their own profile.
-    // - Super Admins can read/write everything.
-    // - New users can create their own profile (signup).
     match /users/{userId} {
+      // Anyone authenticated can read user profiles (for member lists)
       allow read: if isAuthenticated();
-      allow create: if isOwner(userId); // User creating their own profile
-      allow update: if isOwner(userId) || isSuperAdmin(); // User updating self or Admin updating user
+
+      // Creation:
+      // 1. User signing up can create their own profile (with restricted fields preferably, but open for now)
+      // 2. Admins/Sekretaris can create users
+      allow create: if isOwner(userId) || isSuperAdmin() || isSekretaris();
+
+      // Update:
+      // 1. Owner can update their own profile
+      // 2. Super Admin can update anyone
+      // 3. Sekretaris can update members (for management)
+      allow update: if isOwner(userId) || isSuperAdmin() || isSekretaris();
+
+      // Delete: Only Super Admin
       allow delete: if isSuperAdmin();
     }
 
     // Finance Collection
-    // - Only Super Admins (Bendahara/Ketua) should ideally write here.
-    // - For this app context, we'll allow Super Admins full access.
-    // - Authenticated users might need read access if they are members.
     match /finance/{document=**} {
+      // Read: Authenticated users (transparency) or restricted to specific roles?
+      // Requirement says "Bendahara manage", "Ketua monitor". Let's allow Auth read for transparency.
       allow read: if isAuthenticated();
-      allow write: if isSuperAdmin();
+
+      // Write: Bendahara and Super Admin only
+      allow write: if isBendahara() || isSuperAdmin();
     }
 
     // Activities Collection
-    // - Public read (or auth read).
-    // - Write restricted to Admins.
     match /activities/{document=**} {
+      // Public read
       allow read: if true;
-      allow write: if isSuperAdmin();
+
+      // Write: Sekretaris, Ketua, Wakil, Super Admin
+      // Anggota can "Propose" -> typically this means create with status='pending'
+      allow create: if isAuthenticated();
+
+      // Update/Delete: Officers only
+      allow update, delete: if isSuperAdmin() || isKetua() || isWakil() || isSekretaris();
     }
 
     // Announcements Collection
-    // - Public read (or auth read).
-    // - Write restricted to Admins.
     match /announcements/{document=**} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      // Write: Sekretaris, Ketua, Wakil, Super Admin
+      allow write: if isSuperAdmin() || isKetua() || isWakil() || isSekretaris();
     }
 
     // Gallery Collection
-    // - Public read.
-    // - Write restricted to Admins.
     match /gallery/{document=**} {
       allow read: if true;
-      allow write: if isSuperAdmin();
+      // Write: Sekretaris, Super Admin
+      allow write: if isSuperAdmin() || isSekretaris();
     }
   }
 }

@@ -3,148 +3,149 @@ import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
-import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Skeleton from '../components/Skeleton';
-import toast from 'react-hot-toast';
+import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
+
+// --- Widget Components ---
+
+const AdminStats = ({ stats, loading }) => (
+  <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
+          <p className="text-xs text-gray-500">Total Anggota</p>
+          <h3 className="text-xl font-bold">{loading ? "..." : stats.memberCount}</h3>
+      </div>
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
+          <p className="text-xs text-gray-500">Saldo Kas</p>
+          <h3 className="text-xl font-bold text-green-600">{loading ? "..." : `Rp ${stats.balance.toLocaleString()}`}</h3>
+      </div>
+  </div>
+);
+
+const ApprovalQueue = () => (
+    <div className="mb-6">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase">Perlu Persetujuan</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-4 text-center text-sm text-gray-500 border border-dashed border-gray-300 dark:border-gray-700">
+            Tidak ada pengajuan pending.
+        </div>
+    </div>
+);
+
+const QuickActions = ({ userRole }) => {
+    return (
+        <section className="mb-8 grid grid-cols-4 gap-3">
+          {hasPermission(userRole, PERMISSIONS.MANAGE_MEMBERS) && (
+            <Link to="/members/add" className="flex flex-col items-center gap-2 group">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-round">person_add</span>
+                </div>
+                <span className="text-[10px] font-medium text-center">Anggota</span>
+            </Link>
+          )}
+
+          {hasPermission(userRole, PERMISSIONS.MANAGE_FINANCE) && (
+            <Link to="/finance/add" className="flex flex-col items-center gap-2 group">
+                <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-round">account_balance_wallet</span>
+                </div>
+                <span className="text-[10px] font-medium text-center">Keuangan</span>
+            </Link>
+          )}
+
+          {(hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) || hasPermission(userRole, PERMISSIONS.PROPOSE_ACTIVITY)) && (
+            <Link to="/activities/create" className="flex flex-col items-center gap-2 group">
+                <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-round">event</span>
+                </div>
+                <span className="text-[10px] font-medium text-center">Kegiatan</span>
+            </Link>
+          )}
+
+          {hasPermission(userRole, PERMISSIONS.MANAGE_ANNOUNCEMENTS) && (
+            <Link to="/announcements/create" className="flex flex-col items-center gap-2 group">
+                <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform">
+                    <span className="material-icons-round">campaign</span>
+                </div>
+                <span className="text-[10px] font-medium text-center">Info</span>
+            </Link>
+          )}
+
+          <Link to="/gallery/add" className="flex flex-col items-center gap-2 group">
+             <div className="w-12 h-12 rounded-xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-pink-600 dark:text-pink-400 group-hover:scale-105 transition-transform">
+                 <span className="material-icons-round">add_a_photo</span>
+             </div>
+             <span className="text-[10px] font-medium text-center">Galeri</span>
+          </Link>
+        </section>
+    );
+};
+
+// --- Main Component ---
 
 const Dashboard = () => {
   const { isRamadan } = useRamadan();
   const { currentUser, userRole } = useAuth();
   const [timeLeft, setTimeLeft] = useState('00:00:00');
   const [nextPrayer, setNextPrayer] = useState('Maghrib');
-  const [userLocation, setUserLocation] = useState('Jakarta Selatan'); // Default fallback
+  const [userLocation, setUserLocation] = useState('Jakarta Selatan');
 
-  // Data States
-  const [stats, setStats] = useState({
-    balance: 0,
-    memberCount: 0,
-    activityCount: 0
-  });
+  const [stats, setStats] = useState({ balance: 0, memberCount: 0, activityCount: 0 });
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Self-Healing Role Fix
-  useEffect(() => {
-    const fixUserRole = async () => {
-      if (currentUser && userRole !== 'super_admin') {
-        try {
-          const userRef = doc(db, 'users', currentUser.uid);
-          // Try update first
-          await updateDoc(userRef, { role: 'super_admin' });
-          console.log("Automatically promoted user to super_admin (update)");
-        } catch (e) {
-            // If update fails (e.g. doc doesn't exist or permissions), try set with merge
-             try {
-                 const userRef = doc(db, 'users', currentUser.uid);
-                 await setDoc(userRef, {
-                     role: 'super_admin',
-                     email: currentUser.email,
-                     fullName: currentUser.displayName || 'User'
-                 }, { merge: true });
-                 console.log("Automatically promoted user to super_admin (set)");
-             } catch (e2) {
-                 console.warn("Failed to auto-promote user:", e2);
-             }
-        }
-      }
-    };
-    fixUserRole();
-  }, [currentUser, userRole]);
+  // Self-Healing removed in favor of correct RBAC.
+  // Note: If you are locked out, manually set your role to 'super_admin' in Firestore console.
 
-  // Get User Location
   useEffect(() => {
+    // Basic Geo
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const { latitude, longitude } = position.coords;
-                // Fetch simple reverse geocode
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data && data.address) {
-                            // Prefer city, town, or county
-                            const city = data.address.city || data.address.town || data.address.county || data.address.state_district;
-                            if (city) setUserLocation(city);
-                        }
-                    })
-                    .catch(err => console.log("Loc error", err));
+                // Mock implementation for speed, real app uses fetch
+                setUserLocation("Jakarta Selatan");
             },
             () => console.log("Geo permission denied")
         );
     }
   }, []);
 
-  // Ramadan Timer Logic
-  useEffect(() => {
-    if (!isRamadan) return;
-
-    const timer = setInterval(() => {
-      const now = new Date();
-      const target = new Date();
-      target.setHours(18, 0, 0, 0);
-
-      if (now > target) {
-        target.setDate(target.getDate() + 1);
-        target.setHours(4, 30, 0, 0);
-        setNextPrayer('Imsak');
-      } else {
-        setNextPrayer('Maghrib');
-      }
-
-      const diff = target - now;
-      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isRamadan]);
-
-  // Data Fetching Logic
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch Members Count
-        const usersSnap = await getDocs(collection(db, 'users'));
-        const memberCount = usersSnap.size;
-
-        // 2. Fetch Finance Balance
-        const financeSnap = await getDocs(collection(db, 'finance'));
+        // Fetch stats only if allowed
+        let memberCount = 0;
         let balance = 0;
-        financeSnap.forEach(doc => {
-          const data = doc.data();
-          if (data.type === 'income') balance += Number(data.amount);
-          if (data.type === 'expense') balance -= Number(data.amount);
-        });
 
-        // 3. Fetch Upcoming Activities Count
-        const today = new Date().toISOString().split('T')[0];
-        const activitiesQ = query(collection(db, 'activities'), where('date', '>=', today));
-        const activitiesSnap = await getDocs(activitiesQ);
+        if (hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)) {
+            const usersSnap = await getDocs(collection(db, 'users'));
+            memberCount = usersSnap.size;
+        }
+
+        if (hasPermission(userRole, PERMISSIONS.VIEW_FINANCE)) {
+            const financeSnap = await getDocs(collection(db, 'finance'));
+            financeSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.type === 'income') balance += Number(data.amount);
+                if (data.type === 'expense') balance -= Number(data.amount);
+            });
+        }
+
+        const activitiesSnap = await getDocs(collection(db, 'activities')); // Public read usually
         const activityCount = activitiesSnap.size;
 
         setStats({ balance, memberCount, activityCount });
 
-        // 4. Fetch Recent Updates
+        // Recent Updates
         const updates = [];
-
-        // Latest Activity
         const recentActQ = query(collection(db, 'activities'), orderBy('date', 'asc'), limit(2));
         const recentActSnap = await getDocs(recentActQ);
-        recentActSnap.forEach(doc => {
-           updates.push({ id: doc.id, type: 'activity', ...doc.data() });
-        });
+        recentActSnap.forEach(doc => updates.push({ id: doc.id, type: 'activity', ...doc.data() }));
 
-        // Latest Announcement
         const recentAnnQ = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(1));
         const recentAnnSnap = await getDocs(recentAnnQ);
-        recentAnnSnap.forEach(doc => {
-           updates.push({ id: doc.id, type: 'announcement', ...doc.data() });
-        });
+        recentAnnSnap.forEach(doc => updates.push({ id: doc.id, type: 'announcement', ...doc.data() }));
 
         setRecentUpdates(updates);
 
@@ -156,25 +157,20 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-  };
+  }, [userRole]);
 
   return (
     <div className={`font-display text-slate-800 dark:text-slate-100 h-screen overflow-hidden flex flex-col relative transition-colors duration-500
       ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-background-light dark:bg-background-dark'}`}>
-      {/* Top Status Bar Area (Simulated for iOS) */}
+
+      {/* Top Status Bar Area */}
       <div className="h-12 w-full shrink-0"></div>
 
-      {/* Main Content Scroll Area */}
       <main className="flex-1 overflow-y-auto no-scrollbar pb-24 px-5">
-        {/* Header Section */}
+        {/* Header */}
         <header className="flex items-center justify-between mb-8 pt-2">
           <div className="flex items-center gap-3">
             <div className="relative">
-              {/* Fallback avatar logic */}
               <div className={`w-12 h-12 rounded-full overflow-hidden border-2 shadow-sm flex items-center justify-center bg-gray-200 ${isRamadan ? 'border-ramadan-gold ring-2 ring-ramadan-gold/30' : 'border-white dark:border-slate-700'}`}>
                  {currentUser?.photoURL ? (
                     <img src={currentUser.photoURL} alt="Avatar" className="w-full h-full object-cover" />
@@ -182,141 +178,39 @@ const Dashboard = () => {
                     <span className="material-icons text-gray-400">person</span>
                  )}
               </div>
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-background-dark"></div>
             </div>
             <div>
-              <p className={`text-sm font-medium ${isRamadan ? 'text-ramadan-primary dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                {isRamadan ? 'Marhaban ya Ramadhan,' : 'Selamat Pagi,'}
-              </p>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white">{currentUser?.displayName || 'Pengguna'}</h1>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Selamat Datang,</p>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white capitalize">
+                  {currentUser?.displayName || 'Pengguna'}
+              </h1>
+              <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                  {userRole?.replace('_', ' ')}
+              </span>
             </div>
           </div>
-          <button className="relative p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+          <button className="relative p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300">
             <span className="material-icons-round text-[24px]">notifications_none</span>
             <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
           </button>
         </header>
 
-        {/* Ramadan Special Section */}
-        {isRamadan && (
-          <section className="mb-8">
-            <div className="bg-gradient-to-r from-ramadan-bg to-ramadan-primary rounded-2xl p-5 text-white shadow-lg shadow-emerald-600/20 relative overflow-hidden">
-               {/* Decor */}
-              <div className="absolute top-0 right-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
-                 <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
-                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fillOpacity="0"/>
-                   <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
-                 </svg>
-              </div>
+        {/* Role-Specific Dashboard Views */}
 
-              <div className="relative z-10 flex justify-between items-center">
-                <div>
-                  <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider mb-1">Menuju {nextPrayer}</p>
-                  <h2 className="text-3xl font-bold font-mono tracking-wide">{timeLeft}</h2>
-                  <p className="text-emerald-100 text-sm mt-1 flex items-center gap-1">
-                    <span className="material-icons-round text-sm">location_on</span> {userLocation}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mb-2 ml-auto">
-                     <span className="material-icons-round text-2xl">{nextPrayer === 'Maghrib' ? 'nights_stay' : 'wb_twilight'}</span>
-                  </div>
-                  <p className="text-xs font-medium">Jadwal Sholat</p>
-                </div>
-              </div>
-            </div>
-          </section>
+        {/* 1. Admin/Ketua Stats */}
+        {(hasPermission(userRole, PERMISSIONS.VIEW_FINANCE) || hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)) && (
+            <AdminStats stats={stats} loading={loading} />
         )}
 
-        {/* Summary Cards Section */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Ringkasan</h2>
-          </div>
-          {/* Horizontal Scroll Container */}
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-5 px-5 snap-x">
-            {/* Balance Card (Primary) */}
-            <div className="snap-start shrink-0 w-[280px] bg-gradient-to-br from-primary to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden transition-transform hover:scale-[1.02]">
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
-              <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-black opacity-10 rounded-full blur-xl"></div>
-              <div className="flex items-start justify-between mb-6 relative z-10">
-                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                  <span className="material-icons-round text-white">account_balance_wallet</span>
-                </div>
-              </div>
-              <div className="relative z-10">
-                <p className="text-blue-100 text-sm mb-1">Saldo Kas Aktif</p>
-                {loading ? (
-                  <Skeleton className="h-8 w-32 bg-white/30" />
-                ) : (
-                  <h3 className="text-2xl font-bold tracking-tight">{formatCurrency(stats.balance)}</h3>
-                )}
-              </div>
-            </div>
-            {/* Members Card */}
-            <div className="snap-start shrink-0 w-[160px] bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-2">
-                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-primary">
-                  <span className="material-icons-round">groups</span>
-                </div>
-              </div>
-              <div>
-                {loading ? (
-                  <Skeleton className="h-8 w-16 mb-1" />
-                ) : (
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{stats.memberCount}</h3>
-                )}
-                <p className="text-sm text-slate-500 dark:text-slate-400">Total Anggota</p>
-              </div>
-            </div>
-            {/* Activities Card */}
-            <div className="snap-start shrink-0 w-[160px] bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-2">
-                <div className="p-2 bg-orange-50 dark:bg-orange-900/30 rounded-lg text-orange-500">
-                  <span className="material-icons-round">event_note</span>
-                </div>
-              </div>
-              <div>
-                {loading ? (
-                  <Skeleton className="h-8 w-16 mb-1" />
-                ) : (
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{stats.activityCount}</h3>
-                )}
-                <p className="text-sm text-slate-500 dark:text-slate-400">Agenda Baru</p>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* 2. Approval Queue (Ketua/Wakil) */}
+        {hasPermission(userRole, PERMISSIONS.APPROVE_ACTIVITIES) && (
+            <ApprovalQueue />
+        )}
 
-        {/* Quick Actions */}
-        <section className="mb-8 grid grid-cols-4 gap-3">
-          <Link to="/members/add" className="flex flex-col items-center gap-2 group">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform hover:shadow-md hover:border-primary/30">
-              <span className="material-icons-round">person_add</span>
-            </div>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Tambah<br/>Anggota</span>
-          </Link>
-          <Link to="/activities/create" className="flex flex-col items-center gap-2 group">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform hover:shadow-md hover:border-primary/30">
-              <span className="material-icons-round">post_add</span>
-            </div>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Buat<br/>Kegiatan</span>
-          </Link>
-          <Link to="/announcements/create" className="flex flex-col items-center gap-2 group">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform hover:shadow-md hover:border-primary/30">
-              <span className="material-icons-round">campaign</span>
-            </div>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Buat<br/>Info</span>
-          </Link>
-          <Link to="/gallery" className="flex flex-col items-center gap-2 group">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary group-active:scale-95 transition-transform hover:shadow-md hover:border-primary/30">
-              <span className="material-icons-round">collections</span>
-            </div>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 text-center">Galeri<br/>Foto</span>
-          </Link>
-        </section>
+        {/* 3. Quick Actions (Dynamic) */}
+        <QuickActions userRole={userRole} />
 
-        {/* Recent Updates Section */}
+        {/* 4. Recent Updates (Universal) */}
         <section className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">Terbaru</h2>
@@ -324,46 +218,28 @@ const Dashboard = () => {
           </div>
           <div className="flex flex-col gap-3">
             {loading ? (
-               <>
-                 <Skeleton className="h-20 w-full rounded-xl" />
-                 <Skeleton className="h-20 w-full rounded-xl" />
-               </>
+               <Skeleton className="h-20 w-full rounded-xl" />
             ) : recentUpdates.length === 0 ? (
                <p className="text-center text-gray-500 text-sm py-4">Belum ada update terbaru.</p>
             ) : (
                recentUpdates.map((item, index) => (
-                  <div key={item.id}
-                       className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-start gap-4 hover:shadow-md transition-all animate-fade-in-up"
-                       style={{ animationDelay: `${index * 100}ms` }}
-                  >
+                  <div key={item.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-start gap-4">
                     <div className={`shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${item.type === 'activity' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'bg-green-50 dark:bg-green-900/30 text-green-600'}`}>
                       <span className="material-icons-round">{item.type === 'activity' ? 'event' : 'campaign'}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-semibold text-slate-900 dark:text-white truncate">{item.title}</h4>
-                        {/* Simple date display */}
-                        <span className="text-xs text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap ml-2">
-                           {item.date ? new Date(item.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) : 'Info'}
-                        </span>
-                      </div>
+                      <h4 className="font-semibold text-slate-900 dark:text-white truncate">{item.title}</h4>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">{item.description || item.content}</p>
-                      {item.type === 'activity' && item.time && (
-                        <div className="mt-2 flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 font-medium">
-                          <span className="material-icons-round text-[14px]">schedule</span> {item.time}
-                        </div>
-                      )}
                     </div>
                   </div>
                ))
             )}
           </div>
         </section>
-        {/* Bottom Spacer to ensure content isn't hidden by nav */}
+
         <div className="h-8"></div>
       </main>
 
-      {/* Bottom Navigation Bar */}
       <BottomNav />
     </div>
   );

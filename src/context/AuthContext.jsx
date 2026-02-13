@@ -9,6 +9,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
+import { ROLES } from "../constants/roles";
 
 const AuthContext = createContext();
 
@@ -22,15 +23,15 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     async function signup(email, password, fullName) {
-        // Create user in Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Create user document in Firestore with default role 'super_admin' to allow write access during testing
+        // Default role is ANGGOTA.
+        // Admin promotion must be done manually in DB or via a seed script for the first user.
         await setDoc(doc(db, "users", user.uid), {
             fullName: fullName,
             email: email,
-            role: "super_admin", // Changed from 'anggota' to 'super_admin' to bypass permission restrictions
+            role: ROLES.ANGGOTA,
             status: "active",
             createdAt: new Date().toISOString()
         });
@@ -44,15 +45,10 @@ export function AuthProvider({ children }) {
 
     async function loginWithGoogle() {
         const provider = new GoogleAuthProvider();
-        // If specific Client ID is needed for certain configs, it's usually handled in Firebase console
-        // or via provider.setCustomParameters(). The user provided one, but usually default works.
-        // provider.setCustomParameters({ 'client_id': '877730599886-649dp45jcmdqk8taoma1m70o74r9ehi1.apps.googleusercontent.com' });
-
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
-            // Check if user exists in Firestore, if not create
             const docRef = doc(db, "users", user.uid);
             const docSnap = await getDoc(docRef);
 
@@ -60,7 +56,7 @@ export function AuthProvider({ children }) {
                 await setDoc(docRef, {
                     fullName: user.displayName,
                     email: user.email,
-                    role: "super_admin", // Default for dev/testing
+                    role: ROLES.ANGGOTA, // Default role
                     status: "active",
                     photoURL: user.photoURL,
                     createdAt: new Date().toISOString()
@@ -82,12 +78,18 @@ export function AuthProvider({ children }) {
             setCurrentUser(user);
             if (user) {
                 // Fetch user role from Firestore
-                const docRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    setUserRole(docSnap.data().role);
-                } else {
-                    setUserRole("anggota"); // Default fallback
+                try {
+                    const docRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        setUserRole(docSnap.data().role || ROLES.ANGGOTA);
+                    } else {
+                        // Fallback if doc doesn't exist yet (race condition in signup?)
+                        setUserRole(ROLES.ANGGOTA);
+                    }
+                } catch (error) {
+                    console.error("Error fetching role:", error);
+                    setUserRole(ROLES.ANGGOTA);
                 }
             } else {
                 setUserRole(null);
