@@ -49,15 +49,17 @@ export const RamadanProvider = ({ children }) => {
     <RamadanContext.Provider value={{ isRamadan, toggleRamadan }}>
       {children}
       {/* Debug Toggle - Hidden in production ideally, but useful for this task */}
-      <div className="fixed bottom-4 left-4 z-50 opacity-50 hover:opacity-100 transition-opacity">
-        <button
-          onClick={toggleRamadan}
-          className="bg-emerald-600 text-white px-2 py-1 rounded text-xs shadow-lg"
-          title="Toggle Ramadan Mode (Debug)"
-        >
-          {isRamadan ? '🌙 ON' : '🌙 OFF'}
-        </button>
-      </div>
+      {import.meta.env.DEV && (
+        <div className="fixed bottom-4 left-4 z-50 opacity-50 hover:opacity-100 transition-opacity">
+          <button
+            onClick={toggleRamadan}
+            className="bg-emerald-600 text-white px-2 py-1 rounded text-xs shadow-lg"
+            title="Toggle Ramadan Mode (Debug)"
+          >
+            {isRamadan ? '🌙 ON' : '🌙 OFF'}
+          </button>
+        </div>
+      )}
     </RamadanContext.Provider>
   );
 };
