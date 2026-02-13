@@ -4,6 +4,7 @@ import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
 import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { formatRelativeDate } from '../utils/date';
 
 const Announcements = () => {
   const [notifications, setNotifications] = useState(true);
@@ -72,16 +73,6 @@ const Announcements = () => {
       default:
         return 'border-l-primary'; // Default border color
     }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const today = new Date();
-    if (date.toDateString() === today.toDateString()) {
-      return `Hari ini, ${date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
-    }
-    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   return (
@@ -161,7 +152,7 @@ const Announcements = () => {
                             ${getBadgeColor(item.type)}`}>
                             {item.type || 'Umum'}
                             </span>
-                            <span className="text-xs text-gray-400 font-medium">{formatDate(item.createdAt)}</span>
+                            <span className="text-xs text-gray-400 font-medium">{formatRelativeDate(item.createdAt)}</span>
                         </div>
                         <h3 className={`text-base font-bold mb-1 leading-tight transition-colors ${isRamadan ? 'text-ramadan-primary dark:text-emerald-400' : 'text-gray-900 dark:text-white group-hover:text-primary'}`}>
                             {item.title}
