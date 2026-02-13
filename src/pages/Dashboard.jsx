@@ -86,9 +86,6 @@ const QuickActions = ({ userRole }) => {
 const Dashboard = () => {
   const { isRamadan } = useRamadan();
   const { currentUser, userRole } = useAuth();
-  const [timeLeft, setTimeLeft] = useState('00:00:00');
-  const [nextPrayer, setNextPrayer] = useState('Maghrib');
-  const [userLocation, setUserLocation] = useState('Jakarta Selatan');
 
   const [stats, setStats] = useState({ balance: 0, memberCount: 0, activityCount: 0 });
   const [recentUpdates, setRecentUpdates] = useState([]);
@@ -97,18 +94,6 @@ const Dashboard = () => {
   // Self-Healing removed in favor of correct RBAC.
   // Note: If you are locked out, manually set your role to 'super_admin' in Firestore console.
 
-  useEffect(() => {
-    // Basic Geo
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                // Mock implementation for speed, real app uses fetch
-                setUserLocation("Jakarta Selatan");
-            },
-            () => console.log("Geo permission denied")
-        );
-    }
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
