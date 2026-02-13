@@ -82,13 +82,17 @@ function App() {
         </Route>
 
         {/* Admin/Officer Only Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin', 'bendahara', 'anggota']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'bendahara', 'anggota']} />}>
           {/* Relaxing roles for demo purposes, or specific roles */}
           <Route path="/members/add" element={<AddMember />} />
           <Route path="/announcements/create" element={<CreateAnnouncement />} />
           <Route path="/activities/create" element={<CreateActivity />} />
-          <Route path="/finance/add" element={<AddTransaction />} />
           <Route path="/gallery/add" element={<AddGalleryPhoto />} />
+        </Route>
+
+        {/* Finance Specific Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'bendahara']} />}>
+          <Route path="/finance/add" element={<AddTransaction />} />
         </Route>
 
       </Routes>
