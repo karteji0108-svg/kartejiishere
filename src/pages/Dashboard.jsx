@@ -88,7 +88,7 @@ const Dashboard = () => {
   const { currentUser, userRole } = useAuth();
   const [timeLeft, setTimeLeft] = useState('00:00:00');
   const [nextPrayer, setNextPrayer] = useState('Maghrib');
-  const [userLocation, setUserLocation] = useState('Jakarta Selatan');
+  const [userLocation, setUserLocation] = useState(() => localStorage.getItem('userLocation') || 'Jakarta Selatan');
 
   const [stats, setStats] = useState({ balance: 0, memberCount: 0, activityCount: 0 });
   const [recentUpdates, setRecentUpdates] = useState([]);
@@ -98,12 +98,17 @@ const Dashboard = () => {
   // Note: If you are locked out, manually set your role to 'super_admin' in Firestore console.
 
   useEffect(() => {
-    // Basic Geo
+    // Basic Geo - cached to avoid redundant calls
     if (navigator.geolocation) {
+        const cachedLocation = localStorage.getItem('userLocation');
+        if (cachedLocation) return;
+
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 // Mock implementation for speed, real app uses fetch
-                setUserLocation("Jakarta Selatan");
+                const locationName = "Jakarta Selatan";
+                setUserLocation(locationName);
+                localStorage.setItem('userLocation', locationName);
             },
             () => console.log("Geo permission denied")
         );
