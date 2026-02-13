@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import BottomNav from '../components/BottomNav';
 import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Skeleton from '../components/Skeleton';
 import toast from 'react-hot-toast';
 
 const ActivityGallery = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchGallery();
@@ -17,16 +18,15 @@ const ActivityGallery = () => {
   const fetchGallery = async () => {
     setLoading(true);
     try {
-      // 1. Fetch from 'gallery' collection
-      const qGallery = query(collection(db, 'gallery'), orderBy('date', 'desc'));
+      const qGallery = query(collection(db, 'gallery'), orderBy('createdAt', 'desc'));
       const gallerySnap = await getDocs(qGallery);
       const galleryData = gallerySnap.docs.map(doc => ({
         id: doc.id,
         source: 'gallery',
-        ...doc.data()
+        ...doc.data(),
+        url: doc.data().imageURL // Normalize
       }));
 
-      // 2. Fetch from 'activities' collection
       const qActivities = query(collection(db, 'activities'), orderBy('date', 'desc'));
       const activitySnap = await getDocs(qActivities);
       const activityData = [];
@@ -36,24 +36,18 @@ const ActivityGallery = () => {
            activityData.push({
              id: doc.id,
              source: 'activity',
-             url: d.imageURL, // Normalize to url
-             imageURL: d.imageURL,
+             url: d.imageURL,
              title: d.title,
-             date: d.date
+             date: d.date,
+             createdAt: d.createdAt
            });
          }
       });
 
       // Merge and Sort
-      const combined = [...galleryData, ...activityData].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const combined = [...galleryData, ...activityData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setImages(combined);
 
-      // Normalize URL property
-      const finalData = combined.map(item => ({
-          ...item,
-          url: item.imageURL || item.url // Ensure 'url' property exists
-      }));
-
-      setImages(finalData);
     } catch (error) {
       console.error("Error fetching gallery: ", error);
     } finally {
@@ -61,16 +55,19 @@ const ActivityGallery = () => {
     }
   };
 
-  const handleDelete = async (id, source) => {
-      if (source !== 'gallery') {
-          toast.error("Foto dari kegiatan hanya bisa dihapus dengan menghapus kegiatannya.");
+  const handleDelete = async (id, source, e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      if (source === 'activity') {
+          toast.error("Foto kegiatan hanya bisa dihapus lewat menu Kegiatan.");
           return;
       }
 
       if (window.confirm("Hapus foto ini dari galeri?")) {
           try {
               await deleteDoc(doc(db, 'gallery', id));
-              fetchGallery();
+              setImages(images.filter(img => img.id !== id));
               toast.success("Foto berhasil dihapus.");
           } catch (error) {
               console.error("Error deleting photo: ", error);
@@ -80,58 +77,92 @@ const ActivityGallery = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 min-h-screen pb-24 relative">
-       <header className="bg-white dark:bg-slate-900 px-5 pt-12 pb-4 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 shadow-sm animate-fade-in-down">
-          <h1 className="text-2xl font-bold tracking-tight">Galeri Kegiatan</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Dokumentasi Karang Taruna</p>
+    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 min-h-screen pb-24 relative overflow-x-hidden">
+       {/* Background */}
+       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-purple-500/5 to-transparent z-0"></div>
+
+       <header className="glass-header px-5 py-4 sticky top-0 z-40 flex items-center justify-between safe-area-top animate-fade-in-down">
+          <div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Galeri Kegiatan</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Dokumentasi Karang Taruna</p>
+          </div>
+          <button className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+              <span className="material-icons-round">filter_list</span>
+          </button>
        </header>
 
-       <main className="p-4 grid grid-cols-2 gap-4">
+       <main className="p-4 relative z-10">
           {loading ? (
-             <>
-               <Skeleton className="aspect-square rounded-xl" />
-               <Skeleton className="aspect-square rounded-xl" />
-               <Skeleton className="aspect-square rounded-xl" />
-               <Skeleton className="aspect-square rounded-xl" />
-             </>
+             <div className="columns-2 gap-4 space-y-4">
+               <Skeleton className="h-40 w-full rounded-2xl" />
+               <Skeleton className="h-64 w-full rounded-2xl" />
+               <Skeleton className="h-48 w-full rounded-2xl" />
+               <Skeleton className="h-56 w-full rounded-2xl" />
+             </div>
           ) : images.length === 0 ? (
-             <div className="col-span-2 text-center py-10 text-gray-500 animate-fade-in-up">
-                Belum ada foto dokumentasi.
+             <div className="flex flex-col items-center justify-center py-20 animate-fade-in-up text-center">
+                <div className="w-24 h-24 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                    <span className="material-icons-round text-4xl text-gray-300 dark:text-gray-600">collections</span>
+                </div>
+                <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">Belum Ada Foto</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs mt-1">
+                    Dokumentasi kegiatan akan muncul di sini. Tambahkan foto baru sekarang!
+                </p>
              </div>
           ) : (
-             images.map((img, index) => (
-                <div key={`${img.source}-${img.id}`}
-                     className="relative rounded-xl overflow-hidden aspect-square group shadow-sm hover:shadow-md transition-all animate-fade-in-up"
-                     style={{ animationDelay: `${index * 50}ms` }}
-                >
-                   <img src={img.url} alt={img.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
+             /* Masonry Layout using columns */
+             <div className="columns-2 gap-4 space-y-4">
+                 {images.map((img, index) => (
+                    <div key={`${img.source}-${img.id}`}
+                         className="break-inside-avoid relative rounded-2xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer animate-fade-in-up bg-gray-200 dark:bg-slate-800"
+                         style={{ animationDelay: `${index * 50}ms` }}
+                         onClick={() => img.source === 'activity' ? navigate(`/activities/${img.id}`) : null}
+                    >
+                       <img
+                           src={img.url}
+                           alt={img.title || 'Galeri'}
+                           loading="lazy"
+                           className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700"
+                       />
 
-                   {/* Delete Button for Gallery Source */}
-                   {img.source === 'gallery' && (
-                       <button
-                           onClick={(e) => { e.preventDefault(); handleDelete(img.id, img.source); }}
-                           className="absolute top-2 right-2 p-1.5 rounded-full bg-black/40 hover:bg-red-600 text-white transition-colors opacity-0 group-hover:opacity-100"
-                       >
-                           <span className="material-icons text-sm">delete</span>
-                       </button>
-                   )}
+                       {/* Overlay Gradient */}
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                          <p className="text-white text-sm font-bold line-clamp-2 leading-tight">{img.title || 'Dokumentasi'}</p>
+                          <div className="flex items-center justify-between mt-1">
+                              <span className="text-white/80 text-[10px] font-medium backdrop-blur-sm bg-black/20 px-2 py-0.5 rounded-full">
+                                  {new Date(img.date || img.createdAt).toLocaleDateString()}
+                              </span>
+                              {img.source === 'activity' && (
+                                  <span className="material-icons-round text-white/80 text-sm">arrow_forward</span>
+                              )}
+                          </div>
+                       </div>
 
-                   {/* Info Overlay */}
-                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 pointer-events-none">
-                      <p className="text-white text-xs font-semibold line-clamp-2">{img.title}</p>
-                      <p className="text-white/80 text-[10px]">{new Date(img.date).toLocaleDateString()}</p>
-                      {img.source === 'activity' && (
-                          <span className="text-[9px] bg-primary/80 text-white px-1.5 py-0.5 rounded w-fit mt-1">Kegiatan</span>
-                      )}
-                   </div>
-                </div>
-             ))
+                       {/* Delete Button (Only for direct gallery uploads) */}
+                       {img.source === 'gallery' && (
+                           <button
+                               onClick={(e) => handleDelete(img.id, img.source, e)}
+                               className="absolute top-2 right-2 p-2 rounded-full bg-black/40 hover:bg-red-500 text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+                           >
+                               <span className="material-icons-round text-base">delete</span>
+                           </button>
+                       )}
+
+                       {/* Source Badge */}
+                       <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/30 backdrop-blur-md border border-white/10">
+                           <span className="text-[10px] font-bold text-white uppercase tracking-wider">
+                               {img.source === 'activity' ? 'Event' : 'Galeri'}
+                           </span>
+                       </div>
+                    </div>
+                 ))}
+             </div>
           )}
        </main>
 
-       {/* FAB for Adding Photo */}
-       <Link to="/gallery/add" className="fixed right-5 bottom-24 z-30 h-14 w-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center hover:bg-primary-dark transition-colors transform hover:scale-105 active:scale-95">
-          <span className="material-icons text-2xl">add_a_photo</span>
+       {/* FAB */}
+       <Link to="/gallery/add" className="fixed right-5 bottom-24 z-30 h-14 w-14 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center hover:shadow-xl hover:scale-105 transition-all active:scale-95">
+          <span className="material-icons-round text-2xl">add_photo_alternate</span>
        </Link>
 
        <BottomNav />

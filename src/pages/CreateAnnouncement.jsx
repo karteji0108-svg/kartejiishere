@@ -59,94 +59,129 @@ const CreateAnnouncement = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col">
+    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-full h-64 bg-gradient-to-bl from-orange-500/10 to-transparent z-0"></div>
+      <div className="absolute -top-10 -right-10 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl z-0"></div>
+
       {/* Header */}
-      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10 animate-fade-in-down">
+      <header className="glass-header px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <span className="material-icons">arrow_back</span>
+          <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
-        <h1 className="text-lg font-bold">Buat Pengumuman</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Buat Pengumuman</h1>
       </header>
 
-      <main className="flex-1 p-5 max-w-md mx-auto w-full animate-fade-in-up">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Judul</label>
-            <input
-              type="text"
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-transparent p-3 transition-shadow"
-              placeholder="Contoh: Rapat Bulanan"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
+      <main className="flex-1 p-5 max-w-md mx-auto w-full relative z-10 pb-24 animate-fade-in-up">
+        <div className="glass-card rounded-2xl p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Title */}
+            <div>
+                <label className="label-primary">Judul Pengumuman</label>
+                <div className="relative">
+                    <span className="absolute left-3 top-3 text-gray-400 material-icons-round text-lg">campaign</span>
+                    <input
+                        type="text"
+                        className="input-primary pl-10"
+                        placeholder="Contoh: Rapat Bulanan"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                    />
+                </div>
+            </div>
 
-          {/* Type */}
-          <div>
-            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Jenis</label>
-            <select
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-transparent p-3 transition-shadow"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-            >
-              <option value="Penting">Penting</option>
-              <option value="Kegiatan">Kegiatan</option>
-              <option value="Rapat">Rapat</option>
-              <option value="Umum">Umum</option>
-            </select>
-          </div>
+            {/* Type */}
+            <div>
+                <label className="label-primary">Jenis</label>
+                <div className="relative">
+                     <span className="absolute left-3 top-3 text-gray-400 material-icons-round text-lg">category</span>
+                     <select
+                        className="input-primary pl-10 appearance-none"
+                        value={type}
+                        onChange={(e) => setType(e.target.value)}
+                    >
+                        <option value="Penting">Penting</option>
+                        <option value="Kegiatan">Kegiatan</option>
+                        <option value="Rapat">Rapat</option>
+                        <option value="Umum">Umum</option>
+                    </select>
+                    <span className="absolute right-3 top-3 text-gray-400 material-icons-round text-lg pointer-events-none">expand_more</span>
+                </div>
+            </div>
 
-          {/* Content */}
-          <div>
-            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Isi Pengumuman</label>
-            <textarea
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-transparent p-3 h-32 transition-shadow"
-              placeholder="Tulis detail pengumuman..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              required
-            ></textarea>
-          </div>
+            {/* Content */}
+            <div>
+                <label className="label-primary">Isi Pengumuman</label>
+                <div className="relative">
+                    <textarea
+                        className="input-primary p-3 h-32 resize-none"
+                        placeholder="Tulis detail pengumuman..."
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        required
+                    ></textarea>
+                </div>
+            </div>
 
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Gambar (Opsional)</label>
-            <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 relative overflow-hidden transition-colors">
+            {/* Image Upload */}
+            <div>
+                <label className="label-primary">Gambar / Poster</label>
+                <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group h-48">
+                    <input
+                        type="file"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                        onChange={handleImageChange}
+                        accept="image/*"
+                    />
                     {preview ? (
-                        <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="w-full h-full relative">
+                             <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                 <span className="text-white font-medium flex items-center gap-2">
+                                     <span className="material-icons-round">edit</span> Ubah Gambar
+                                 </span>
+                             </div>
+                        </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <span className="material-icons text-gray-400 mb-2">cloud_upload</span>
+                        <div className="flex flex-col items-center justify-center h-full">
+                            <span className="material-icons-round text-gray-400 text-4xl mb-2 group-hover:text-primary transition-colors">add_photo_alternate</span>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                 Klik untuk upload gambar
                             </p>
                         </div>
                     )}
-                    <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
-                </label>
+                </div>
+                {preview && (
+                    <button
+                        type="button"
+                        onClick={() => { setImage(null); setPreview(null); }}
+                        className="mt-2 text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"
+                    >
+                        <span className="material-icons-round text-sm">delete</span> Hapus Gambar
+                    </button>
+                )}
             </div>
-            {preview && (
-                <button
-                    type="button"
-                    onClick={() => { setImage(null); setPreview(null); }}
-                    className="mt-2 text-sm text-red-500 hover:text-red-700 font-medium"
-                >
-                    Hapus Gambar
-                </button>
-            )}
-          </div>
 
-          <button
-            type="submit"
-            disabled={uploading}
-            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-transform active:scale-[0.98] ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
-          >
-            {uploading ? 'Mengirim...' : 'Kirim Pengumuman'}
-          </button>
-        </form>
+            <button
+                type="submit"
+                disabled={uploading}
+                className="btn-primary mt-4 flex items-center justify-center gap-2 shadow-orange-500/20 bg-gradient-to-r from-orange-500 to-red-500"
+            >
+                {uploading ? (
+                    <>
+                        <span className="material-icons-round animate-spin text-lg">refresh</span>
+                        Mengirim...
+                    </>
+                ) : (
+                    <>
+                        <span className="material-icons-round text-lg">send</span>
+                        Kirim Pengumuman
+                    </>
+                )}
+            </button>
+            </form>
+        </div>
       </main>
     </div>
   );

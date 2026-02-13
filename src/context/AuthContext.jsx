@@ -3,7 +3,9 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    onAuthStateChanged
+    onAuthStateChanged,
+    GoogleAuthProvider,
+    signInWithPopup
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
@@ -40,6 +42,37 @@ export function AuthProvider({ children }) {
         return signInWithEmailAndPassword(auth, email, password);
     }
 
+    async function loginWithGoogle() {
+        const provider = new GoogleAuthProvider();
+        // If specific Client ID is needed for certain configs, it's usually handled in Firebase console
+        // or via provider.setCustomParameters(). The user provided one, but usually default works.
+        // provider.setCustomParameters({ 'client_id': '877730599886-649dp45jcmdqk8taoma1m70o74r9ehi1.apps.googleusercontent.com' });
+
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            // Check if user exists in Firestore, if not create
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                await setDoc(docRef, {
+                    fullName: user.displayName,
+                    email: user.email,
+                    role: "super_admin", // Default for dev/testing
+                    status: "active",
+                    photoURL: user.photoURL,
+                    createdAt: new Date().toISOString()
+                });
+            }
+            return user;
+        } catch (error) {
+            console.error("Google Sign-In Error", error);
+            throw error;
+        }
+    }
+
     function logout() {
         return signOut(auth);
     }
@@ -70,6 +103,7 @@ export function AuthProvider({ children }) {
         userRole,
         signup,
         login,
+        loginWithGoogle,
         logout,
         loading
     };

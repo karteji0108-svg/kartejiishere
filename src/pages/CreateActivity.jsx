@@ -22,25 +22,24 @@ const CreateActivity = () => {
     setLocationLoading(true);
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-            (position) => {
+            async (position) => {
                 const { latitude, longitude } = position.coords;
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data && data.display_name) {
-                            const parts = data.display_name.split(',');
-                            const simpleAddress = parts.slice(0, 3).join(',');
-                            setLocation(simpleAddress);
-                        } else {
-                            setLocation(`${latitude}, ${longitude}`);
-                        }
-                    })
-                    .catch(() => {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                    const data = await res.json();
+                    if (data && data.display_name) {
+                        const parts = data.display_name.split(',');
+                        // Take first 3 parts for a concise address
+                        const simpleAddress = parts.slice(0, 3).join(', ');
+                        setLocation(simpleAddress);
+                    } else {
                         setLocation(`${latitude}, ${longitude}`);
-                    })
-                    .finally(() => {
-                        setLocationLoading(false);
-                    });
+                    }
+                } catch (error) {
+                    setLocation(`${latitude}, ${longitude}`);
+                } finally {
+                    setLocationLoading(false);
+                }
             },
             (error) => {
                 console.error(error);
@@ -92,105 +91,143 @@ const CreateActivity = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col">
-      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10 animate-fade-in-down">
+    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full max-w-lg h-64 bg-gradient-to-b from-purple-500/10 to-transparent z-0"></div>
+      <div className="absolute top-10 right-10 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl z-0"></div>
+
+      <header className="glass-header px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <span className="material-icons">arrow_back</span>
+          <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
-        <h1 className="text-lg font-bold">Buat Kegiatan Baru</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Buat Kegiatan</h1>
       </header>
 
-      <main className="flex-1 p-5 max-w-md mx-auto w-full pb-24 animate-fade-in-up">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium mb-1">Judul Kegiatan</label>
-            <input
-              type="text"
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Deskripsi</label>
-            <textarea
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 h-24 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-            ></textarea>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+      <main className="flex-1 p-5 max-w-md mx-auto w-full relative z-10 pb-24 animate-fade-in-up">
+        <div className="glass-card rounded-2xl p-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-                <label className="block text-sm font-medium mb-1">Tanggal</label>
-                <input
-                type="date"
-                className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-                />
+                <label className="label-primary">Judul Kegiatan</label>
+                <div className="relative">
+                    <span className="absolute left-3 top-3 text-gray-400 material-icons-round text-lg">event_note</span>
+                    <input
+                        type="text"
+                        className="input-primary pl-10"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Nama Acara"
+                        required
+                    />
+                </div>
             </div>
+
             <div>
-                <label className="block text-sm font-medium mb-1">Jam</label>
-                <input
-                type="time"
-                className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                required
-                />
+                <label className="label-primary">Deskripsi</label>
+                <div className="relative">
+                     <textarea
+                        className="input-primary p-3 h-32 resize-none"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Jelaskan detail kegiatan..."
+                        required
+                    ></textarea>
+                </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Lokasi</label>
-            <div className="flex gap-2">
-                <input
-                type="text"
-                className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Nama tempat / Alamat"
-                required
-                />
-                <button
-                    type="button"
-                    onClick={handleGetLocation}
-                    disabled={locationLoading}
-                    className="bg-gray-100 dark:bg-slate-700 p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-w-[50px] active:scale-95 transform"
-                    title="Ambil Lokasi Saat Ini"
-                >
-                    {locationLoading ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                    ) : (
-                        <span className="material-icons text-primary">my_location</span>
-                    )}
-                </button>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="label-primary">Tanggal</label>
+                    <div className="relative">
+                        <input
+                            type="date"
+                            className="input-primary"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            required
+                        />
+                    </div>
+                </div>
+                <div>
+                    <label className="label-primary">Waktu</label>
+                    <div className="relative">
+                        <input
+                            type="time"
+                            className="input-primary"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                            required
+                        />
+                    </div>
+                </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Poster Kegiatan</label>
-            <input
-              type="file"
-              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer"
-              onChange={(e) => setImage(e.target.files[0])}
-              accept="image/*"
-            />
-          </div>
+            <div>
+                <label className="label-primary">Lokasi</label>
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <span className="absolute left-3 top-3 text-gray-400 material-icons-round text-lg">place</span>
+                        <input
+                            type="text"
+                            className="input-primary pl-10"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="Alamat / Tempat"
+                            required
+                        />
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleGetLocation}
+                        disabled={locationLoading}
+                        className="bg-primary/10 dark:bg-primary/20 p-3 rounded-xl hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors flex items-center justify-center min-w-[52px] active:scale-95 border border-primary/20"
+                        title="Gunakan Lokasi Saat Ini"
+                    >
+                        {locationLoading ? (
+                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+                        ) : (
+                            <span className="material-icons-round text-primary">my_location</span>
+                        )}
+                    </button>
+                </div>
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-transform active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-          >
-            {loading ? 'Memproses...' : 'Buat Kegiatan'}
-          </button>
-        </form>
+            <div>
+                <label className="label-primary">Poster / Banner</label>
+                <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group">
+                    <input
+                        type="file"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        onChange={(e) => setImage(e.target.files[0])}
+                        accept="image/*"
+                    />
+                    <div className="flex flex-col items-center">
+                        <span className="material-icons-round text-gray-400 text-3xl mb-2 group-hover:text-primary transition-colors">cloud_upload</span>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                            {image ? image.name : "Klik untuk upload gambar"}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary mt-4 flex items-center justify-center gap-2 shadow-purple-500/20 bg-gradient-to-r from-primary to-blue-600"
+            >
+                {loading ? (
+                    <>
+                        <span className="material-icons-round animate-spin text-lg">refresh</span>
+                        Memproses...
+                    </>
+                ) : (
+                    <>
+                        <span className="material-icons-round text-lg">add_circle</span>
+                        Buat Kegiatan
+                    </>
+                )}
+            </button>
+            </form>
+        </div>
       </main>
     </div>
   );

@@ -54,101 +54,128 @@ const AddMember = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col">
-      <header className="bg-white dark:bg-slate-900 shadow-sm px-4 py-4 flex items-center gap-4 sticky top-0 z-10 animate-fade-in-down">
+    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-full h-64 bg-gradient-to-bl from-blue-500/10 to-transparent z-0"></div>
+      <div className="absolute -top-20 -left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl z-0"></div>
+
+      <header className="glass-header px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <span className="material-icons">arrow_back</span>
+          <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
-        <h1 className="text-lg font-bold">Tambah Anggota</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Tambah Anggota</h1>
       </header>
 
-      <main className="flex-1 p-5 max-w-md mx-auto w-full animate-fade-in-up">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium mb-1">Nama Lengkap</label>
-            <input
-              type="text"
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Jabatan</label>
-            <select
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option value="Anggota">Anggota</option>
-              <option value="Ketua">Ketua</option>
-              <option value="Wakil Ketua">Wakil Ketua</option>
-              <option value="Sekretaris">Sekretaris</option>
-              <option value="Bendahara">Bendahara</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">No. Telepon</label>
-            <input
-              type="tel"
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <select
-              className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-800 p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              <option value="active">Aktif</option>
-              <option value="inactive">Tidak Aktif</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Foto Profil</label>
-            <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden flex items-center justify-center border border-gray-300 dark:border-slate-600 shadow-sm">
-                    {preview ? (
-                        <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                        <span className="material-icons text-gray-400 text-3xl">person</span>
-                    )}
+      <main className="flex-1 p-5 max-w-md mx-auto w-full relative z-10 animate-fade-in-up">
+        <div className="glass-card rounded-2xl p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Photo Upload - Centered */}
+            <div className="flex flex-col items-center mb-6">
+                <div className="relative group">
+                    <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-slate-700 overflow-hidden flex items-center justify-center border-4 border-white dark:border-slate-600 shadow-lg">
+                        {preview ? (
+                            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="material-icons-round text-gray-300 dark:text-gray-500 text-4xl">person_add</span>
+                        )}
+                    </div>
+                    <label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg cursor-pointer transform transition-transform hover:scale-110 active:scale-95">
+                        <span className="material-icons-round text-sm">camera_alt</span>
+                        <input
+                            type="file"
+                            className="hidden"
+                            onChange={handlePhotoChange}
+                            accept="image/*"
+                        />
+                    </label>
                 </div>
-                <label className="flex-1 cursor-pointer">
-                    <span className="sr-only">Choose profile photo</span>
-                    <input
-                      type="file"
-                      className="block w-full text-sm text-slate-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-full file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-primary/10 file:text-primary
-                        hover:file:bg-primary/20
-                        transition-colors
-                      "
-                      onChange={handlePhotoChange}
-                      accept="image/*"
-                    />
-                </label>
+                <p className="text-xs text-gray-400 mt-2">Upload Foto Profil</p>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition-transform active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-          >
-            {loading ? 'Menyimpan...' : 'Simpan Anggota'}
-          </button>
-        </form>
+            <div className="space-y-4">
+                <div>
+                    <label className="label-primary">Nama Lengkap</label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-3 text-gray-400 material-icons-round text-lg">badge</span>
+                        <input
+                            type="text"
+                            className="input-primary pl-10"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            placeholder="Nama Lengkap Anggota"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="label-primary">Jabatan</label>
+                        <div className="relative">
+                             <select
+                                className="input-primary pl-3 appearance-none"
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                            >
+                                <option value="Anggota">Anggota</option>
+                                <option value="Ketua">Ketua</option>
+                                <option value="Wakil Ketua">Wakil</option>
+                                <option value="Sekretaris">Sekretaris</option>
+                                <option value="Bendahara">Bendahara</option>
+                            </select>
+                             <span className="absolute right-3 top-3 text-gray-400 material-icons-round text-lg pointer-events-none">expand_more</span>
+                        </div>
+                    </div>
+                    <div>
+                         <label className="label-primary">Status</label>
+                        <div className="relative">
+                            <select
+                                className="input-primary pl-3 appearance-none"
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value)}
+                            >
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Non-Aktif</option>
+                            </select>
+                            <span className="absolute right-3 top-3 text-gray-400 material-icons-round text-lg pointer-events-none">expand_more</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="label-primary">No. Telepon</label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-3 text-gray-400 material-icons-round text-lg">phone</span>
+                        <input
+                            type="tel"
+                            className="input-primary pl-10"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="08..."
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary mt-6 flex items-center justify-center gap-2"
+            >
+                {loading ? (
+                    <>
+                        <span className="material-icons-round animate-spin text-lg">refresh</span>
+                        Menyimpan...
+                    </>
+                ) : (
+                    <>
+                        <span className="material-icons-round text-lg">check</span>
+                        Simpan Anggota
+                    </>
+                )}
+            </button>
+            </form>
+        </div>
       </main>
     </div>
   );
