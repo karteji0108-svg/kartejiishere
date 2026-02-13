@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -15,27 +15,6 @@ const AddTransaction = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
-  // Helper to ensure user has permissions (Self-healing)
-  const ensureUserPermissions = async (user) => {
-      try {
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-
-          if (!userSnap.exists() || userSnap.data().role !== 'super_admin') {
-              console.log("Attempting to fix user permissions...");
-              await setDoc(userRef, {
-                  role: 'super_admin',
-                  email: user.email,
-                  fullName: user.displayName || 'User',
-                  status: 'active',
-                  uid: user.uid
-              }, { merge: true });
-          }
-      } catch (error) {
-          console.error("Failed to self-heal permissions:", error);
-      }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -44,8 +23,6 @@ const AddTransaction = () => {
       if (!currentUser) {
           throw new Error("Anda harus login untuk menambah transaksi.");
       }
-
-      await ensureUserPermissions(currentUser);
 
       const transactionData = {
         title,
@@ -67,7 +44,7 @@ const AddTransaction = () => {
     } catch (error) {
       console.error("Error adding transaction: ", error);
       if (error.code === 'permission-denied') {
-          toast.error("Izin ditolak. Pastikan Anda memiliki akses 'super_admin'. Coba refresh halaman.");
+          toast.error("Izin ditolak. Anda tidak memiliki izin untuk menambahkan transaksi.");
       } else {
           toast.error(`Gagal menambahkan transaksi: ${error.message}`);
       }
