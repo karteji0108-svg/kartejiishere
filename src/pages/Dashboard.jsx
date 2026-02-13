@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import RamadanTimer from '../components/RamadanTimer';
 import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
@@ -86,8 +87,6 @@ const QuickActions = ({ userRole }) => {
 const Dashboard = () => {
   const { isRamadan } = useRamadan();
   const { currentUser, userRole } = useAuth();
-  const [timeLeft, setTimeLeft] = useState('00:00:00');
-  const [nextPrayer, setNextPrayer] = useState('Maghrib');
   const [userLocation, setUserLocation] = useState('Jakarta Selatan');
 
   const [stats, setStats] = useState({ balance: 0, memberCount: 0, activityCount: 0 });
@@ -156,8 +155,10 @@ const Dashboard = () => {
       }
     };
 
+
     fetchData();
   }, [userRole]);
+
 
   return (
     <div className={`font-display text-slate-800 dark:text-slate-100 h-screen overflow-hidden flex flex-col relative transition-colors duration-500
@@ -194,6 +195,9 @@ const Dashboard = () => {
             <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
           </button>
         </header>
+        {/* Ramadan Timer */}
+        <RamadanTimer />
+
 
         {/* Role-Specific Dashboard Views */}
 
