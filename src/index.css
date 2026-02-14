@@ -45,7 +45,9 @@
       @apply bg-gradient-to-br from-[#0B1020] to-[#3B0F5A];
   }
   .bg-ramadan {
-      @apply bg-gradient-to-br from-ramadan-primary via-ramadan-bg to-ramadan-primary;
+      @apply bg-cover bg-center bg-no-repeat bg-fixed;
+      background-image: url('./assets/ramadan-bg.png');
+      background-color: #064E3B;
   }
 }
 
