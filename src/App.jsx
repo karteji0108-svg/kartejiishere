@@ -12,6 +12,7 @@ import Activities from './pages/Activities';
 import CreateActivity from './pages/CreateActivity';
 import ActivityDetail from './pages/ActivityDetail';
 import ActivityGallery from './pages/ActivityGallery';
+import Gallery from './pages/Gallery';
 import AddGalleryPhoto from './pages/AddGalleryPhoto';
 import Announcements from './pages/Announcements';
 import CreateAnnouncement from './pages/CreateAnnouncement';
@@ -67,7 +68,7 @@ function App() {
           <Route path="/kegiatan" element={<Activities />} />
 
           <Route path="/activities/:id" element={<ActivityDetail />} />
-          <Route path="/gallery" element={<AddGalleryPhoto />} />
+          <Route path="/gallery" element={<Gallery />} />
 
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/pengumuman" element={<Announcements />} />

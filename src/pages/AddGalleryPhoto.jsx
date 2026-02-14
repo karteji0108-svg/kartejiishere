@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -13,13 +13,43 @@ const AddGalleryPhoto = () => {
   const [preview, setPreview] = useState(null);
   const [description, setDescription] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0); // Simulated progress
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+        processFile(file);
+    }
+  };
+
+  const processFile = (file) => {
+      if (file.type.startsWith('image/')) {
         setImage(file);
         setPreview(URL.createObjectURL(file));
-    }
+      } else {
+          toast.error("Mohon upload file gambar.");
+      }
+  };
+
+  const handleDragOver = (e) => {
+      e.preventDefault();
+      setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+      e.preventDefault();
+      setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files[0];
+      if (file) {
+          processFile(file);
+      }
   };
 
   const handleSubmit = async (e) => {
@@ -31,12 +61,24 @@ const AddGalleryPhoto = () => {
 
     setUploading(true);
 
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+        setProgress(prev => {
+            if (prev >= 90) {
+                clearInterval(progressInterval);
+                return 90;
+            }
+            return prev + 10;
+        });
+    }, 200);
+
     try {
       if (!currentUser) {
           throw new Error("Anda harus login untuk mengupload foto.");
       }
 
       const imageURL = await uploadToCloudinary(image);
+      setProgress(100);
 
       await addDoc(collection(db, 'gallery'), {
         imageURL,
@@ -48,17 +90,19 @@ const AddGalleryPhoto = () => {
       });
 
       toast.success('Foto berhasil diupload!');
-      navigate('/gallery');
+      setTimeout(() => navigate('/gallery'), 500);
     } catch (error) {
       console.error("Error uploading photo: ", error);
       toast.error(`Gagal upload foto: ${error.message}`);
+      setProgress(0);
     } finally {
+      clearInterval(progressInterval);
       setUploading(false);
     }
   };
 
   return (
-    <div className="bg-glass-light dark:bg-glass-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden">
+    <div className="bg-glass-light dark:bg-glass-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden transition-colors duration-500">
 
       <header className="glass-header px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-white/30 dark:hover:bg-black/50 transition-colors">
@@ -73,10 +117,20 @@ const AddGalleryPhoto = () => {
             {/* Upload Area */}
             <div>
                 <label className="label-primary text-center block mb-4">Pilih Foto Dokumentasi</label>
-                <div className={`relative border-2 border-dashed rounded-2xl overflow-hidden hover:bg-white/10 dark:hover:bg-black/10 transition-all cursor-pointer group h-80 flex flex-col items-center justify-center ${preview ? 'border-primary' : 'border-white/30 dark:border-white/10'}`}>
+                <div
+                    className={`relative border-2 border-dashed rounded-2xl overflow-hidden transition-all cursor-pointer group h-80 flex flex-col items-center justify-center
+                        ${isDragging ? 'border-primary bg-primary/10 scale-[1.02]' : 'border-white/30 dark:border-white/10 hover:bg-white/10 dark:hover:bg-black/10'}
+                        ${preview ? 'border-primary' : ''}
+                    `}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                >
                     <input
                         type="file"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                        className="hidden"
+                        ref={fileInputRef}
                         onChange={handleImageChange}
                         accept="image/*"
                     />
@@ -84,17 +138,19 @@ const AddGalleryPhoto = () => {
                         <>
                             <img src={preview} alt="Preview" className="w-full h-full object-contain p-2" />
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 backdrop-blur-sm">
-                                <span className="text-white font-medium flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full">
+                                <span className="text-white font-medium flex items-center gap-2 bg-black/50 px-4 py-2 rounded-full pointer-events-none">
                                     <span className="material-icons-round">edit</span> Ganti Foto
                                 </span>
                             </div>
                         </>
                     ) : (
                         <div className="flex flex-col items-center justify-center p-6 text-center animate-bounce">
-                            <div className="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-500 mb-4">
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors ${isDragging ? 'bg-primary text-white' : 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500'}`}>
                                 <span className="material-icons-round text-3xl">cloud_upload</span>
                             </div>
-                            <h3 className="font-bold text-slate-700 dark:text-slate-300 mb-1">Tap untuk Upload</h3>
+                            <h3 className="font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                {isDragging ? 'Lepaskan Foto' : 'Tap atau Drop Foto'}
+                            </h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[200px]">
                                 Support JPG, PNG. Maksimal 5MB.
                             </p>
@@ -108,7 +164,7 @@ const AddGalleryPhoto = () => {
                 <label className="label-primary">Keterangan Foto</label>
                 <div className="relative">
                     <textarea
-                        className="glass-input p-3 h-24 resize-none"
+                        className="glass-input p-3 h-24 resize-none w-full"
                         placeholder="Tambahkan cerita di balik foto ini..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
@@ -117,20 +173,27 @@ const AddGalleryPhoto = () => {
                 </div>
             </div>
 
+            {/* Progress Bar */}
+            {uploading && (
+                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
+                    <div className="bg-primary h-2.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                </div>
+            )}
+
             <button
                 type="submit"
                 disabled={uploading}
-                className="btn-primary mt-4 flex items-center justify-center gap-2 shadow-indigo-500/30 bg-gradient-to-r from-indigo-500 to-purple-600 hover:to-purple-700"
+                className="btn-primary mt-4 flex items-center justify-center gap-2 shadow-indigo-500/30 bg-gradient-to-r from-indigo-500 to-purple-600 hover:to-purple-700 disabled:opacity-80"
             >
                 {uploading ? (
                     <>
                         <span className="material-icons-round animate-spin text-lg">refresh</span>
-                        Mengupload...
+                        Mengupload {progress}%...
                     </>
                 ) : (
                     <>
                         <span className="material-icons-round text-lg">upload_file</span>
-                        Upload Foto
+                        Upload Sekarang
                     </>
                 )}
             </button>

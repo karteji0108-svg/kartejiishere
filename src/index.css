@@ -22,16 +22,16 @@
 
   /* Glassmorphism helpers */
   .glass-card {
-      @apply bg-white/20 dark:bg-black/30 backdrop-blur-xl shadow-lg border border-white/40 dark:border-white/10 rounded-2xl;
+      @apply bg-white/15 dark:bg-black/20 backdrop-blur-md shadow-lg border border-white/30 dark:border-white/5 rounded-2xl;
   }
   .glass-header {
-      @apply bg-white/30 dark:bg-black/40 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm;
+      @apply bg-white/10 dark:bg-black/20 backdrop-blur-lg border-b border-white/20 dark:border-white/5 shadow-sm;
   }
   .glass-nav {
-      @apply bg-white/30 dark:bg-black/40 backdrop-blur-xl border-t border-white/20 dark:border-white/10 shadow-lg;
+      @apply bg-white/10 dark:bg-black/20 backdrop-blur-lg border-t border-white/20 dark:border-white/5 shadow-lg;
   }
   .glass-input {
-      @apply bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 focus:ring-2 focus:ring-primary/50 outline-none text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 rounded-xl;
+      @apply bg-white/20 dark:bg-black/10 backdrop-blur-sm border border-white/30 dark:border-white/10 focus:ring-2 focus:ring-primary/50 outline-none text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 rounded-xl;
   }
   .glass-overlay {
       @apply bg-black/40 backdrop-blur-sm;
@@ -39,10 +39,13 @@
 
   /* Background Gradients */
   .bg-glass-light {
-      @apply bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100;
+      @apply bg-gradient-to-br from-[#6DD5FA] to-[#B06AB3];
   }
   .bg-glass-dark {
-      @apply bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950;
+      @apply bg-gradient-to-br from-[#0B1020] to-[#3B0F5A];
+  }
+  .bg-ramadan {
+      @apply bg-gradient-to-br from-ramadan-primary via-ramadan-bg to-ramadan-primary;
   }
 }
 
@@ -58,7 +61,7 @@
 
   /* Input/Form styling */
   .input-primary {
-      @apply w-full px-4 py-3 bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary focus:bg-white/60 dark:focus:bg-black/40 transition-all outline-none text-sm font-medium text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400;
+      @apply w-full px-4 py-3 bg-white/20 dark:bg-black/10 backdrop-blur-sm border border-white/30 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary focus:bg-white/30 dark:focus:bg-black/30 transition-all outline-none text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400;
   }
   .btn-primary {
       @apply w-full py-3.5 px-4 bg-primary text-white font-semibold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark transition-transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed;

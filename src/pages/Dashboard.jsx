@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import ThemeToggle from '../components/ThemeToggle';
+import RamadanBanner from '../components/RamadanBanner';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
 import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -72,9 +73,9 @@ const QuickActions = ({ userRole }) => {
             </Link>
           )}
 
-          <Link to="/gallery/add" className="flex flex-col items-center gap-2 group">
+          <Link to="/gallery" className="flex flex-col items-center gap-2 group">
              <div className="w-12 h-12 rounded-xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-pink-600 dark:text-pink-400 group-hover:scale-105 transition-transform">
-                 <span className="material-icons-round">add_a_photo</span>
+                 <span className="material-icons-round">photo_library</span>
              </div>
              <span className="text-[10px] font-medium text-center">Galeri</span>
           </Link>
@@ -95,8 +96,9 @@ const Dashboard = () => {
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Self-Healing removed in favor of correct RBAC.
-  // Note: If you are locked out, manually set your role to 'super_admin' in Firestore console.
+  const canUpload = hasPermission(userRole, PERMISSIONS.MANAGE_GALLERY) ||
+                    hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) ||
+                    userRole === 'anggota';
 
   useEffect(() => {
     // Basic Geo
@@ -162,7 +164,7 @@ const Dashboard = () => {
 
   return (
     <div className={`font-display text-slate-800 dark:text-slate-100 h-screen overflow-hidden flex flex-col relative transition-colors duration-500
-      ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-glass-light dark:bg-glass-dark'}`}>
+      ${isRamadan ? 'bg-ramadan' : 'bg-glass-light dark:bg-glass-dark'}`}>
 
       {/* Top Status Bar Area */}
       <div className="h-12 w-full shrink-0"></div>
@@ -185,7 +187,7 @@ const Dashboard = () => {
             <div>
               <p className="text-sm font-medium text-slate-600 dark:text-slate-300 ml-1">Selamat Datang,</p>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white capitalize ml-1">
-                  Nama Pengguna
+                  {currentUser?.displayName || 'Pengguna'}
               </h1>
               <span className="ml-1 mt-1 inline-block text-[10px] bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 text-primary dark:text-primary-content px-2 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm">
                   {userRole?.replace('_', ' ')}
@@ -246,6 +248,17 @@ const Dashboard = () => {
         <div className="h-8"></div>
       </main>
 
+      {/* FAB for Upload (Context-Aware) */}
+      {canUpload && (
+        <Link
+            to="/gallery/add"
+            className="fixed bottom-24 right-5 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all"
+        >
+            <span className="material-icons-round text-2xl">add</span>
+        </Link>
+      )}
+
+      <RamadanBanner />
       <BottomNav />
     </div>
   );
