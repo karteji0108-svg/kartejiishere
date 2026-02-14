@@ -19,7 +19,13 @@ const ActivityGallery = () => {
     setLoading(true);
     try {
       const qGallery = query(collection(db, 'gallery'), orderBy('createdAt', 'desc'));
-      const gallerySnap = await getDocs(qGallery);
+      const qActivities = query(collection(db, 'activities'), orderBy('date', 'desc'));
+
+      const [gallerySnap, activitySnap] = await Promise.all([
+        getDocs(qGallery),
+        getDocs(qActivities)
+      ]);
+
       const galleryData = gallerySnap.docs.map(doc => ({
         id: doc.id,
         source: 'gallery',
@@ -27,8 +33,6 @@ const ActivityGallery = () => {
         url: doc.data().imageURL // Normalize
       }));
 
-      const qActivities = query(collection(db, 'activities'), orderBy('date', 'desc'));
-      const activitySnap = await getDocs(qActivities);
       const activityData = [];
       activitySnap.forEach((doc) => {
          const d = doc.data();
@@ -49,7 +53,7 @@ const ActivityGallery = () => {
       setImages(combined);
 
     } catch (error) {
-      console.error("Error fetching gallery: ", error);
+      toast.error("Gagal memuat galeri");
     } finally {
       setLoading(false);
     }
@@ -70,7 +74,6 @@ const ActivityGallery = () => {
               setImages(images.filter(img => img.id !== id));
               toast.success("Foto berhasil dihapus.");
           } catch (error) {
-              console.error("Error deleting photo: ", error);
               toast.error("Gagal menghapus foto");
           }
       }
