@@ -95,6 +95,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ balance: 0, memberCount: 0, activityCount: 0 });
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null); // Local state for detailed user data
 
   const canUpload = hasPermission(userRole, PERMISSIONS.MANAGE_GALLERY) ||
                     hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) ||
@@ -117,6 +118,14 @@ const Dashboard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Fetch detailed user profile
+        if (currentUser) {
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            if (userDoc.exists()) {
+                setUserProfile(userDoc.data());
+            }
+        }
+
         // Fetch stats only if allowed
         let memberCount = 0;
         let balance = 0;
@@ -160,7 +169,10 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [userRole]);
+  }, [userRole, currentUser]);
+
+  const displayName = userProfile?.fullName || userProfile?.displayName || currentUser?.displayName || 'Pengguna';
+  const photoURL = userProfile?.photoURL || currentUser?.photoURL;
 
   return (
     <div className={`font-display text-slate-800 dark:text-slate-100 h-screen overflow-hidden flex flex-col relative transition-colors duration-500
@@ -176,8 +188,8 @@ const Dashboard = () => {
             <div className="relative">
               <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center glass-card p-1 shadow-lg">
                  <div className="w-full h-full rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                     {currentUser?.photoURL ? (
-                        <img src={currentUser.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                     {photoURL ? (
+                        <img src={photoURL} alt="Avatar" className="w-full h-full object-cover" />
                      ) : (
                         <span className="material-icons text-gray-400 dark:text-gray-500 text-3xl flex items-center justify-center h-full w-full">person</span>
                      )}
@@ -187,7 +199,7 @@ const Dashboard = () => {
             <div>
               <p className="text-sm font-medium text-slate-600 dark:text-slate-300 ml-1">Selamat Datang,</p>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white capitalize ml-1">
-                  {currentUser?.displayName || 'Pengguna'}
+                  {displayName}
               </h1>
               <span className="ml-1 mt-1 inline-block text-[10px] bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 text-primary dark:text-primary-content px-2 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm">
                   {userRole?.replace('_', ' ')}
