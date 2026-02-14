@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRamadan } from '../context/RamadanContext';
+import { useRamadan } from '../../context/RamadanContext';
 
 const RamadanDecorations = () => {
   const { isRamadan } = useRamadan();

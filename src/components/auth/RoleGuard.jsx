@@ -1,6 +1,6 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
-import { hasPermission } from '../constants/roles';
+import { useAuth } from '../../context/AuthContext';
+import { hasPermission } from '../../constants/roles';
 import { Navigate } from 'react-router-dom';
 
 const RoleGuard = ({ permission, children, fallback = null }) => {
