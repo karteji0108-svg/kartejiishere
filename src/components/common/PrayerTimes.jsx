@@ -7,39 +7,30 @@ const PrayerTimes = () => {
   const [nextPrayer, setNextPrayer] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
   const [loading, setLoading] = useState(true);
-  const [locationName, setLocationName] = useState('Jakarta');
+  const [locationName, setLocationName] = useState('Jakarta (Default)');
+  const [locationDenied, setLocationDenied] = useState(false);
 
   useEffect(() => {
     if (!isRamadan) return;
 
-    const fetchPrayerTimes = async () => {
-      setLoading(true);
-      try {
-        let latitude = -6.2088; // Default Jakarta
-        let longitude = 106.8456;
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    latitude = position.coords.latitude;
-                    longitude = position.coords.longitude;
-                    await getTimes(latitude, longitude);
-                },
-                async () => {
-                    await getTimes(latitude, longitude);
-                }
-            );
-        } else {
-             await getTimes(latitude, longitude);
+    const fetchCityName = async (lat, long) => {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${long}`);
+            const data = await response.json();
+            if (data && data.address) {
+                const city = data.address.city || data.address.town || data.address.county || data.address.state || 'Lokasi Terdeteksi';
+                // Clean up if it's too long
+                const sub = data.address.suburb ? `${data.address.suburb}, ` : '';
+                setLocationName(`${sub}${city}`);
+            }
+        } catch (error) {
+            console.error("Error fetching city name:", error);
+            // Fallback is kept
         }
-
-      } catch (error) {
-        console.error("Error fetching prayer times:", error);
-        setLoading(false);
-      }
     };
 
     const getTimes = async (lat, long) => {
+        setLoading(true);
         try {
             const date = new Date();
             const timestamp = Math.floor(date.getTime() / 1000);
@@ -48,17 +39,39 @@ const PrayerTimes = () => {
             const data = await response.json();
             if (data.code === 200) {
                 setPrayerTimes(data.data.timings);
-                setLocationName(data.data.meta.timezone);
                 calculateNextPrayer(data.data.timings);
-                setLoading(false);
             }
         } catch (e) {
             console.error(e);
+        } finally {
             setLoading(false);
         }
     };
 
-    fetchPrayerTimes();
+    const getLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const long = position.coords.longitude;
+                    setLocationDenied(false);
+                    fetchCityName(lat, long);
+                    getTimes(lat, long);
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    setLocationDenied(true);
+                    // Fallback to Jakarta
+                    getTimes(-6.2088, 106.8456);
+                }
+            );
+        } else {
+             setLocationDenied(true);
+             getTimes(-6.2088, 106.8456);
+        }
+    };
+
+    getLocation();
   }, [isRamadan]);
 
   useEffect(() => {
@@ -114,6 +127,20 @@ const PrayerTimes = () => {
       }
   };
 
+  const handleRequestLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+          (position) => {
+              // Simply reload to re-trigger the initial effect logic cleanly
+              window.location.reload();
+          },
+          (error) => {
+              alert("Gagal mendapatkan lokasi. Pastikan GPS aktif dan izin diberikan.");
+          }
+      );
+    }
+  };
+
   if (!isRamadan) return null;
 
   return (
@@ -126,10 +153,20 @@ const PrayerTimes = () => {
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h3 className="text-emerald-100 font-bold text-lg">Jadwal Imsyakiyah</h3>
-                    <p className="text-emerald-200/70 text-xs flex items-center gap-1">
-                        <span className="material-icons text-xs">location_on</span>
-                        {locationName}
-                    </p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-emerald-200/70 text-xs flex items-center gap-1">
+                            <span className="material-icons text-xs">location_on</span>
+                            {locationName}
+                        </p>
+                        {locationDenied && (
+                             <button
+                                onClick={handleRequestLocation}
+                                className="bg-emerald-600/50 hover:bg-emerald-600 text-[10px] text-white px-2 py-0.5 rounded border border-emerald-400/50 transition-colors"
+                             >
+                                Aktifkan Lokasi
+                             </button>
+                        )}
+                    </div>
                 </div>
                 <div className="text-right">
                     <p className="text-xs text-emerald-200/80 uppercase tracking-wider mb-1">Menuju {nextPrayer?.name}</p>
