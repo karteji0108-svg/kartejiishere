@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useRamadan } from '../context/RamadanContext';
 import Skeleton from '../components/Skeleton';
+import { formatFullDateWithDay } from '../utils/date';
 
 const ActivityDetail = () => {
   const { id } = useParams();
@@ -126,7 +127,7 @@ const ActivityDetail = () => {
                 <div className="flex items-center text-white/90 text-sm gap-4 animate-fade-in-up" style={{animationDelay: '200ms'}}>
                     <div className="flex items-center gap-1.5">
                         <span className="material-icons-round text-base">calendar_month</span>
-                        {new Date(activity.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                        {formatFullDateWithDay(activity.date)}
                     </div>
                 </div>
             </div>

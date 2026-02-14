@@ -4,6 +4,7 @@ import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/fi
 import { db } from '../config/firebase';
 import { Link } from 'react-router-dom';
 import Skeleton from '../components/Skeleton';
+import { formatDateShort } from '../utils/date';
 
 const Finance = () => {
   const [transactions, setTransactions] = useState([]);
@@ -64,11 +65,6 @@ const Finance = () => {
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
   // Helper for chart bars opacity
@@ -185,7 +181,7 @@ const Finance = () => {
                             </div>
                             <div className="min-w-0 flex-1">
                                 <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{t.title}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(t.date)} • {t.category || 'Umum'}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{formatDateShort(t.date)} • {t.category || 'Umum'}</p>
                             </div>
                         </div>
                         <div className="text-right ml-2 flex items-center gap-3">

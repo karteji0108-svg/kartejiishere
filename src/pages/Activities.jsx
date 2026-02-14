@@ -5,6 +5,7 @@ import { useRamadan } from '../context/RamadanContext';
 import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Skeleton from '../components/Skeleton';
+import { formatMonthYear, getDay, getMonthShort } from '../utils/date';
 
 const Activities = () => {
   const { isRamadan } = useRamadan();
@@ -50,24 +51,6 @@ const Activities = () => {
     activity.title?.toLowerCase().includes(search.toLowerCase()) ||
     activity.description?.toLowerCase().includes(search.toLowerCase())
   );
-
-  const getMonthName = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-  };
-
-  const getDay = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.getDate();
-  };
-
-  const getMonthShort = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('id-ID', { month: 'short' });
-  };
 
   return (
     <div className={`font-display min-h-screen flex flex-col items-center justify-center transition-colors duration-500 relative
@@ -119,11 +102,11 @@ const Activities = () => {
             filteredActivities.map((activity, index) => (
               <div key={activity.id}>
                  {/* Show Month Header */}
-                 {(index === 0 || getMonthName(activity.date) !== getMonthName(filteredActivities[index-1].date)) && (
+                 {(index === 0 || formatMonthYear(activity.date) !== formatMonthYear(filteredActivities[index-1].date)) && (
                     <div className="flex items-center space-x-2 pb-1 pt-2 animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
                       <span className="material-icons text-primary text-sm">event</span>
                       <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        {getMonthName(activity.date)}
+                        {formatMonthYear(activity.date)}
                       </h2>
                     </div>
                  )}
