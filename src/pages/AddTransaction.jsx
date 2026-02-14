@@ -15,27 +15,6 @@ const AddTransaction = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
-  // Helper to ensure user has permissions (Self-healing)
-  const ensureUserPermissions = async (user) => {
-      try {
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-
-          if (!userSnap.exists() || userSnap.data().role !== 'super_admin') {
-              console.log("Attempting to fix user permissions...");
-              await setDoc(userRef, {
-                  role: 'super_admin',
-                  email: user.email,
-                  fullName: user.displayName || 'User',
-                  status: 'active',
-                  uid: user.uid
-              }, { merge: true });
-          }
-      } catch (error) {
-          console.error("Failed to self-heal permissions:", error);
-      }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -44,8 +23,6 @@ const AddTransaction = () => {
       if (!currentUser) {
           throw new Error("Anda harus login untuk menambah transaksi.");
       }
-
-      await ensureUserPermissions(currentUser);
 
       const transactionData = {
         title,

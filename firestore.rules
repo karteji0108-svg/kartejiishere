@@ -48,15 +48,15 @@ service cloud.firestore {
       allow read: if isAuthenticated();
 
       // Creation:
-      // 1. User signing up can create their own profile (with restricted fields preferably, but open for now)
+      // 1. User signing up can create their own profile (must be 'anggota' by default)
       // 2. Admins/Sekretaris can create users
-      allow create: if isOwner(userId) || isSuperAdmin() || isSekretaris();
+      allow create: if (isOwner(userId) && request.resource.data.role == 'anggota') || isSuperAdmin() || isSekretaris();
 
       // Update:
-      // 1. Owner can update their own profile
-      // 2. Super Admin can update anyone
-      // 3. Sekretaris can update members (for management)
-      allow update: if isOwner(userId) || isSuperAdmin() || isSekretaris();
+      // 1. Super Admin can update anything
+      // 2. Owner & Sekretaris can update but CANNOT change roles
+      allow update: if isSuperAdmin()
+                    || ((isOwner(userId) || isSekretaris()) && request.resource.data.role == resource.data.role);
 
       // Delete: Only Super Admin
       allow delete: if isSuperAdmin();
@@ -64,9 +64,8 @@ service cloud.firestore {
 
     // Finance Collection
     match /finance/{document=**} {
-      // Read: Authenticated users (transparency) or restricted to specific roles?
-      // Requirement says "Bendahara manage", "Ketua monitor". Let's allow Auth read for transparency.
-      allow read: if isAuthenticated();
+      // Read: Restricted to specific roles (Super Admin, Ketua, Wakil Ketua, Bendahara)
+      allow read: if isSuperAdmin() || isKetua() || isWakil() || isBendahara();
 
       // Write: Bendahara and Super Admin only
       allow write: if isBendahara() || isSuperAdmin();
