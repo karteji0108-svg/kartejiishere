@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import toast from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
+import { formatFullDate } from '../utils/date';
 
 const Profile = () => {
   const { currentUser, logout, userRole } = useAuth();
@@ -285,7 +286,7 @@ const Profile = () => {
                        </div>
                        <div className="flex-1">
                            <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Bergabung Sejak</p>
-                           <p className="font-medium text-slate-800 dark:text-white text-sm">{new Date(profile?.createdAt || Date.now()).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                           <p className="font-medium text-slate-800 dark:text-white text-sm">{formatFullDate(profile?.createdAt || Date.now())}</p>
                        </div>
                     </div>
                  </div>

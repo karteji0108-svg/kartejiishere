@@ -5,6 +5,7 @@ import { db } from '../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import Skeleton from '../components/Skeleton';
 import toast from 'react-hot-toast';
+import { formatDateDefault } from '../utils/date';
 
 const ActivityGallery = () => {
   const [images, setImages] = useState([]);
@@ -130,7 +131,7 @@ const ActivityGallery = () => {
                           <p className="text-white text-sm font-bold line-clamp-2 leading-tight">{img.title || 'Dokumentasi'}</p>
                           <div className="flex items-center justify-between mt-1">
                               <span className="text-white/80 text-[10px] font-medium backdrop-blur-sm bg-black/20 px-2 py-0.5 rounded-full">
-                                  {new Date(img.date || img.createdAt).toLocaleDateString()}
+                                  {formatDateDefault(img.date || img.createdAt)}
                               </span>
                               {img.source === 'activity' && (
                                   <span className="material-icons-round text-white/80 text-sm">arrow_forward</span>
