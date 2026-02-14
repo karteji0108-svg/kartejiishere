@@ -58,13 +58,10 @@ const AddGalleryPhoto = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-indigo-500/10 to-transparent z-0"></div>
-      <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl z-0"></div>
+    <div className="bg-glass-light dark:bg-glass-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden">
 
       <header className="glass-header px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-white/30 dark:hover:bg-black/50 transition-colors">
           <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
         <h1 className="text-lg font-bold text-slate-900 dark:text-white">Upload Foto Galeri</h1>
@@ -76,7 +73,7 @@ const AddGalleryPhoto = () => {
             {/* Upload Area */}
             <div>
                 <label className="label-primary text-center block mb-4">Pilih Foto Dokumentasi</label>
-                <div className={`relative border-2 border-dashed rounded-2xl overflow-hidden hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-all cursor-pointer group h-80 flex flex-col items-center justify-center ${preview ? 'border-primary' : 'border-gray-300 dark:border-gray-600'}`}>
+                <div className={`relative border-2 border-dashed rounded-2xl overflow-hidden hover:bg-white/10 dark:hover:bg-black/10 transition-all cursor-pointer group h-80 flex flex-col items-center justify-center ${preview ? 'border-primary' : 'border-white/30 dark:border-white/10'}`}>
                     <input
                         type="file"
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
@@ -111,7 +108,7 @@ const AddGalleryPhoto = () => {
                 <label className="label-primary">Keterangan Foto</label>
                 <div className="relative">
                     <textarea
-                        className="input-primary p-3 h-24 resize-none"
+                        className="glass-input p-3 h-24 resize-none"
                         placeholder="Tambahkan cerita di balik foto ini..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}

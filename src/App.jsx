@@ -67,7 +67,7 @@ function App() {
           <Route path="/kegiatan" element={<Activities />} />
 
           <Route path="/activities/:id" element={<ActivityDetail />} />
-          <Route path="/gallery" element={<ActivityGallery />} />
+          <Route path="/gallery" element={<AddGalleryPhoto />} />
 
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/pengumuman" element={<Announcements />} />

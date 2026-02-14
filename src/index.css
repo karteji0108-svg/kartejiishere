@@ -19,15 +19,30 @@
   .pb-safe {
       padding-bottom: env(safe-area-inset-bottom, 20px);
   }
+
   /* Glassmorphism helpers */
-  .glass-header {
-      @apply bg-white/90 dark:bg-neutral-surface-dark/90 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-gray-800;
-  }
   .glass-card {
-      @apply bg-white dark:bg-neutral-surface-dark bg-opacity-95 dark:bg-opacity-90 backdrop-blur-lg shadow-xl border border-white/20 dark:border-white/10;
+      @apply bg-white/20 dark:bg-black/30 backdrop-blur-xl shadow-lg border border-white/40 dark:border-white/10 rounded-2xl;
+  }
+  .glass-header {
+      @apply bg-white/30 dark:bg-black/40 backdrop-blur-xl border-b border-white/20 dark:border-white/10 shadow-sm;
+  }
+  .glass-nav {
+      @apply bg-white/30 dark:bg-black/40 backdrop-blur-xl border-t border-white/20 dark:border-white/10 shadow-lg;
+  }
+  .glass-input {
+      @apply bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 focus:ring-2 focus:ring-primary/50 outline-none text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 rounded-xl;
   }
   .glass-overlay {
       @apply bg-black/40 backdrop-blur-sm;
+  }
+
+  /* Background Gradients */
+  .bg-glass-light {
+      @apply bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100;
+  }
+  .bg-glass-dark {
+      @apply bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950;
   }
 }
 
@@ -43,7 +58,7 @@
 
   /* Input/Form styling */
   .input-primary {
-      @apply w-full px-4 py-3 bg-gray-50 dark:bg-slate-700 border border-transparent dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all outline-none text-sm font-medium text-slate-800 dark:text-white placeholder-gray-400;
+      @apply w-full px-4 py-3 bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary focus:bg-white/60 dark:focus:bg-black/40 transition-all outline-none text-sm font-medium text-slate-800 dark:text-white placeholder-slate-500 dark:placeholder-slate-400;
   }
   .btn-primary {
       @apply w-full py-3.5 px-4 bg-primary text-white font-semibold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark transition-transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed;
