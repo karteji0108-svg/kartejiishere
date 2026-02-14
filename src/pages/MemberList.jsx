@@ -35,7 +35,7 @@ const MemberList = () => {
   }, []);
 
   const filteredMembers = members.filter(member => {
-    const nameMatch = member.displayName?.toLowerCase().includes(search.toLowerCase()) || false;
+    const nameMatch = (member.fullName || member.displayName)?.toLowerCase().includes(search.toLowerCase()) || false;
     const roleMatch = member.role?.toLowerCase().includes(search.toLowerCase()) || false;
 
     if (!nameMatch && !roleMatch) return false;
@@ -134,19 +134,19 @@ const MemberList = () => {
                   <div className="relative shrink-0">
                     {member.photoURL ? (
                       <img
-                        alt={`Portrait of ${member.displayName}`}
+                        alt={`Portrait of ${member.fullName || member.displayName || 'Anggota'}`}
                         className="h-12 w-12 rounded-full object-cover border-2 border-white/50 dark:border-white/10 shadow-sm"
                         src={member.photoURL}
                       />
                     ) : (
                       <div className="flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg border-2 border-white/50 dark:border-white/10 shadow-sm bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300">
-                          {getInitials(member.displayName)}
+                          {getInitials(member.fullName || member.displayName)}
                       </div>
                     )}
                     <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white dark:ring-slate-800 bg-emerald-500"></span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{member.displayName}</h3>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{member.fullName || member.displayName || 'Anggota'}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getRoleColor(member.role)}`}>
                         {member.role?.replace('_', ' ') || 'Anggota'}
