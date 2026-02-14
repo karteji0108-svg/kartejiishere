@@ -20,6 +20,7 @@ export default {
 
         // Ramadan Theme Colors (Specified by user)
         "ramadan-primary": "#0F5132",
+        "ramadan-bg": "#064E3B", // Added missing color
         "ramadan-accent": "#2FAF6A",
         "ramadan-gold": "#D4AF37",
 
