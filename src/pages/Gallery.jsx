@@ -4,8 +4,8 @@ import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission, PERMISSIONS } from '../constants/roles';
 import { Link, useNavigate } from 'react-router-dom';
-import BottomNav from '../components/BottomNav';
-import Skeleton from '../components/Skeleton';
+import BottomNav from '../components/layout/BottomNav';
+import Skeleton from '../components/common/Skeleton';
 import toast from 'react-hot-toast';
 
 const Gallery = () => {

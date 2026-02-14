@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import BottomNav from '../components/BottomNav';
-import ThemeToggle from '../components/ThemeToggle';
-import RamadanBanner from '../components/RamadanBanner';
+import BottomNav from '../components/layout/BottomNav';
+import ThemeToggle from '../components/common/ThemeToggle';
+import RamadanBanner from '../components/common/RamadanBanner';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
 import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import Skeleton from '../components/Skeleton';
+import Skeleton from '../components/common/Skeleton';
 import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
 
 // --- Widget Components ---

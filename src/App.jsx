@@ -17,8 +17,8 @@ import AddGalleryPhoto from './pages/AddGalleryPhoto';
 import Announcements from './pages/Announcements';
 import CreateAnnouncement from './pages/CreateAnnouncement';
 import Profile from './pages/Profile';
-import RamadanDecorations from './components/RamadanDecorations';
-import ProtectedRoute from './components/ProtectedRoute';
+import RamadanDecorations from './components/common/RamadanDecorations';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
   return (

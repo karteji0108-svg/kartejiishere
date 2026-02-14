@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useRamadan } from '../context/RamadanContext';
-import Skeleton from '../components/Skeleton';
+import Skeleton from '../components/common/Skeleton';
 
 const ActivityDetail = () => {
   const { id } = useParams();
