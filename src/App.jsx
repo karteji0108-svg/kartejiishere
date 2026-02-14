@@ -74,21 +74,26 @@ function App() {
         </Route>
 
         {/* Role Protected Routes */}
-        <Route element={<ProtectedRoute />}>
+        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'wakil_ketua', 'bendahara', 'sekretaris']} />}>
            <Route path="/members" element={<MemberList />} />
            <Route path="/anggota" element={<MemberList />} />
+        </Route>
+        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'wakil_ketua', 'bendahara']} />}>
            <Route path="/finance" element={<Finance />} />
            <Route path="/keuangan" element={<Finance />} />
         </Route>
 
         {/* Admin/Officer Only Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin', 'bendahara', 'anggota']} />}>
-          {/* Relaxing roles for demo purposes, or specific roles */}
+        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'wakil_ketua', 'sekretaris', 'bendahara']} />}>
           <Route path="/members/add" element={<AddMember />} />
           <Route path="/announcements/create" element={<CreateAnnouncement />} />
           <Route path="/activities/create" element={<CreateActivity />} />
-          <Route path="/finance/add" element={<AddTransaction />} />
           <Route path="/gallery/add" element={<AddGalleryPhoto />} />
+        </Route>
+
+        {/* Finance Management - Restricted to Super Admin and Bendahara */}
+        <Route element={<ProtectedRoute allowedRoles={['super_admin', 'bendahara']} />}>
+          <Route path="/finance/add" element={<AddTransaction />} />
         </Route>
 
       </Routes>

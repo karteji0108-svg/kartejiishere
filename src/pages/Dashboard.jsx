@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
-import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc, getAggregateFromServer, sum, getCountFromServer } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Skeleton from '../components/Skeleton';
 import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
@@ -119,21 +119,26 @@ const Dashboard = () => {
         let balance = 0;
 
         if (hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)) {
-            const usersSnap = await getDocs(collection(db, 'users'));
-            memberCount = usersSnap.size;
+            const usersSnap = await getCountFromServer(collection(db, 'users'));
+            memberCount = usersSnap.data().count;
         }
 
         if (hasPermission(userRole, PERMISSIONS.VIEW_FINANCE)) {
-            const financeSnap = await getDocs(collection(db, 'finance'));
-            financeSnap.forEach(doc => {
-                const data = doc.data();
-                if (data.type === 'income') balance += Number(data.amount);
-                if (data.type === 'expense') balance -= Number(data.amount);
-            });
+            const incomeQ = query(collection(db, 'finance'), where('type', '==', 'income'));
+            const expenseQ = query(collection(db, 'finance'), where('type', '==', 'expense'));
+
+            const [incomeSnap, expenseSnap] = await Promise.all([
+                getAggregateFromServer(incomeQ, { total: sum('amount') }),
+                getAggregateFromServer(expenseQ, { total: sum('amount') })
+            ]);
+
+            const totalIncome = incomeSnap.data().total || 0;
+            const totalExpense = expenseSnap.data().total || 0;
+            balance = totalIncome - totalExpense;
         }
 
-        const activitiesSnap = await getDocs(collection(db, 'activities')); // Public read usually
-        const activityCount = activitiesSnap.size;
+        const activitiesSnap = await getCountFromServer(collection(db, 'activities'));
+        const activityCount = activitiesSnap.data().count;
 
         setStats({ balance, memberCount, activityCount });
 
