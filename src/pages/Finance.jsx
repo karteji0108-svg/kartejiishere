@@ -30,8 +30,19 @@ const Finance = () => {
       let inc = 0;
       let exp = 0;
       data.forEach(t => {
-        if (t.type === 'income') inc += Number(t.amount);
-        if (t.type === 'expense') exp += Number(t.amount);
+        // Robust number parsing
+        let amount = t.amount;
+        if (typeof amount === 'string') {
+            // Remove dots (thousands separators) and ensure proper number format
+            // If comma is used as decimal separator, replace with dot
+            // Standardizing to: "1000000" or "1000.50"
+            amount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
+        }
+
+        const numAmount = Number(amount) || 0;
+
+        if (t.type === 'income') inc += numAmount;
+        if (t.type === 'expense') exp += numAmount;
       });
       setSummary({
         income: inc,
@@ -51,7 +62,7 @@ const Finance = () => {
       try {
         await deleteDoc(doc(db, 'finance', id));
         setTransactions(transactions.filter(t => t.id !== id));
-        fetchFinance();
+        fetchFinance(); // Re-fetch to update summary
       } catch (error) {
         console.error("Error deleting transaction: ", error);
         alert("Gagal menghapus transaksi.");
@@ -60,6 +71,7 @@ const Finance = () => {
   };
 
   const formatCurrency = (amount) => {
+    if (isNaN(amount)) return 'Rp 0';
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
 
@@ -167,39 +179,48 @@ const Finance = () => {
             ) : transactions.length === 0 ? (
                 <p className="text-center opacity-60 text-sm animate-fade-in-up py-4">Belum ada transaksi.</p>
             ) : (
-                transactions.map((t, index) => (
-                    <div key={t.id}
-                         className="glass-card p-4 flex items-center justify-between hover:scale-[1.01] transition-transform animate-fade-in-up group"
-                         style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                        <div className="flex items-center space-x-4 flex-1">
-                            <div className={`h-10 w-10 rounded-full flex items-center justify-center backdrop-blur-md
-                                ${t.type === 'income'
-                                ? 'bg-green-100/80 dark:bg-green-900/50 text-green-600 dark:text-green-400'
-                                : 'bg-red-100/80 dark:bg-red-900/50 text-red-600 dark:text-red-400'}`}>
-                                <span className="material-icons-round text-xl">
-                                    {t.type === 'income' ? 'volunteer_activism' : 'shopping_cart'}
-                                </span>
+                transactions.map((t, index) => {
+                    // Robust handling for display per transaction item too
+                    let amt = t.amount;
+                    if (typeof amt === 'string') {
+                        amt = parseFloat(amt.replace(/\./g, '').replace(',', '.'));
+                    }
+                    const displayAmt = Number(amt) || 0;
+
+                    return (
+                        <div key={t.id}
+                             className="glass-card p-4 flex items-center justify-between hover:scale-[1.01] transition-transform animate-fade-in-up group"
+                             style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                            <div className="flex items-center space-x-4 flex-1">
+                                <div className={`h-10 w-10 rounded-full flex items-center justify-center backdrop-blur-md
+                                    ${t.type === 'income'
+                                    ? 'bg-green-100/80 dark:bg-green-900/50 text-green-600 dark:text-green-400'
+                                    : 'bg-red-100/80 dark:bg-red-900/50 text-red-600 dark:text-red-400'}`}>
+                                    <span className="material-icons-round text-xl">
+                                        {t.type === 'income' ? 'volunteer_activism' : 'shopping_cart'}
+                                    </span>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{t.title}</p>
+                                    <p className="text-xs opacity-60">{formatDate(t.date)} • {t.category || 'Umum'}</p>
+                                </div>
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{t.title}</p>
-                                <p className="text-xs opacity-60">{formatDate(t.date)} • {t.category || 'Umum'}</p>
+                            <div className="text-right ml-2 flex items-center gap-3">
+                                <p className={`font-bold text-sm ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    {t.type === 'income' ? '+' : '-'} {formatCurrency(displayAmt)}
+                                </p>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
+                                    className="p-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                    title="Hapus Transaksi"
+                                >
+                                    <span className="material-icons-round text-sm">delete</span>
+                                </button>
                             </div>
                         </div>
-                        <div className="text-right ml-2 flex items-center gap-3">
-                            <p className={`font-bold text-sm ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
-                            </p>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
-                                className="p-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                                title="Hapus Transaksi"
-                            >
-                                <span className="material-icons-round text-sm">delete</span>
-                            </button>
-                        </div>
-                    </div>
-                ))
+                    );
+                })
             )}
           </div>
         </section>

@@ -21,7 +21,7 @@ const AdminStats = ({ stats, loading }) => (
       </div>
       <div className="glass-card p-4">
           <p className="text-xs text-gray-600 dark:text-gray-300">Saldo Kas</p>
-          <h3 className="text-xl font-bold text-green-600">{loading ? "..." : `Rp ${stats.balance.toLocaleString()}`}</h3>
+          <h3 className="text-xl font-bold text-green-600">{loading ? "..." : `Rp ${stats.balance.toLocaleString('id-ID')}`}</h3>
       </div>
   </div>
 );
@@ -140,8 +140,15 @@ const Dashboard = () => {
             const financeSnap = await getDocs(collection(db, 'finance'));
             financeSnap.forEach(doc => {
                 const data = doc.data();
-                if (data.type === 'income') balance += Number(data.amount);
-                if (data.type === 'expense') balance -= Number(data.amount);
+                // Robust parsing for dashboard summary
+                let amount = data.amount;
+                if (typeof amount === 'string') {
+                    amount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
+                }
+                const numAmount = Number(amount) || 0;
+
+                if (data.type === 'income') balance += numAmount;
+                if (data.type === 'expense') balance -= numAmount;
             });
         }
 
