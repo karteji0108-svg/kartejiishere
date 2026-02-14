@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import RamadanDecorations from './components/common/RamadanDecorations';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import InstallPrompt from './components/common/InstallPrompt';
 
 // Lazy load pages for better performance
 const Login = lazy(() => import('./pages/Login'));
@@ -64,6 +65,7 @@ function App() {
           }}
         />
         <RamadanDecorations />
+        <InstallPrompt />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             {/* Public Routes */}

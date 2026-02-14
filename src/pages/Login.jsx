@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import logo from '../assets/logo.png';
 import { useRamadan } from '../context/RamadanContext';
 import ThemeToggle from '../components/common/ThemeToggle';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,6 +16,13 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { isRamadan } = useRamadan();
+  const { currentUser } = useAuth();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [currentUser, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
