@@ -32,12 +32,26 @@ const Profile = () => {
                 const docRef = doc(db, 'users', currentUser.uid);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
-                    setProfile(docSnap.data());
+                    const data = docSnap.data();
+                    setProfile(data);
                     setFormData({
-                        displayName: docSnap.data().displayName || currentUser.displayName || '',
-                        phone: docSnap.data().phone || '',
-                        address: docSnap.data().address || '',
-                        bio: docSnap.data().bio || ''
+                        displayName: data.displayName || currentUser.displayName || '',
+                        phone: data.phone || '',
+                        address: data.address || '',
+                        bio: data.bio || ''
+                    });
+                } else {
+                    // Fallback if document doesn't exist yet
+                    setProfile({
+                        displayName: currentUser.displayName,
+                        email: currentUser.email,
+                        photoURL: currentUser.photoURL
+                    });
+                    setFormData({
+                        displayName: currentUser.displayName || '',
+                        phone: '',
+                        address: '',
+                        bio: ''
                     });
                 }
             } catch (error) {
@@ -64,12 +78,10 @@ const Profile = () => {
       try {
           const photoURL = await uploadToCloudinary(file);
           await updateDoc(doc(db, 'users', currentUser.uid), { photoURL });
-          // Update local state is tricky without reload or auth update,
-          // but we can update profile state to reflect immediately in UI if we used that
           setProfile(prev => ({ ...prev, photoURL }));
           toast.success("Foto profil diperbarui!");
-          // Reload to update Auth Context (optional, but good for consistency)
-          window.location.reload();
+          // Reload window to update global auth context if needed, though local state update handles UI
+          // window.location.reload();
       } catch (error) {
           console.error("Error uploading photo:", error);
           toast.error("Gagal upload foto.");
@@ -81,13 +93,16 @@ const Profile = () => {
   const handleSave = async () => {
       setLoading(true);
       try {
-          await updateDoc(doc(db, 'users', currentUser.uid), {
+          // Optimistic update
+          const updatedData = {
               displayName: formData.displayName,
               phone: formData.phone,
               address: formData.address,
               bio: formData.bio
-          });
-          setProfile(prev => ({ ...prev, ...formData }));
+          };
+
+          await updateDoc(doc(db, 'users', currentUser.uid), updatedData);
+          setProfile(prev => ({ ...prev, ...updatedData }));
           setIsEditing(false);
           toast.success("Profil berhasil disimpan.");
       } catch (error) {
@@ -109,6 +124,26 @@ const Profile = () => {
       }
   };
 
+  // Helper for safe date formatting
+  const formatDate = (timestamp) => {
+      if (!timestamp) return '-';
+      try {
+          // If it's a Firestore Timestamp
+          if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+              return timestamp.toDate().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+          }
+          // If it's a Date object or string
+          const date = new Date(timestamp);
+          if (!isNaN(date.getTime())) {
+              return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+          }
+          return '-';
+      } catch (e) {
+          console.error("Date formatting error", e);
+          return '-';
+      }
+  };
+
   if (loading && !profile) {
       return (
         <div className={`min-h-screen font-display flex flex-col ${isRamadan ? 'bg-ramadan' : 'bg-glass-light dark:bg-glass-dark'}`}>
@@ -121,6 +156,9 @@ const Profile = () => {
         </div>
       );
   }
+
+  // Fallback profile if null (shouldn't happen with loading check but safe to have)
+  const displayProfile = profile || {};
 
   return (
     <div className={`min-h-screen font-display flex flex-col relative transition-colors duration-500 overflow-hidden
@@ -137,15 +175,15 @@ const Profile = () => {
             <div className="relative inline-block mb-4 group">
                 <div className="w-28 h-28 rounded-full p-1 glass-card flex items-center justify-center relative overflow-hidden">
                     <img
-                        src={profile?.photoURL || currentUser?.photoURL || `https://ui-avatars.com/api/?name=${currentUser?.displayName}&background=random`}
+                        src={displayProfile.photoURL || currentUser?.photoURL || `https://ui-avatars.com/api/?name=${currentUser?.displayName || 'User'}&background=random`}
                         alt="Profile"
                         className="w-full h-full rounded-full object-cover"
                     />
-                    {isEditing && (
+                    {(isEditing || true) && ( // Allow changing photo always or only in edit mode? Usually always is better UX
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                            <label className="cursor-pointer flex flex-col items-center text-white text-xs">
+                            <label className="cursor-pointer flex flex-col items-center text-white text-xs w-full h-full justify-center">
                                 <span className="material-icons text-xl mb-1">camera_alt</span>
-                                Ubah Foto
+                                Ubah
                                 <input type="file" className="hidden" onChange={handlePhotoUpload} accept="image/*" />
                             </label>
                         </div>
@@ -156,13 +194,16 @@ const Profile = () => {
                         </div>
                     )}
                 </div>
-                <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800 shadow-md">
-                     <span className="material-icons text-sm">edit</span>
-                </div>
+                {/* Floating Edit Icon for visibility */}
+                {!uploadingPhoto && (
+                    <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800 shadow-md pointer-events-none">
+                        <span className="material-icons text-sm">edit</span>
+                    </div>
+                )}
             </div>
 
             {isEditing ? (
-                <div className="space-y-3 max-w-xs mx-auto">
+                <div className="space-y-3 max-w-xs mx-auto animate-fade-in-up">
                     <input
                         type="text"
                         name="displayName"
@@ -180,14 +221,14 @@ const Profile = () => {
                     />
                 </div>
             ) : (
-                <>
-                    <h2 className="text-2xl font-bold mb-1">{profile?.displayName || currentUser?.displayName}</h2>
-                    <p className="text-sm opacity-80 mb-2">{profile?.email || currentUser?.email}</p>
+                <div className="animate-fade-in-down">
+                    <h2 className="text-2xl font-bold mb-1">{displayProfile.displayName || currentUser?.displayName || 'Tanpa Nama'}</h2>
+                    <p className="text-sm opacity-80 mb-2">{displayProfile.email || currentUser?.email}</p>
                     <span className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-wider border border-primary/20 backdrop-blur-md">
-                        {userRole?.replace('_', ' ')}
+                        {userRole?.replace('_', ' ') || 'ANGGOTA'}
                     </span>
-                    {profile?.bio && <p className="mt-4 text-sm opacity-90 max-w-xs mx-auto leading-relaxed">"{profile.bio}"</p>}
-                </>
+                    {displayProfile.bio && <p className="mt-4 text-sm opacity-90 max-w-xs mx-auto leading-relaxed">"{displayProfile.bio}"</p>}
+                </div>
             )}
         </div>
 
@@ -247,7 +288,7 @@ const Profile = () => {
                                     placeholder="08..."
                                />
                            ) : (
-                               <p className="font-medium text-sm">{profile?.phone || '-'}</p>
+                               <p className="font-medium text-sm">{displayProfile.phone || '-'}</p>
                            )}
                        </div>
                     </div>
@@ -268,7 +309,7 @@ const Profile = () => {
                                     rows="2"
                                />
                            ) : (
-                               <p className="font-medium text-sm leading-relaxed">{profile?.address || '-'}</p>
+                               <p className="font-medium text-sm leading-relaxed">{displayProfile.address || '-'}</p>
                            )}
                        </div>
                     </div>
@@ -279,7 +320,7 @@ const Profile = () => {
                        </div>
                        <div className="flex-1">
                            <p className="text-[10px] opacity-60 uppercase font-bold mb-1">Bergabung Sejak</p>
-                           <p className="font-medium text-sm">{new Date(profile?.createdAt?.toDate() || Date.now()).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                           <p className="font-medium text-sm">{formatDate(displayProfile.createdAt)}</p>
                        </div>
                     </div>
                  </div>
