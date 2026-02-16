@@ -33,9 +33,6 @@ const Finance = () => {
         // Robust number parsing
         let amount = t.amount;
         if (typeof amount === 'string') {
-            // Remove dots (thousands separators) and ensure proper number format
-            // If comma is used as decimal separator, replace with dot
-            // Standardizing to: "1000000" or "1000.50"
             amount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
         }
 
@@ -78,12 +75,6 @@ const Finance = () => {
   const formatDate = (dateString) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
-
-  const getBarClass = (index) => {
-      if (index === 3) return isRamadan ? 'bg-ramadan-gold' : 'bg-primary';
-      if (index % 2 === 0) return isRamadan ? 'bg-ramadan-gold/60' : 'bg-primary/60';
-      return isRamadan ? 'bg-ramadan-gold/40' : 'bg-primary/40';
   };
 
   return (
@@ -140,27 +131,6 @@ const Finance = () => {
                 {loading ? <Skeleton className="h-6 w-24 bg-white/30" /> : <p className="text-lg font-semibold text-white">{formatCurrency(summary.expense)}</p>}
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* Analytics Chart */}
-        <section className="glass-card p-5 animate-fade-in-up">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-900 dark:text-white">Arus Kas</h3>
-            <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${isRamadan ? 'bg-emerald-100 text-emerald-700' : 'bg-primary/10 text-primary'}`}>Mingguan</span>
-          </div>
-          <div className="h-32 w-full flex items-end justify-between space-x-2 px-2">
-             {[40, 25, 60, 85, 45, 30, 20].map((h, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 group w-full">
-                    <div className="w-full bg-slate-100/50 dark:bg-slate-700/50 rounded-t-sm relative h-24 flex items-end justify-center overflow-hidden">
-                        <div
-                            className={`w-full ${getBarClass(i)} transition-all duration-500 ease-out`}
-                            style={{height: `${h}%`}}
-                        ></div>
-                    </div>
-                    <span className="text-[10px] opacity-60">{['Sen','Sel','Rab','Kam','Jum','Sab','Min'][i]}</span>
-                </div>
-             ))}
           </div>
         </section>
 
