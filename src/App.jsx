@@ -5,6 +5,7 @@ import RamadanDecorations from './components/common/RamadanDecorations';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import InstallPrompt from './components/common/InstallPrompt';
+import WhatsNewModal from './components/common/WhatsNewModal';
 
 // Lazy load pages for better performance
 const Login = lazy(() => import('./pages/Login'));
@@ -66,6 +67,7 @@ function App() {
         />
         <RamadanDecorations />
         <InstallPrompt />
+        <WhatsNewModal />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             {/* Public Routes */}
