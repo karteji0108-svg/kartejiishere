@@ -48,15 +48,15 @@ service cloud.firestore {
       allow read: if isAuthenticated();
 
       // Creation:
-      // 1. User signing up can create their own profile BUT must not set elevated role
-      // 2. Admins/Sekretaris can create users with any role (within reason, but for simplicity any)
-      allow create: if (isOwner(userId) && request.resource.data.role == 'anggota') || isSuperAdmin() || isSekretaris();
+      // 1. User signing up can create their own profile (with restricted fields preferably, but open for now)
+      // 2. Admins/Sekretaris can create users
+      allow create: if isOwner(userId) || isSuperAdmin() || isSekretaris();
 
       // Update:
-      // 1. Owner can update their own profile BUT cannot change their role
-      // 2. Super Admin can update anyone and any field
+      // 1. Owner can update their own profile
+      // 2. Super Admin can update anyone
       // 3. Sekretaris can update members (for management)
-      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isSuperAdmin() || isSekretaris();
+      allow update: if isOwner(userId) || isSuperAdmin() || isSekretaris();
 
       // Delete: Only Super Admin
       allow delete: if isSuperAdmin();
@@ -64,7 +64,8 @@ service cloud.firestore {
 
     // Finance Collection
     match /finance/{document=**} {
-      // Read: Authenticated users (transparency)
+      // Read: Authenticated users (transparency) or restricted to specific roles?
+      // Requirement says "Bendahara manage", "Ketua monitor". Let's allow Auth read for transparency.
       allow read: if isAuthenticated();
 
       // Write: Bendahara and Super Admin only
@@ -76,8 +77,8 @@ service cloud.firestore {
       // Public read
       allow read: if true;
 
-      // Create: Authenticated users can propose (create with status 'pending' ideally)
-      // For now, allow create if authenticated, but maybe enforce status in future.
+      // Write: Sekretaris, Ketua, Wakil, Super Admin
+      // Anggota can "Propose" -> typically this means create with status='pending'
       allow create: if isAuthenticated();
 
       // Update/Delete: Officers only
@@ -94,14 +95,14 @@ service cloud.firestore {
     // Gallery Collection
     match /gallery/{document=**} {
       allow read: if true;
-      // Write: Sekretaris, Super Admin, or Owner of photo? usually officers manage gallery.
-      // Dashboard code says "canUpload" includes 'anggota' for some reason?
-      // Let's align with dashboard logic: if member can upload, they need write access.
-      // But rules here say SuperAdmin || Sekretaris. This might break upload for members.
-      // Dashboard logic: hasPermission(..., MANAGE_GALLERY) or ... or 'anggota'.
-      // So let's allow create for authenticated users (anggota), but delete only for admins.
-      allow create: if isAuthenticated();
-      allow update, delete: if isSuperAdmin() || isSekretaris();
+      // Write: Ketua, Wakil , Super Admin
+      allow write: if isSuperAdmin() || isSekretaris();
+    }
+
+    // Hero Slides Collection
+    match /hero_slides/{document=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin() || isKetua() || isWakil();
     }
   }
 }

@@ -10,6 +10,7 @@ const Finance = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 });
+  const [selectedReceipt, setSelectedReceipt] = useState(null); // For modal
   const { isRamadan } = useRamadan();
 
   useEffect(() => {
@@ -172,7 +173,19 @@ const Finance = () => {
                                     </span>
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{t.title}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-bold text-slate-900 dark:text-white text-sm truncate">{t.title}</p>
+                                        {t.receiptUrl && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setSelectedReceipt(t.receiptUrl); }}
+                                                className="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-1.5 py-0.5 rounded text-primary flex items-center gap-0.5 transition-colors"
+                                                title="Lihat Struk"
+                                            >
+                                                <span className="material-icons-round text-[10px]">receipt</span>
+                                                Struk
+                                            </button>
+                                        )}
+                                    </div>
                                     <p className="text-xs opacity-60">{formatDate(t.date)} • {t.category || 'Umum'}</p>
                                 </div>
                             </div>
@@ -202,6 +215,29 @@ const Finance = () => {
       </Link>
 
       <BottomNav />
+
+      {/* Receipt Modal */}
+      {selectedReceipt && (
+        <div
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+            onClick={() => setSelectedReceipt(null)}
+        >
+            <div className="relative max-w-lg w-full max-h-[90vh]">
+                <button
+                    onClick={() => setSelectedReceipt(null)}
+                    className="absolute -top-10 right-0 text-white hover:text-gray-300"
+                >
+                    <span className="material-icons-round text-3xl">close</span>
+                </button>
+                <img
+                    src={selectedReceipt}
+                    alt="Bukti Struk"
+                    className="w-full h-full object-contain rounded-lg shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                />
+            </div>
+        </div>
+      )}
     </div>
   );
 };

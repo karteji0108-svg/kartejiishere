@@ -32,6 +32,9 @@ export const PERMISSIONS = {
   // Gallery
   MANAGE_GALLERY: 'manage_gallery',
 
+  // Hero Carousel
+  MANAGE_HERO: 'manage_hero',
+
   // System
   MANAGE_ROLES: 'manage_roles',
   VIEW_LOGS: 'view_logs',
@@ -47,6 +50,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.VIEW_ACTIVITIES,
     PERMISSIONS.APPROVE_ACTIVITIES,
     PERMISSIONS.MANAGE_ANNOUNCEMENTS,
+    PERMISSIONS.MANAGE_HERO,
     PERMISSIONS.VIEW_LOGS,
   ],
 
@@ -57,6 +61,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.VIEW_ACTIVITIES,
     PERMISSIONS.APPROVE_ACTIVITIES, // Backup approval
     PERMISSIONS.MANAGE_ANNOUNCEMENTS,
+    PERMISSIONS.MANAGE_HERO,
   ],
 
   [ROLES.BENDAHARA]: [
