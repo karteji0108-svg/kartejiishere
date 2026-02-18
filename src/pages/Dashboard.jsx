@@ -4,6 +4,7 @@ import BottomNav from '../components/layout/BottomNav';
 import ThemeToggle from '../components/common/ThemeToggle';
 import RamadanBanner from '../components/common/RamadanBanner';
 import PrayerTimes from '../components/common/PrayerTimes';
+import HeroCarousel from '../components/common/HeroCarousel';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
 import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -222,6 +223,10 @@ const Dashboard = () => {
               </button>
           </div>
         </header>
+
+        {/* Hero Carousel */}
+        <HeroCarousel />
+
         {isRamadan && <PrayerTimes />}
 
         {/* Role-Specific Dashboard Views */}
