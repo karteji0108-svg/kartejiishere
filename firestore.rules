@@ -94,14 +94,18 @@ service cloud.firestore {
     // Gallery Collection
     match /gallery/{document=**} {
       allow read: if true;
-      // Write: Sekretaris, Super Admin, or Owner of photo? usually officers manage gallery.
-      // Dashboard code says "canUpload" includes 'anggota' for some reason?
-      // Let's align with dashboard logic: if member can upload, they need write access.
-      // But rules here say SuperAdmin || Sekretaris. This might break upload for members.
-      // Dashboard logic: hasPermission(..., MANAGE_GALLERY) or ... or 'anggota'.
-      // So let's allow create for authenticated users (anggota), but delete only for admins.
+      // Write: Authenticated users (members) can upload, but delete restricted
       allow create: if isAuthenticated();
       allow update, delete: if isSuperAdmin() || isSekretaris();
+    }
+
+    // Hero Slides Collection (NEW)
+    match /hero_slides/{document=**} {
+      // Read: Everyone (it's a hero banner)
+      allow read: if true;
+
+      // Write: Super Admin, Ketua, Wakil Ketua
+      allow write: if isSuperAdmin() || isKetua() || isWakil();
     }
   }
 }

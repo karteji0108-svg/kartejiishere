@@ -26,33 +26,41 @@ const HeroCarousel = () => {
   const { userRole } = useAuth();
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [loadingImages, setLoadingImages] = useState({});
   const [showManageModal, setShowManageModal] = useState(false);
 
   const canManage = hasPermission(userRole, PERMISSIONS.MANAGE_HERO);
 
   useEffect(() => {
-    // console.log("Current User Role:", userRole); // Debugging
-    // console.log("Can Manage Hero:", canManage); // Debugging
-
+    setLoading(true);
     const q = query(collection(db, 'hero_slides'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedSlides = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setSlides(fetchedSlides);
-      setLoading(false);
 
-      const initialStates = fetchedSlides.reduce((acc, slide) => {
-        acc[slide.id] = true;
-        return acc;
-      }, {});
-      setLoadingImages(initialStates);
-    });
+    const unsubscribe = onSnapshot(q,
+      (snapshot) => {
+        const fetchedSlides = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setSlides(fetchedSlides);
+        setLoading(false);
+        setError(null);
+
+        const initialStates = fetchedSlides.reduce((acc, slide) => {
+          acc[slide.id] = true;
+          return acc;
+        }, {});
+        setLoadingImages(initialStates);
+      },
+      (err) => {
+        console.error("Error fetching hero slides:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
-  }, [userRole, canManage]); // Re-run if role changes
+  }, [userRole]);
 
   const handleImageLoad = (id) => {
     setLoadingImages(prev => ({ ...prev, [id]: false }));
@@ -64,6 +72,20 @@ const HeroCarousel = () => {
 
   if (loading) {
     return <Skeleton className="w-full aspect-video rounded-2xl mb-6" />;
+  }
+
+  if (error) {
+    // If error (e.g. permission denied before rules update propagates), show nothing or error message
+    // If user can manage, show error.
+    if (canManage) {
+        return (
+            <div className="w-full aspect-[16/9] mb-6 rounded-2xl border-2 border-dashed border-red-300 flex flex-col items-center justify-center text-red-500 bg-red-50 p-4">
+                <span className="material-icons-round text-3xl mb-2">error_outline</span>
+                <p className="text-sm text-center">Gagal memuat banner: {error}</p>
+            </div>
+        );
+    }
+    return null;
   }
 
   if (slides.length === 0) {
