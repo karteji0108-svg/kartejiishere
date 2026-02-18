@@ -177,7 +177,7 @@ const HeroCarousel = () => {
 
               {/* Text Content - Glassmorphism */}
               {(slide.title || slide.subtitle) && (
-                <div className="absolute top-1/2 left-4 md:left-12 -translate-y-1/2 z-30 max-w-[80%] md:max-w-[60%] lg:max-w-[50%] pointer-events-auto">
+                <div className="absolute bottom-8 left-4 md:left-12 z-30 max-w-[80%] md:max-w-[60%] lg:max-w-[50%] pointer-events-auto">
                   <div className="backdrop-blur-md bg-white/10 dark:bg-black/20 border border-white/20 p-4 md:p-6 rounded-xl shadow-lg">
                     {slide.title && (
                       <h1 className="text-white text-xl md:text-3xl lg:text-4xl font-bold mb-2 drop-shadow-md">
