@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { uploadToCloudinary } from '../utils/cloudinary';
 import toast from 'react-hot-toast';
 
 const AddTransaction = () => {
@@ -14,7 +15,11 @@ const AddTransaction = () => {
   const [type, setType] = useState('expense');
   const [category, setCategory] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [receiptImage, setReceiptImage] = useState(null);
+  const [receiptPreview, setReceiptPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Format currency for display (1.000.000)
   const formatNumber = (num) => {
@@ -36,20 +41,16 @@ const AddTransaction = () => {
     setDisplayAmount(formatNumber(numericValue));
   };
 
-  // Helper to ensure user has permissions (Self-healing - kept for safety)
-  const ensureUserPermissions = async (user) => {
-      try {
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-
-          if (!userSnap.exists() || userSnap.data().role !== 'super_admin') {
-              console.log("Attempting to fix user permissions...");
-              // Only do this if we are sure it's safe - removed auto-promote logic as per security audit request.
-              // Just log or ensure fields exist.
-          }
-      } catch (error) {
-          console.error("Failed to self-heal permissions:", error);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        setReceiptImage(file);
+        setReceiptPreview(URL.createObjectURL(file));
+      } else {
+        toast.error("Mohon upload file gambar.");
       }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -66,12 +67,27 @@ const AddTransaction = () => {
           throw new Error("Jumlah tidak valid.");
       }
 
+      let receiptUrl = null;
+      if (receiptImage) {
+        setUploading(true);
+        try {
+           receiptUrl = await uploadToCloudinary(receiptImage);
+        } catch (uploadError) {
+           console.error("Image upload failed:", uploadError);
+           toast.error("Gagal mengupload struk, tetapi transaksi akan tetap disimpan.");
+           // Optional: Decide whether to block submit or continue without image
+        } finally {
+           setUploading(false);
+        }
+      }
+
       const transactionData = {
         title,
         amount: Number(amount), // Ensure it's stored as Number
         type,
         category,
         date,
+        receiptUrl: receiptUrl || null,
         createdAt: new Date().toISOString(),
         createdBy: currentUser.uid,
         uid: currentUser.uid,
@@ -207,17 +223,51 @@ const AddTransaction = () => {
                         />
                     </div>
                 </div>
+
+                {/* Receipt Upload */}
+                <div>
+                    <label className="label-primary">Bukti Struk (Opsional)</label>
+                    <div
+                        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                        />
+                        {receiptPreview ? (
+                            <div className="relative">
+                                <img src={receiptPreview} alt="Receipt Preview" className="h-40 w-full object-contain rounded-lg" />
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setReceiptImage(null); setReceiptPreview(null); }}
+                                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600"
+                                >
+                                    <span className="material-icons-round text-sm">close</span>
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="py-4 text-gray-500">
+                                <span className="material-icons-round text-3xl mb-1">receipt_long</span>
+                                <p className="text-xs">Klik untuk upload foto struk</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <button
                 type="submit"
-                disabled={loading}
-                className={`w-full py-4 text-white font-bold rounded-xl shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${type === 'income' ? 'bg-gradient-to-r from-green-500 to-green-600 shadow-green-500/30' : 'bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30'} ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                disabled={loading || uploading}
+                className={`w-full py-4 text-white font-bold rounded-xl shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${type === 'income' ? 'bg-gradient-to-r from-green-500 to-green-600 shadow-green-500/30' : 'bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30'} ${loading || uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-                {loading ? (
+                {(loading || uploading) ? (
                     <>
                         <span className="material-icons-round animate-spin text-lg">refresh</span>
-                        Menyimpan...
+                        {uploading ? 'Mengupload Struk...' : 'Menyimpan...'}
                     </>
                 ) : (
                     <>
