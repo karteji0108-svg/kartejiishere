@@ -34,7 +34,8 @@ const HeroCarousel = () => {
 
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, 'hero_slides'), orderBy('createdAt', 'desc'));
+    // Remove orderBy temporarily to rule out index issues
+    const q = collection(db, 'hero_slides');
 
     const unsubscribe = onSnapshot(q,
       (snapshot) => {
@@ -42,6 +43,9 @@ const HeroCarousel = () => {
           id: doc.id,
           ...doc.data()
         }));
+        // Sort client-side if needed
+        fetchedSlides.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
         setSlides(fetchedSlides);
         setLoading(false);
         setError(null);
@@ -75,13 +79,12 @@ const HeroCarousel = () => {
   }
 
   if (error) {
-    // If error (e.g. permission denied before rules update propagates), show nothing or error message
-    // If user can manage, show error.
     if (canManage) {
         return (
             <div className="w-full aspect-[16/9] mb-6 rounded-2xl border-2 border-dashed border-red-300 flex flex-col items-center justify-center text-red-500 bg-red-50 p-4">
                 <span className="material-icons-round text-3xl mb-2">error_outline</span>
                 <p className="text-sm text-center">Gagal memuat banner: {error}</p>
+                <p className="text-xs text-center mt-1 text-red-400">(Pastikan rules Firestore sudah terupdate)</p>
             </div>
         );
     }
