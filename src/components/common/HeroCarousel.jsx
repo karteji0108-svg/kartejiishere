@@ -32,6 +32,9 @@ const HeroCarousel = () => {
   const canManage = hasPermission(userRole, PERMISSIONS.MANAGE_HERO);
 
   useEffect(() => {
+    // console.log("Current User Role:", userRole); // Debugging
+    // console.log("Can Manage Hero:", canManage); // Debugging
+
     const q = query(collection(db, 'hero_slides'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedSlides = snapshot.docs.map(doc => ({
@@ -41,7 +44,6 @@ const HeroCarousel = () => {
       setSlides(fetchedSlides);
       setLoading(false);
 
-      // Reset image loading states when slides change
       const initialStates = fetchedSlides.reduce((acc, slide) => {
         acc[slide.id] = true;
         return acc;
@@ -50,7 +52,7 @@ const HeroCarousel = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [userRole, canManage]); // Re-run if role changes
 
   const handleImageLoad = (id) => {
     setLoadingImages(prev => ({ ...prev, [id]: false }));
@@ -65,24 +67,30 @@ const HeroCarousel = () => {
   }
 
   if (slides.length === 0) {
-    if (canManage) {
-      return (
-        <>
-          <div
-            onClick={() => setShowManageModal(true)}
-            className="w-full aspect-[16/9] mb-6 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer group"
-          >
-            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <span className="material-icons-round text-3xl">add_photo_alternate</span>
+    return (
+      <>
+        <div
+          onClick={() => canManage && setShowManageModal(true)}
+          className={`w-full aspect-[16/9] mb-6 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-gray-500 bg-gray-50 dark:bg-gray-800/50 transition-colors ${canManage ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 group' : ''}`}
+        >
+          {canManage ? (
+            <>
+              <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <span className="material-icons-round text-3xl">add_photo_alternate</span>
+              </div>
+              <h3 className="font-bold text-lg">Setup Hero Banner</h3>
+              <p className="text-sm">Klik untuk menambahkan slide pertama</p>
+            </>
+          ) : (
+            <div className="text-center p-4">
+              <span className="material-icons-round text-3xl mb-2 opacity-50">collections</span>
+              <p className="text-sm">Belum ada banner yang ditampilkan.</p>
             </div>
-            <h3 className="font-bold text-lg">Setup Hero Banner</h3>
-            <p className="text-sm">Klik untuk menambahkan slide pertama</p>
-          </div>
-          {showManageModal && <ManageHeroModal slides={slides} onClose={() => setShowManageModal(false)} />}
-        </>
-      );
-    }
-    return null;
+          )}
+        </div>
+        {canManage && showManageModal && <ManageHeroModal slides={slides} onClose={() => setShowManageModal(false)} />}
+      </>
+    );
   }
 
   return (
@@ -173,7 +181,7 @@ const HeroCarousel = () => {
         })}
       </Swiper>
 
-      {showManageModal && <ManageHeroModal slides={slides} onClose={() => setShowManageModal(false)} />}
+      {canManage && showManageModal && <ManageHeroModal slides={slides} onClose={() => setShowManageModal(false)} />}
 
       <style>{`
         .swiper-button-next, .swiper-button-prev {
