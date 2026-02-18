@@ -1,4 +1,4 @@
-const CACHE_NAME = 'karteji-v1';
+const CACHE_NAME = 'karteji-v2-refresh';
 const urlsToCache = [
   './',
   './index.html',
