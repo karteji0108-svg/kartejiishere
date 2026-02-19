@@ -38,3 +38,17 @@ export const uploadToCloudinary = async (file) => {
         throw error;
     }
 };
+
+/**
+ * Generates a download URL for a Cloudinary image.
+ * @param {string} url - The original Cloudinary URL.
+ * @returns {string} - The URL with fl_attachment flag.
+ */
+export const getDownloadUrl = (url) => {
+    if (!url) return '';
+    if (url.includes('cloudinary.com')) {
+        // Inject fl_attachment after /upload/
+        return url.replace('/upload/', '/upload/fl_attachment/');
+    }
+    return url;
+};

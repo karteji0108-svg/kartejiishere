@@ -7,6 +7,7 @@ import Skeleton from '../components/common/Skeleton';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission, PERMISSIONS } from '../constants/roles';
+import { getDownloadUrl } from '../utils/cloudinary';
 
 const Finance = () => {
   const navigate = useNavigate();
@@ -121,20 +122,29 @@ const Finance = () => {
 
   const handleDownloadReport = () => {
       // CSV Export
-      const headers = ['Tanggal', 'Judul', 'Kategori', 'Tipe', 'Sumber Dana', 'Jumlah', 'Keterangan'];
+      const headers = ['Tanggal', 'Judul', 'Kategori', 'Tipe', 'Sumber Dana', 'Jumlah', 'Keterangan', 'Bukti Struk'];
       const csvRows = [];
       csvRows.push(headers.join(','));
 
       transactions.forEach(t => {
           const amount = typeof t.amount === 'string' ? t.amount : t.amount.toString();
+          // Format date as YYYY-MM-DD for Excel compatibility
+          let formattedDate = '';
+          try {
+            formattedDate = new Date(t.date).toISOString().split('T')[0];
+          } catch (e) {
+            formattedDate = t.date;
+          }
+
           const row = [
-              formatDate(t.date),
+              formattedDate,
               `"${t.title.replace(/"/g, '""')}"`,
               t.category || '-',
               t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
               t.sourceFund || '-',
               amount,
-              `"${(t.description || '').replace(/"/g, '""')}"`
+              `"${(t.description || '').replace(/"/g, '""')}"`,
+              t.receiptUrl || '-'
           ];
           csvRows.push(row.join(','));
       });
@@ -344,7 +354,7 @@ const Finance = () => {
             <div className="relative max-w-lg w-full max-h-[90vh]">
                 <button
                     onClick={() => setSelectedReceipt(null)}
-                    className="absolute -top-10 right-0 text-white hover:text-gray-300"
+                    className="absolute -top-10 right-0 text-white hover:text-gray-300 z-50"
                 >
                     <span className="material-icons-round text-3xl">close</span>
                 </button>
@@ -355,12 +365,23 @@ const Finance = () => {
                         <button onClick={() => setSelectedReceipt(null)} className="btn-primary w-full py-2">Tutup</button>
                      </div>
                 ) : (
-                    <img
-                        src={selectedReceipt}
-                        alt="Bukti Struk"
-                        className="w-full h-full object-contain rounded-lg shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                    />
+                    <div className="relative inline-block" onClick={e => e.stopPropagation()}>
+                        <img
+                            src={selectedReceipt}
+                            alt="Bukti Struk"
+                            className="w-full h-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                        />
+                        <a
+                            href={getDownloadUrl(selectedReceipt)}
+                            download="bukti_struk"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute bottom-4 right-4 bg-white/90 text-slate-900 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:bg-white transition-colors"
+                        >
+                            <span className="material-icons-round text-base">download</span>
+                            Download
+                        </a>
+                    </div>
                 )}
             </div>
         </div>
