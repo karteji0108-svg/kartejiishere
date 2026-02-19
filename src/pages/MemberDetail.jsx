@@ -70,9 +70,30 @@ const MemberDetail = () => {
 
   const checkRoleUniqueness = async (newRole) => {
       const restrictedRoles = [ROLES.SUPER_ADMIN, ROLES.KETUA, ROLES.WAKIL_KETUA];
+
+      // Special Check for Content Creator Limit
+      if (newRole === ROLES.CONTENT_CREATOR) {
+          const q = query(collection(db, 'users'), where('role', '==', ROLES.CONTENT_CREATOR));
+          const snapshot = await getDocs(q);
+
+          // Filter out self if updating existing user who already has this role (unlikely in change scenario, but good practice)
+          // Wait, if I change TO Content Creator, I need to check total count.
+          // If I am already Content Creator, count is included.
+          // Correct logic: Count all users with this role. If result >= 4, check if current user is one of them.
+
+          let count = snapshot.size;
+          const isAlreadyRole = member.role === ROLES.CONTENT_CREATOR;
+
+          if (!isAlreadyRole && count >= 4) {
+              toast.error("Maksimal 4 Content Creator tercapai.");
+              return false;
+          }
+          return true;
+      }
+
       if (!restrictedRoles.includes(newRole)) return true;
 
-      // Query to check if anyone else has this role
+      // Query to check if anyone else has this role (for single-holder roles)
       const q = query(collection(db, 'users'), where('role', '==', newRole));
       const snapshot = await getDocs(q);
 
@@ -98,9 +119,9 @@ const MemberDetail = () => {
           return;
       }
 
-      // Verify uniqueness for specific roles
-      const isUnique = await checkRoleUniqueness(newRole);
-      if (!isUnique) return;
+      // Verify uniqueness and limits
+      const isAllowed = await checkRoleUniqueness(newRole);
+      if (!isAllowed) return;
 
       if (!confirm(`Apakah Anda yakin ingin mengubah role menjadi ${newRole.replace('_', ' ')}?`)) {
           return;
@@ -191,6 +212,7 @@ const MemberDetail = () => {
                       >
                           {/* Render options based on permissions */}
                           <option value={ROLES.ANGGOTA}>ANGGOTA</option>
+                          <option value={ROLES.CONTENT_CREATOR}>CONTENT CREATOR</option>
                           <option value={ROLES.SEKRETARIS}>SEKRETARIS</option>
                           <option value={ROLES.BENDAHARA}>BENDAHARA</option>
 

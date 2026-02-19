@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import { ROLES } from '../constants/roles';
 import toast from 'react-hot-toast';
 
 const AddMember = () => {
@@ -23,11 +24,29 @@ const AddMember = () => {
     }
   };
 
+  const checkRoleLimit = async (selectedRole) => {
+      if (selectedRole === ROLES.CONTENT_CREATOR) {
+          const q = query(collection(db, 'users'), where('role', '==', ROLES.CONTENT_CREATOR));
+          const snapshot = await getDocs(q);
+          if (snapshot.size >= 4) {
+              toast.error("Maksimal 4 Content Creator tercapai.");
+              return false;
+          }
+      }
+      return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const allowed = await checkRoleLimit(role);
+      if (!allowed) {
+          setLoading(false);
+          return;
+      }
+
       let photoURL = null;
       if (photo) {
         photoURL = await uploadToCloudinary(photo);
@@ -117,11 +136,12 @@ const AddMember = () => {
                                 value={role}
                                 onChange={(e) => setRole(e.target.value)}
                             >
-                                <option value="Anggota">Anggota</option>
-                                <option value="Ketua">Ketua</option>
-                                <option value="Wakil Ketua">Wakil</option>
-                                <option value="Sekretaris">Sekretaris</option>
-                                <option value="Bendahara">Bendahara</option>
+                                <option value={ROLES.ANGGOTA}>Anggota</option>
+                                <option value={ROLES.CONTENT_CREATOR}>Content Creator</option>
+                                <option value={ROLES.KETUA}>Ketua</option>
+                                <option value={ROLES.WAKIL_KETUA}>Wakil</option>
+                                <option value={ROLES.SEKRETARIS}>Sekretaris</option>
+                                <option value={ROLES.BENDAHARA}>Bendahara</option>
                             </select>
                              <span className="absolute right-3 top-3 text-gray-400 material-icons-round text-lg pointer-events-none">expand_more</span>
                         </div>
