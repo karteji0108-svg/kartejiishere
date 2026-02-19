@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRamadan } from '../context/RamadanContext';
 import { useTheme } from '../context/ThemeContext';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, storage } from '../config/firebase';
+import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import toast from 'react-hot-toast';
 import BottomNav from '../components/layout/BottomNav';
