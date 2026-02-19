@@ -14,6 +14,7 @@ const Finance = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 });
+  const [categoryStats, setCategoryStats] = useState({ income: {}, expense: {} });
   const [selectedReceipt, setSelectedReceipt] = useState(null); // For modal
   const { isRamadan } = useRamadan();
 
@@ -36,6 +37,9 @@ const Finance = () => {
 
       let inc = 0;
       let exp = 0;
+      const incCats = {};
+      const expCats = {};
+
       data.forEach(t => {
         // Robust number parsing
         let amount = t.amount;
@@ -44,14 +48,26 @@ const Finance = () => {
         }
 
         const numAmount = Number(amount) || 0;
+        const category = t.category || 'Lainnya';
 
-        if (t.type === 'income') inc += numAmount;
-        if (t.type === 'expense') exp += numAmount;
+        if (t.type === 'income') {
+            inc += numAmount;
+            incCats[category] = (incCats[category] || 0) + numAmount;
+        }
+        if (t.type === 'expense') {
+            exp += numAmount;
+            expCats[category] = (expCats[category] || 0) + numAmount;
+        }
       });
+
       setSummary({
         income: inc,
         expense: exp,
         balance: inc - exp
+      });
+      setCategoryStats({
+          income: incCats,
+          expense: expCats
       });
 
     } catch (error) {
@@ -181,6 +197,49 @@ const Finance = () => {
           </div>
         </section>
 
+        {/* Category Breakdown */}
+        {!loading && (Object.keys(categoryStats.income).length > 0 || Object.keys(categoryStats.expense).length > 0) && (
+            <section className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-3">Rincian Per Kategori</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Income Stats */}
+                    {Object.keys(categoryStats.income).length > 0 && (
+                        <div className="glass-card p-4">
+                            <h4 className="text-sm font-bold text-green-600 dark:text-green-400 mb-3 flex items-center gap-2">
+                                <span className="material-icons-round text-base">arrow_downward</span> Pemasukan
+                            </h4>
+                            <div className="space-y-3">
+                                {Object.entries(categoryStats.income).map(([cat, amount]) => (
+                                    <div key={cat} className="flex justify-between items-center text-sm">
+                                        <span className="opacity-80">{cat}</span>
+                                        <span className="font-semibold">{formatCurrency(amount)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Expense Stats */}
+                    {Object.keys(categoryStats.expense).length > 0 && (
+                        <div className="glass-card p-4">
+                            <h4 className="text-sm font-bold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
+                                <span className="material-icons-round text-base">arrow_upward</span> Pengeluaran
+                            </h4>
+                            <div className="space-y-3">
+                                {Object.entries(categoryStats.expense).map(([cat, amount]) => (
+                                    <div key={cat} className="flex justify-between items-center text-sm">
+                                        <span className="opacity-80">{cat}</span>
+                                        <span className="font-semibold">{formatCurrency(amount)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </section>
+        )}
+
         {/* Transaction List */}
         <section>
           <div className="flex items-center justify-between mb-4 mt-2">
@@ -197,7 +256,6 @@ const Finance = () => {
                 <p className="text-center opacity-60 text-sm animate-fade-in-up py-4">Belum ada transaksi.</p>
             ) : (
                 transactions.map((t, index) => {
-                    // Robust handling for display per transaction item too
                     let amt = t.amount;
                     if (typeof amt === 'string') {
                         amt = parseFloat(amt.replace(/\./g, '').replace(',', '.'));
@@ -206,7 +264,7 @@ const Finance = () => {
 
                     return (
                         <div key={t.id}
-                             onClick={() => navigate('/finance/' + t.id)} // Show details modal if no receipt, or improve logic
+                             onClick={() => navigate('/finance/' + t.id)}
                              className="glass-card p-4 flex items-center justify-between hover:scale-[1.01] transition-transform animate-fade-in-up group cursor-pointer"
                              style={{ animationDelay: `${index * 50}ms` }}
                         >
@@ -289,20 +347,12 @@ const Finance = () => {
                 >
                     <span className="material-icons-round text-3xl">close</span>
                 </button>
-                {selectedReceipt === 'details' ? (
-                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold mb-4">Detail Transaksi</h3>
-                        <p className="text-sm opacity-60 mb-6">Fitur detail lengkap akan segera hadir. Gunakan tombol Edit untuk melihat detail lengkap.</p>
-                        <button onClick={() => setSelectedReceipt(null)} className="btn-primary w-full py-2">Tutup</button>
-                     </div>
-                ) : (
-                    <img
-                        src={selectedReceipt}
-                        alt="Bukti Struk"
-                        className="w-full h-full object-contain rounded-lg shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                )}
+                <img
+                    src={selectedReceipt}
+                    alt="Bukti Struk"
+                    className="w-full h-full object-contain rounded-lg shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                />
             </div>
         </div>
       )}
