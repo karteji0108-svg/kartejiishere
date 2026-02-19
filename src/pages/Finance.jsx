@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 import BottomNav from '../components/layout/BottomNav';
 import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Skeleton from '../components/common/Skeleton';
 import { useRamadan } from '../context/RamadanContext';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission, PERMISSIONS } from '../constants/roles';
 
 const Finance = () => {
+  const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 });
   const [selectedReceipt, setSelectedReceipt] = useState(null); // For modal
   const { isRamadan } = useRamadan();
+
+  const canManage = hasPermission(userRole, PERMISSIONS.MANAGE_FINANCE);
 
   useEffect(() => {
     fetchFinance();
@@ -56,6 +62,7 @@ const Finance = () => {
   };
 
   const handleDelete = async (id) => {
+    if (!canManage) return;
     if (window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
       try {
         await deleteDoc(doc(db, 'finance', id));
@@ -66,6 +73,41 @@ const Finance = () => {
         alert("Gagal menghapus transaksi.");
       }
     }
+  };
+
+  const handleEdit = (transaction) => {
+      navigate('/finance/edit/' + transaction.id, { state: { transaction } });
+  };
+
+  const handleDownloadReport = () => {
+      // CSV Export
+      const headers = ['Tanggal', 'Judul', 'Kategori', 'Tipe', 'Jumlah', 'Keterangan'];
+      const csvRows = [];
+      csvRows.push(headers.join(','));
+
+      transactions.forEach(t => {
+          const amount = typeof t.amount === 'string' ? t.amount : t.amount.toString();
+          const row = [
+              formatDate(t.date),
+              `"${t.title.replace(/"/g, '""')}"`,
+              t.category || '-',
+              t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
+              amount,
+              `"${(t.description || '').replace(/"/g, '""')}"`
+          ];
+          csvRows.push(row.join(','));
+      });
+
+      const csvString = csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('hidden', '');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `laporan_keuangan_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
   };
 
   const formatCurrency = (amount) => {
@@ -91,11 +133,15 @@ const Finance = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Keuangan</h1>
           <p className="text-sm opacity-70">Ringkasan Bendahara</p>
         </div>
-        <div className="relative group">
-          <button className="flex items-center space-x-2 glass-card px-3 py-1.5 !rounded-full !p-2 text-sm font-medium hover:bg-white/40 dark:hover:bg-black/40 transition-colors">
-            <span>Semua Transaksi</span>
-            <span className="material-icons-round text-base">expand_more</span>
-          </button>
+        <div className="flex gap-2">
+            <button
+                onClick={handleDownloadReport}
+                className="flex items-center gap-2 glass-card px-3 py-1.5 !rounded-full text-sm font-medium hover:bg-white/40 dark:hover:bg-black/40 transition-colors"
+                title="Download Laporan CSV"
+            >
+                <span className="material-icons-round text-base">download</span>
+                <span className="hidden md:inline">Laporan</span>
+            </button>
         </div>
       </header>
 
@@ -160,7 +206,8 @@ const Finance = () => {
 
                     return (
                         <div key={t.id}
-                             className="glass-card p-4 flex items-center justify-between hover:scale-[1.01] transition-transform animate-fade-in-up group"
+                             onClick={() => setSelectedReceipt(t.receiptUrl || 'details')} // Show details modal if no receipt, or improve logic
+                             className="glass-card p-4 flex items-center justify-between hover:scale-[1.01] transition-transform animate-fade-in-up group cursor-pointer"
                              style={{ animationDelay: `${index * 50}ms` }}
                         >
                             <div className="flex items-center space-x-4 flex-1">
@@ -193,13 +240,24 @@ const Finance = () => {
                                 <p className={`font-bold text-sm ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                     {t.type === 'income' ? '+' : '-'} {formatCurrency(displayAmt)}
                                 </p>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
-                                    className="p-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                                    title="Hapus Transaksi"
-                                >
-                                    <span className="material-icons-round text-sm">delete</span>
-                                </button>
+                                {canManage && (
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleEdit(t); }}
+                                            className="p-1.5 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors opacity-0 group-hover:opacity-100"
+                                            title="Edit Transaksi"
+                                        >
+                                            <span className="material-icons-round text-sm">edit</span>
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
+                                            className="p-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                            title="Hapus Transaksi"
+                                        >
+                                            <span className="material-icons-round text-sm">delete</span>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     );
@@ -210,13 +268,15 @@ const Finance = () => {
       </main>
 
       {/* FAB */}
-      <Link to="/finance/add" className="fixed right-5 bottom-24 z-30 h-14 w-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center hover:bg-primary-dark transition-transform hover:scale-105 active:scale-95">
-        <span className="material-icons-round text-2xl">add</span>
-      </Link>
+      {canManage && (
+        <Link to="/finance/add" className="fixed right-5 bottom-24 z-30 h-14 w-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center hover:bg-primary-dark transition-transform hover:scale-105 active:scale-95">
+            <span className="material-icons-round text-2xl">add</span>
+        </Link>
+      )}
 
       <BottomNav />
 
-      {/* Receipt Modal */}
+      {/* Receipt / Detail Modal */}
       {selectedReceipt && (
         <div
             className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
@@ -229,12 +289,20 @@ const Finance = () => {
                 >
                     <span className="material-icons-round text-3xl">close</span>
                 </button>
-                <img
-                    src={selectedReceipt}
-                    alt="Bukti Struk"
-                    className="w-full h-full object-contain rounded-lg shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                />
+                {selectedReceipt === 'details' ? (
+                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold mb-4">Detail Transaksi</h3>
+                        <p className="text-sm opacity-60 mb-6">Fitur detail lengkap akan segera hadir. Gunakan tombol Edit untuk melihat detail lengkap.</p>
+                        <button onClick={() => setSelectedReceipt(null)} className="btn-primary w-full py-2">Tutup</button>
+                     </div>
+                ) : (
+                    <img
+                        src={selectedReceipt}
+                        alt="Bukti Struk"
+                        className="w-full h-full object-contain rounded-lg shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                )}
             </div>
         </div>
       )}
