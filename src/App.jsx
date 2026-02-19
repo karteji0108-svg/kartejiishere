@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import RamadanDecorations from './components/common/RamadanDecorations';
@@ -6,6 +6,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import InstallPrompt from './components/common/InstallPrompt';
 import WhatsNewModal from './components/common/WhatsNewModal';
+import { getPlatform } from './utils/platform';
 
 // Lazy load pages for better performance
 const Login = lazy(() => import('./pages/Login'));
@@ -35,6 +36,15 @@ const LoadingFallback = () => (
 );
 
 function App() {
+  // Apply platform class to body on mount
+  useEffect(() => {
+    const platform = getPlatform();
+    document.body.classList.add(platform);
+    return () => {
+      document.body.classList.remove(platform);
+    };
+  }, []);
+
   return (
     <Router>
       <ErrorBoundary>

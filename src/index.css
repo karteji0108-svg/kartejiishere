@@ -11,7 +11,7 @@
       scrollbar-width: none;  /* Firefox */
   }
 
-  /* Safe Area Variables - Critical for Edge-to-Edge */
+  /* Safe Area Variables */
   :root {
       --sat: env(safe-area-inset-top, 20px);
       --sab: env(safe-area-inset-bottom, 20px);
@@ -19,26 +19,10 @@
       --sar: env(safe-area-inset-right, 0px);
   }
 
-  /* Robust Safe Area Utilities */
-  .pt-safe {
-      padding-top: var(--sat);
-  }
-  .pb-safe {
-      padding-bottom: var(--sab);
-  }
-  .pl-safe {
-      padding-left: var(--sal);
-  }
-  .pr-safe {
-      padding-right: var(--sar);
-  }
-
-  /* Composite Spacing Helpers */
-  .safe-top-spacer {
-      height: var(--sat);
-      width: 100%;
-      flex-shrink: 0;
-  }
+  .pt-safe { padding-top: var(--sat); }
+  .pb-safe { padding-bottom: var(--sab); }
+  .pl-safe { padding-left: var(--sal); }
+  .pr-safe { padding-right: var(--sar); }
 
   /* Layout Containers */
   .app-container {
@@ -47,62 +31,78 @@
 
   .main-content {
       @apply flex-1 overflow-y-auto overflow-x-hidden no-scrollbar w-full relative z-10;
-      padding-top: var(--sat); /* Default top padding for main content */
+      padding-top: var(--sat);
   }
 
-  /* Glassmorphism helpers - Refined for contrast */
+  /* --- Platform Adaptive Styles --- */
+
+  /* iOS Style: Glassmorphism, Blur, Soft Shadows */
+  .ios .glass-card {
+      @apply bg-white/70 dark:bg-black/50 backdrop-blur-2xl shadow-sm border border-white/40 dark:border-white/10 rounded-3xl;
+  }
+  .ios .glass-header {
+      @apply bg-white/80 dark:bg-black/60 backdrop-blur-xl border-b border-white/20 dark:border-white/5 sticky top-0 z-40 transition-colors;
+  }
+  .ios .glass-nav {
+      @apply bg-white/80 dark:bg-black/80 backdrop-blur-xl border-t border-white/20 dark:border-white/5 shadow-none z-50;
+  }
+  .ios .btn-primary {
+      @apply rounded-2xl font-semibold tracking-wide shadow-none active:opacity-70 transition-opacity;
+  }
+
+  /* Android Style: Material Elevation, Solid/Opaque, Ripple (simulated via active state) */
+  .android .glass-card {
+      @apply bg-white dark:bg-gray-900 shadow-md border-none rounded-xl; /* Sharper corners, solid bg */
+  }
+  .android .glass-header {
+      @apply bg-white dark:bg-gray-900 shadow-sm border-none sticky top-0 z-40;
+  }
+  .android .glass-nav {
+      @apply bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50;
+  }
+  .android .btn-primary {
+      @apply rounded-xl font-medium uppercase tracking-wider shadow-md hover:shadow-lg active:shadow-sm transition-all ripple-bg;
+  }
+
+  /* Fallback / Web Default (Hybrid) */
   .glass-card {
       @apply bg-white/70 dark:bg-black/50 backdrop-blur-xl shadow-lg border border-white/50 dark:border-white/10 rounded-3xl;
   }
   .glass-header {
       @apply bg-white/85 dark:bg-black/70 backdrop-blur-md border-b border-white/20 dark:border-white/5 sticky top-0 z-40;
-      padding-top: var(--sat);
   }
   .glass-nav {
       @apply bg-white/90 dark:bg-black/80 backdrop-blur-xl border-t border-white/20 dark:border-white/5 shadow-2xl z-50;
-      padding-bottom: calc(var(--sab) + 0.5rem); /* Extra padding for bottom nav */
   }
 
   /* Background Gradients */
-  .bg-glass-light {
-      @apply bg-[#F0F4F8];
-  }
-  .bg-glass-dark {
-      @apply bg-[#0B1120];
-  }
+  .bg-glass-light { @apply bg-[#F0F4F8]; }
+  .bg-glass-dark { @apply bg-[#0B1120]; }
   .bg-ramadan {
       @apply bg-cover bg-center bg-no-repeat bg-fixed;
       background-image: url('./assets/ramadan-bg.png');
       background-color: #064E3B;
   }
 
-  /* Responsive Typography Scale */
-  .text-display {
-      @apply text-2xl sm:text-3xl font-bold tracking-tight leading-tight;
-  }
-  .text-h1 {
-      @apply text-xl sm:text-2xl font-bold tracking-tight;
-  }
-  .text-h2 {
-      @apply text-lg sm:text-xl font-bold tracking-normal;
-  }
-  .text-h3 {
-      @apply text-base sm:text-lg font-semibold;
-  }
-  .text-body {
-      @apply text-sm sm:text-base font-normal leading-relaxed text-slate-600 dark:text-slate-300;
-  }
-  .text-caption {
-      @apply text-xs font-medium text-slate-500 dark:text-slate-400;
-  }
+  /* Typography */
+  .text-display { @apply text-2xl sm:text-3xl font-bold tracking-tight leading-tight; }
+  .text-h1 { @apply text-xl sm:text-2xl font-bold tracking-tight; }
+  .text-h2 { @apply text-lg sm:text-xl font-bold tracking-normal; }
+  .text-h3 { @apply text-base sm:text-lg font-semibold; }
+  .text-body { @apply text-sm sm:text-base font-normal leading-relaxed text-slate-600 dark:text-slate-300; }
+  .text-caption { @apply text-xs font-medium text-slate-500 dark:text-slate-400; }
 }
 
 @layer components {
-  /* Input/Form styling */
   .input-primary {
       @apply w-full px-4 py-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-base font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400;
   }
   .btn-primary {
-      @apply w-full py-4 px-6 bg-primary text-white font-bold text-base rounded-2xl shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2;
+      @apply w-full py-4 px-6 bg-primary text-white text-base flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed;
+  }
+
+  /* Helper for Android Ripple effect simulation */
+  .ripple-bg {
+      @apply relative overflow-hidden;
   }
 }
