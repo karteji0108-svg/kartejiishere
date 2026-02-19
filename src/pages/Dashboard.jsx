@@ -7,7 +7,7 @@ import PrayerTimes from '../components/common/PrayerTimes';
 import HeroCarousel from '../components/common/HeroCarousel';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
-import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Skeleton from '../components/common/Skeleton';
 import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
@@ -15,72 +15,61 @@ import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
 // --- Widget Components ---
 
 const AdminStats = ({ stats, loading }) => (
-  <div className="grid grid-cols-2 gap-4 mb-6">
-      <div className="glass-card p-4">
-          <p className="text-xs text-gray-600 dark:text-gray-300">Total Anggota</p>
-          <h3 className="text-xl font-bold">{loading ? "..." : stats.memberCount}</h3>
+  <section className="mb-8">
+      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-5 px-5 snap-x">
+          <div className="glass-card p-5 min-w-[160px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+              <div>
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-2">
+                      <span className="material-icons-round text-sm">groups</span>
+                  </div>
+                  <p className="text-caption">Total Warga</p>
+              </div>
+              <h3 className="text-display text-slate-800 dark:text-white">{loading ? "..." : stats.memberCount}</h3>
+          </div>
+
+          <div className="glass-card p-5 min-w-[200px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
+              <div>
+                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-2">
+                      <span className="material-icons-round text-sm">account_balance_wallet</span>
+                  </div>
+                  <p className="text-caption">Saldo Kas</p>
+              </div>
+              <h3 className="text-h1 text-slate-800 dark:text-white truncate">{loading ? "..." : `Rp ${stats.balance.toLocaleString('id-ID')}`}</h3>
+          </div>
       </div>
-      <div className="glass-card p-4">
-          <p className="text-xs text-gray-600 dark:text-gray-300">Saldo Kas</p>
-          <h3 className="text-xl font-bold text-green-600">{loading ? "..." : `Rp ${stats.balance.toLocaleString('id-ID')}`}</h3>
-      </div>
-  </div>
+  </section>
 );
 
-const ApprovalQueue = () => (
-    <div className="mb-6">
-        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase">Perlu Persetujuan</h3>
-        <div className="glass-card p-4 text-center text-sm text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600">
-            Tidak ada pengajuan pending.
+const QuickActionItem = ({ to, icon, label, color }) => (
+    <Link to={to} className="flex flex-col items-center gap-3 min-w-[72px] snap-center group">
+        <div className={`w-16 h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-active:scale-95 shadow-sm border border-white/20 dark:border-white/5 ${color}`}>
+            <span className="material-icons-round text-2xl">{icon}</span>
         </div>
-    </div>
+        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 text-center leading-tight max-w-[80px]">{label}</span>
+    </Link>
 );
 
 const QuickActions = ({ userRole }) => {
     return (
-        <section className="mb-8 grid grid-cols-4 gap-3">
-          {hasPermission(userRole, PERMISSIONS.MANAGE_MEMBERS) && (
-            <Link to="/members/add" className="flex flex-col items-center gap-2 group">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
-                    <span className="material-icons-round">person_add</span>
-                </div>
-                <span className="text-[10px] font-medium text-center">Anggota</span>
-            </Link>
-          )}
-
-          {hasPermission(userRole, PERMISSIONS.MANAGE_FINANCE) && (
-            <Link to="/finance/add" className="flex flex-col items-center gap-2 group">
-                <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 group-hover:scale-105 transition-transform">
-                    <span className="material-icons-round">account_balance_wallet</span>
-                </div>
-                <span className="text-[10px] font-medium text-center">Keuangan</span>
-            </Link>
-          )}
-
-          {(hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) || hasPermission(userRole, PERMISSIONS.PROPOSE_ACTIVITY)) && (
-            <Link to="/activities/create" className="flex flex-col items-center gap-2 group">
-                <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 group-hover:scale-105 transition-transform">
-                    <span className="material-icons-round">event</span>
-                </div>
-                <span className="text-[10px] font-medium text-center">Kegiatan</span>
-            </Link>
-          )}
-
-          {hasPermission(userRole, PERMISSIONS.MANAGE_ANNOUNCEMENTS) && (
-            <Link to="/announcements/create" className="flex flex-col items-center gap-2 group">
-                <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform">
-                    <span className="material-icons-round">campaign</span>
-                </div>
-                <span className="text-[10px] font-medium text-center">Info</span>
-            </Link>
-          )}
-
-          <Link to="/gallery" className="flex flex-col items-center gap-2 group">
-             <div className="w-12 h-12 rounded-xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-pink-600 dark:text-pink-400 group-hover:scale-105 transition-transform">
-                 <span className="material-icons-round">photo_library</span>
-             </div>
-             <span className="text-[10px] font-medium text-center">Galeri</span>
-          </Link>
+        <section className="mb-8">
+            <h3 className="text-h3 text-slate-800 dark:text-white mb-4 px-1">Menu Cepat</h3>
+            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-5 px-5 snap-x">
+                {hasPermission(userRole, PERMISSIONS.MANAGE_MEMBERS) && (
+                    <QuickActionItem to="/members/add" icon="person_add" label="Tambah Warga" color="bg-blue-100/80 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300" />
+                )}
+                {hasPermission(userRole, PERMISSIONS.MANAGE_FINANCE) && (
+                    <QuickActionItem to="/finance/add" icon="payments" label="Catat Kas" color="bg-green-100/80 dark:bg-green-900/40 text-green-600 dark:text-green-300" />
+                )}
+                {(hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) || hasPermission(userRole, PERMISSIONS.PROPOSE_ACTIVITY)) && (
+                    <QuickActionItem to="/activities/create" icon="event_note" label="Buat Acara" color="bg-orange-100/80 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300" />
+                )}
+                {hasPermission(userRole, PERMISSIONS.MANAGE_ANNOUNCEMENTS) && (
+                    <QuickActionItem to="/announcements/create" icon="campaign" label="Info Baru" color="bg-purple-100/80 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300" />
+                )}
+                <QuickActionItem to="/gallery/add" icon="add_a_photo" label="Upload Foto" color="bg-pink-100/80 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300" />
+            </div>
         </section>
     );
 };
@@ -90,37 +79,15 @@ const QuickActions = ({ userRole }) => {
 const Dashboard = () => {
   const { isRamadan } = useRamadan();
   const { currentUser, userRole } = useAuth();
-  const [timeLeft, setTimeLeft] = useState('00:00:00');
-  const [nextPrayer, setNextPrayer] = useState('Maghrib');
-  const [userLocation, setUserLocation] = useState('Jakarta Selatan');
-
   const [stats, setStats] = useState({ balance: 0, memberCount: 0, activityCount: 0 });
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState(null); // Local state for detailed user data
-
-  const canUpload = hasPermission(userRole, PERMISSIONS.MANAGE_GALLERY) ||
-                    hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) ||
-                    userRole === 'anggota';
-
-  useEffect(() => {
-    // Basic Geo
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                // Mock implementation for speed, real app uses fetch
-                setUserLocation("Jakarta Selatan");
-            },
-            () => console.log("Geo permission denied")
-        );
-    }
-  }, []);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch detailed user profile
         if (currentUser) {
             const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
             if (userDoc.exists()) {
@@ -128,7 +95,6 @@ const Dashboard = () => {
             }
         }
 
-        // Fetch stats only if allowed
         let memberCount = 0;
         let balance = 0;
 
@@ -141,30 +107,27 @@ const Dashboard = () => {
             const financeSnap = await getDocs(collection(db, 'finance'));
             financeSnap.forEach(doc => {
                 const data = doc.data();
-                // Robust parsing for dashboard summary
                 let amount = data.amount;
                 if (typeof amount === 'string') {
                     amount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
                 }
                 const numAmount = Number(amount) || 0;
-
                 if (data.type === 'income') balance += numAmount;
                 if (data.type === 'expense') balance -= numAmount;
             });
         }
 
-        const activitiesSnap = await getDocs(collection(db, 'activities')); // Public read usually
+        const activitiesSnap = await getDocs(collection(db, 'activities'));
         const activityCount = activitiesSnap.size;
 
         setStats({ balance, memberCount, activityCount });
 
-        // Recent Updates
         const updates = [];
         const recentActQ = query(collection(db, 'activities'), orderBy('date', 'asc'), limit(2));
         const recentActSnap = await getDocs(recentActQ);
         recentActSnap.forEach(doc => updates.push({ id: doc.id, type: 'activity', ...doc.data() }));
 
-        const recentAnnQ = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(1));
+        const recentAnnQ = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(2));
         const recentAnnSnap = await getDocs(recentAnnQ);
         recentAnnSnap.forEach(doc => updates.push({ id: doc.id, type: 'announcement', ...doc.data() }));
 
@@ -183,106 +146,97 @@ const Dashboard = () => {
   const displayName = userProfile?.fullName || userProfile?.displayName || currentUser?.displayName || 'Pengguna';
   const photoURL = userProfile?.photoURL || currentUser?.photoURL;
 
+  // Get greeting based on time
+  const hour = new Date().getHours();
+  let greeting = 'Selamat Pagi';
+  if (hour >= 10) greeting = 'Selamat Siang';
+  if (hour >= 15) greeting = 'Selamat Sore';
+  if (hour >= 18) greeting = 'Selamat Malam';
+
   return (
     <div className={`font-display text-slate-800 dark:text-slate-100 h-screen overflow-hidden flex flex-col relative transition-colors duration-500
       ${isRamadan ? 'bg-ramadan' : 'bg-glass-light dark:bg-glass-dark'}`}>
 
-      {/* Top Status Bar Area */}
-      <div className="h-12 w-full shrink-0"></div>
+      <main className="flex-1 overflow-y-auto no-scrollbar pb-32 pt-safe px-6">
 
-      <main className="flex-1 overflow-y-auto no-scrollbar pb-24 px-5">
-        {/* Header */}
-        <header className="flex items-center justify-between mb-8 pt-2">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center glass-card p-1 shadow-lg">
-                 <div className="w-full h-full rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                     {photoURL ? (
-                        <img src={photoURL} alt="Avatar" className="w-full h-full object-cover" />
-                     ) : (
-                        <span className="material-icons text-gray-400 dark:text-gray-500 text-3xl flex items-center justify-center h-full w-full">person</span>
-                     )}
-                 </div>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-300 ml-1">Selamat Datang,</p>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white capitalize ml-1">
-                  {displayName}
-              </h1>
-              <span className="ml-1 mt-1 inline-block text-[10px] bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 text-primary dark:text-primary-content px-2 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm">
-                  {userRole?.replace('_', ' ')}
-              </span>
-            </div>
+        {/* Modern Header */}
+        <header className="flex items-start justify-between mb-8 mt-4">
+          <div>
+            <p className="text-caption mb-1 opacity-80">{greeting},</p>
+            <h1 className="text-h1 capitalize leading-tight">
+                {displayName.split(' ')[0]}
+            </h1>
           </div>
-          <div className="flex gap-3 items-center">
-              <ThemeToggle className="glass-card !rounded-full !p-2 !shadow-none !border-white/20 hover:bg-white/30 dark:hover:bg-black/50 transition-colors" />
-              <button className="relative p-2 rounded-full glass-card !shadow-none !border-white/20 text-slate-600 dark:text-slate-300 hover:bg-white/30 dark:hover:bg-black/50 transition-colors">
-                <span className="material-icons-round text-[24px]">notifications_none</span>
-                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
-              </button>
+          <div className="flex gap-3">
+             <button className="w-10 h-10 rounded-full glass-card flex items-center justify-center relative hover:scale-105 transition-transform">
+                <span className="material-icons-round text-slate-700 dark:text-white">notifications</span>
+                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-800"></span>
+             </button>
+             <Link to="/profile" className="w-10 h-10 rounded-full overflow-hidden glass-card p-0.5 shadow-md hover:scale-105 transition-transform">
+                 {photoURL ? (
+                    <img src={photoURL} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                 ) : (
+                    <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center rounded-full">
+                        <span className="material-icons text-slate-400 text-lg">person</span>
+                    </div>
+                 )}
+             </Link>
           </div>
         </header>
 
-        {/* Hero Carousel */}
-        <HeroCarousel />
+        {/* Hero Section */}
+        <div className="mb-8 -mx-1">
+            <HeroCarousel />
+        </div>
 
-        {isRamadan && <PrayerTimes />}
+        {isRamadan && <div className="mb-8"><PrayerTimes /></div>}
 
-        {/* Role-Specific Dashboard Views */}
-
-        {/* 1. Admin/Ketua Stats */}
+        {/* Stats Row (Horizontal Scroll) */}
         {(hasPermission(userRole, PERMISSIONS.VIEW_FINANCE) || hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)) && (
             <AdminStats stats={stats} loading={loading} />
         )}
 
-        {/* 2. Approval Queue (Ketua/Wakil) */}
-        {hasPermission(userRole, PERMISSIONS.APPROVE_ACTIVITIES) && (
-            <ApprovalQueue />
-        )}
-
-        {/* 3. Quick Actions (Dynamic) */}
+        {/* Quick Actions (Horizontal Scroll) */}
         <QuickActions userRole={userRole} />
 
-        {/* 4. Recent Updates (Universal) */}
+        {/* Recent Updates */}
         <section className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Terbaru</h2>
-            <Link to="/announcements" className="text-sm font-medium text-primary hover:text-blue-600 transition-colors">Lihat Semua</Link>
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h3 className="text-h3 text-slate-800 dark:text-white">Terbaru</h3>
+            <Link to="/announcements" className="text-sm font-semibold text-primary hover:text-blue-600 transition-colors">Lihat Semua</Link>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {loading ? (
-               <Skeleton className="h-20 w-full rounded-xl" />
+               <Skeleton className="h-24 w-full rounded-3xl" />
             ) : recentUpdates.length === 0 ? (
-               <p className="text-center text-gray-500 text-sm py-4">Belum ada update terbaru.</p>
+               <div className="glass-card p-8 text-center">
+                   <span className="material-icons-round text-4xl text-slate-300 mb-2">inbox</span>
+                   <p className="text-caption">Belum ada update terbaru.</p>
+               </div>
             ) : (
                recentUpdates.map((item, index) => (
-                  <div key={item.id} className="glass-card p-4 flex items-start gap-4">
-                    <div className={`shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${item.type === 'activity' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'bg-green-50 dark:bg-green-900/30 text-green-600'}`}>
-                      <span className="material-icons-round">{item.type === 'activity' ? 'event' : 'campaign'}</span>
+                  <div key={item.id} className="glass-card p-4 flex items-start gap-4 hover:bg-white/40 dark:hover:bg-black/30 transition-colors cursor-pointer group">
+                    <div className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm
+                        ${item.type === 'activity'
+                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                            : 'bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400'}`}>
+                      <span className="material-icons-round text-2xl">{item.type === 'activity' ? 'event' : 'campaign'}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-slate-900 dark:text-white truncate">{item.title}</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">{item.description || item.content}</p>
+                    <div className="flex-1 min-w-0 py-1">
+                      <div className="flex justify-between items-start">
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white truncate pr-2">{item.title}</h4>
+                          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500 font-medium">
+                              {item.type === 'activity' ? 'Event' : 'Info'}
+                          </span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">{item.description || item.content}</p>
                     </div>
                   </div>
                ))
             )}
           </div>
         </section>
-
-        <div className="h-8"></div>
       </main>
-
-      {/* FAB for Upload (Context-Aware) */}
-      {canUpload && (
-        <Link
-            to="/gallery/add"
-            className="fixed bottom-24 right-5 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all"
-        >
-            <span className="material-icons-round text-2xl">add</span>
-        </Link>
-      )}
 
       <RamadanBanner />
       <BottomNav />
