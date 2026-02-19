@@ -22,8 +22,8 @@ const BottomNav = () => {
         {/* Helper to render Nav Items */}
         {[
             { to: "/dashboard", icon: "dashboard", label: "Home" },
-            { to: "/gallery", icon: "photo_library", label: "Galeri" },
-            { to: "/activities", icon: "event", label: "Acara", isFab: true }, // Center FAB
+            { to: "/activities", icon: "event", label: "Acara" },
+            { to: "/menu", icon: "grid_view", label: "Menu", isFab: true }, // Center FAB now Menu
             { to: "/finance", icon: "account_balance_wallet", label: "Kas" },
             { to: "/profile", icon: "person", label: "Profil" }
         ].map((item) => (

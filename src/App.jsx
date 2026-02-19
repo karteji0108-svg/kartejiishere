@@ -16,7 +16,7 @@ const MemberList = lazy(() => import('./pages/MemberList'));
 const MemberDetail = lazy(() => import('./pages/MemberDetail'));
 const AddMember = lazy(() => import('./pages/AddMember'));
 const Finance = lazy(() => import('./pages/Finance'));
-const TransactionDetail = lazy(() => import('./pages/TransactionDetail')); // New
+const TransactionDetail = lazy(() => import('./pages/TransactionDetail'));
 const AddTransaction = lazy(() => import('./pages/AddTransaction'));
 const Activities = lazy(() => import('./pages/Activities'));
 const CreateActivity = lazy(() => import('./pages/CreateActivity'));
@@ -27,6 +27,12 @@ const AddGalleryPhoto = lazy(() => import('./pages/AddGalleryPhoto'));
 const Announcements = lazy(() => import('./pages/Announcements'));
 const CreateAnnouncement = lazy(() => import('./pages/CreateAnnouncement'));
 const Profile = lazy(() => import('./pages/Profile'));
+
+// New Features
+const Menu = lazy(() => import('./pages/Menu'));
+const Correspondence = lazy(() => import('./pages/Correspondence'));
+const Inventory = lazy(() => import('./pages/Inventory'));
+const Partners = lazy(() => import('./pages/Partners'));
 
 // Simple loading spinner for Suspense fallback
 const LoadingFallback = () => (
@@ -100,6 +106,12 @@ function App() {
 
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/pengumuman" element={<Announcements />} />
+
+              {/* New Menu Hub */}
+              <Route path="/menu" element={<Menu />} />
+              <Route path="/correspondence" element={<Correspondence />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/partners" element={<Partners />} />
             </Route>
 
             {/* Role Protected Routes */}
@@ -109,11 +121,11 @@ function App() {
               <Route path="/members/:id" element={<MemberDetail />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/keuangan" element={<Finance />} />
-              <Route path="/finance/:id" element={<TransactionDetail />} /> {/* New Route */}
+              <Route path="/finance/:id" element={<TransactionDetail />} />
             </Route>
 
             {/* Admin/Officer Only Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin', 'bendahara', 'wakil_ketua', 'anggota']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin', 'bendahara', 'wakil_ketua', 'anggota', 'content_creator']} />}>
               <Route path="/members/add" element={<AddMember />} />
               <Route path="/announcements/create" element={<CreateAnnouncement />} />
               <Route path="/activities/create" element={<CreateActivity />} />
