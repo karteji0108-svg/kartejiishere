@@ -17,6 +17,7 @@ const AddTransaction = () => {
   const [displayAmount, setDisplayAmount] = useState('');
   const [type, setType] = useState('expense');
   const [category, setCategory] = useState('');
+  const [sourceFund, setSourceFund] = useState(''); // New field for expenses
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [receiptImage, setReceiptImage] = useState(null);
   const [receiptPreview, setReceiptPreview] = useState(null);
@@ -44,6 +45,7 @@ const AddTransaction = () => {
                     setDisplayAmount(formatNumber(t.amount));
                     setType(t.type);
                     setCategory(t.category);
+                    setSourceFund(t.sourceFund || '');
                     setDate(t.date);
                     setReceiptPreview(t.receiptUrl);
                 } else {
@@ -57,6 +59,7 @@ const AddTransaction = () => {
                         setDisplayAmount(formatNumber(t.amount));
                         setType(t.type);
                         setCategory(t.category);
+                        setSourceFund(t.sourceFund || '');
                         setDate(t.date);
                         setReceiptPreview(t.receiptUrl);
                     } else {
@@ -136,6 +139,7 @@ const AddTransaction = () => {
         amount: Number(amount),
         type,
         category,
+        sourceFund: type === 'expense' ? sourceFund : null, // Store sourceFund only for expenses
         date,
         receiptUrl: receiptUrl || null,
         updatedAt: new Date().toISOString(),
@@ -264,6 +268,29 @@ const AddTransaction = () => {
                         <span className="absolute right-3 top-3 text-gray-400 material-icons-round text-lg pointer-events-none">expand_more</span>
                     </div>
                 </div>
+
+                {/* Source Fund Selection (Only for Expense) */}
+                {type === 'expense' && (
+                    <div>
+                        <label className="label-primary">Ambil dari Sumber Dana?</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-3 text-gray-400 material-icons-round text-lg">account_balance_wallet</span>
+                            <select
+                                className="input-primary pl-10 appearance-none"
+                                value={sourceFund}
+                                onChange={(e) => setSourceFund(e.target.value)}
+                                required
+                            >
+                                <option value="">Pilih Sumber Dana</option>
+                                <option value="Iuran">Kas Iuran</option>
+                                <option value="Donasi">Kas Donasi</option>
+                                <option value="Usaha">Kas Usaha</option>
+                                <option value="Lainnya">Kas Lainnya</option>
+                            </select>
+                            <span className="absolute right-3 top-3 text-gray-400 material-icons-round text-lg pointer-events-none">expand_more</span>
+                        </div>
+                    </div>
+                )}
 
                 <div>
                     <label className="label-primary">Tanggal</label>

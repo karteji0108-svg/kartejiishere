@@ -15,6 +15,7 @@ const Finance = () => {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 });
   const [categoryStats, setCategoryStats] = useState({ income: {}, expense: {} });
+  const [fundStats, setFundStats] = useState({}); // New: Fund Balances
   const [selectedReceipt, setSelectedReceipt] = useState(null); // For modal
   const { isRamadan } = useRamadan();
 
@@ -39,6 +40,7 @@ const Finance = () => {
       let exp = 0;
       const incCats = {};
       const expCats = {};
+      const funds = { 'Iuran': 0, 'Donasi': 0, 'Usaha': 0, 'Lainnya': 0 }; // Initialize
 
       data.forEach(t => {
         // Robust number parsing
@@ -53,10 +55,31 @@ const Finance = () => {
         if (t.type === 'income') {
             inc += numAmount;
             incCats[category] = (incCats[category] || 0) + numAmount;
+
+            // Add to fund balance (Income Category acts as Fund Source)
+            // Map generic categories to known funds if needed, or just use category name
+            // Assuming income category names match fund names: 'Iuran', 'Donasi', etc.
+            if (funds[category] !== undefined) {
+                funds[category] += numAmount;
+            } else {
+                funds[category] = (funds[category] || 0) + numAmount;
+            }
         }
         if (t.type === 'expense') {
             exp += numAmount;
             expCats[category] = (expCats[category] || 0) + numAmount;
+
+            // Deduct from Source Fund
+            const source = t.sourceFund;
+            if (source && funds[source] !== undefined) {
+                funds[source] -= numAmount;
+            } else if (source) {
+                funds[source] = (funds[source] || 0) - numAmount;
+            } else {
+                // If no source specified (legacy data), maybe deduct from 'Lainnya' or ignore for fund stats?
+                // Let's deduct from 'Lainnya' as fallback or display 'Unallocated'
+                funds['Lainnya'] = (funds['Lainnya'] || 0) - numAmount;
+            }
         }
       });
 
@@ -69,6 +92,7 @@ const Finance = () => {
           income: incCats,
           expense: expCats
       });
+      setFundStats(funds);
 
     } catch (error) {
       console.error("Error fetching finance data: ", error);
@@ -97,7 +121,7 @@ const Finance = () => {
 
   const handleDownloadReport = () => {
       // CSV Export
-      const headers = ['Tanggal', 'Judul', 'Kategori', 'Tipe', 'Jumlah', 'Keterangan'];
+      const headers = ['Tanggal', 'Judul', 'Kategori', 'Tipe', 'Sumber Dana', 'Jumlah', 'Keterangan'];
       const csvRows = [];
       csvRows.push(headers.join(','));
 
@@ -108,6 +132,7 @@ const Finance = () => {
               `"${t.title.replace(/"/g, '""')}"`,
               t.category || '-',
               t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
+              t.sourceFund || '-',
               amount,
               `"${(t.description || '').replace(/"/g, '""')}"`
           ];
@@ -197,45 +222,19 @@ const Finance = () => {
           </div>
         </section>
 
-        {/* Category Breakdown */}
-        {!loading && (Object.keys(categoryStats.income).length > 0 || Object.keys(categoryStats.expense).length > 0) && (
-            <section className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-3">Rincian Per Kategori</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Income Stats */}
-                    {Object.keys(categoryStats.income).length > 0 && (
-                        <div className="glass-card p-4">
-                            <h4 className="text-sm font-bold text-green-600 dark:text-green-400 mb-3 flex items-center gap-2">
-                                <span className="material-icons-round text-base">arrow_downward</span> Pemasukan
-                            </h4>
-                            <div className="space-y-3">
-                                {Object.entries(categoryStats.income).map(([cat, amount]) => (
-                                    <div key={cat} className="flex justify-between items-center text-sm">
-                                        <span className="opacity-80">{cat}</span>
-                                        <span className="font-semibold">{formatCurrency(amount)}</span>
-                                    </div>
-                                ))}
-                            </div>
+        {/* Fund Balances (New Section) */}
+        {!loading && Object.keys(fundStats).length > 0 && (
+            <section className="animate-fade-in-up" style={{ animationDelay: '50ms' }}>
+                <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-3">Sisa Saldo Per Sumber</h3>
+                <div className="grid grid-cols-2 gap-3">
+                    {Object.entries(fundStats).map(([fund, balance]) => (
+                        <div key={fund} className="glass-card p-4 flex flex-col justify-between hover:scale-[1.02] transition-transform">
+                            <span className="text-xs uppercase font-bold opacity-60 mb-1">{fund}</span>
+                            <span className={`font-bold text-lg ${balance < 0 ? 'text-red-500' : 'text-slate-800 dark:text-white'}`}>
+                                {formatCurrency(balance)}
+                            </span>
                         </div>
-                    )}
-
-                    {/* Expense Stats */}
-                    {Object.keys(categoryStats.expense).length > 0 && (
-                        <div className="glass-card p-4">
-                            <h4 className="text-sm font-bold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
-                                <span className="material-icons-round text-base">arrow_upward</span> Pengeluaran
-                            </h4>
-                            <div className="space-y-3">
-                                {Object.entries(categoryStats.expense).map(([cat, amount]) => (
-                                    <div key={cat} className="flex justify-between items-center text-sm">
-                                        <span className="opacity-80">{cat}</span>
-                                        <span className="font-semibold">{formatCurrency(amount)}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    ))}
                 </div>
             </section>
         )}
@@ -291,7 +290,9 @@ const Finance = () => {
                                             </button>
                                         )}
                                     </div>
-                                    <p className="text-xs opacity-60">{formatDate(t.date)} • {t.category || 'Umum'}</p>
+                                    <p className="text-xs opacity-60">
+                                        {formatDate(t.date)} • {t.type === 'expense' && t.sourceFund ? `Dari: ${t.sourceFund}` : (t.category || 'Umum')}
+                                    </p>
                                 </div>
                             </div>
                             <div className="text-right ml-2 flex items-center gap-3">
@@ -347,12 +348,20 @@ const Finance = () => {
                 >
                     <span className="material-icons-round text-3xl">close</span>
                 </button>
-                <img
-                    src={selectedReceipt}
-                    alt="Bukti Struk"
-                    className="w-full h-full object-contain rounded-lg shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                />
+                {selectedReceipt === 'details' ? (
+                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold mb-4">Detail Transaksi</h3>
+                        <p className="text-sm opacity-60 mb-6">Fitur detail lengkap akan segera hadir. Gunakan tombol Edit untuk melihat detail lengkap.</p>
+                        <button onClick={() => setSelectedReceipt(null)} className="btn-primary w-full py-2">Tutup</button>
+                     </div>
+                ) : (
+                    <img
+                        src={selectedReceipt}
+                        alt="Bukti Struk"
+                        className="w-full h-full object-contain rounded-lg shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                )}
             </div>
         </div>
       )}

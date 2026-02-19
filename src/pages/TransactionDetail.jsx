@@ -122,6 +122,15 @@ const TransactionDetail = () => {
                       <p className="font-medium text-sm">{transaction.category || '-'}</p>
                   </div>
               </div>
+              {transaction.sourceFund && (
+                  <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <p className="text-xs uppercase font-bold opacity-50 mb-1 text-center">Sumber Dana</p>
+                      <div className="flex items-center justify-center gap-2">
+                          <span className="material-icons-round text-primary text-sm">account_balance_wallet</span>
+                          <p className="font-bold text-sm">Kas {transaction.sourceFund}</p>
+                      </div>
+                  </div>
+              )}
           </div>
 
           {/* Details & Receipt */}
