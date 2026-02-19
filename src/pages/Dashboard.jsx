@@ -10,14 +10,14 @@ import { useAuth } from '../context/AuthContext';
 import { collection, getDocs, query, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Skeleton from '../components/common/Skeleton';
-import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
+import { hasPermission, PERMISSIONS } from '../constants/roles';
 
 // --- Widget Components ---
 
 const AdminStats = ({ stats, loading }) => (
   <section className="mb-8">
-      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-5 px-5 snap-x">
-          <div className="glass-card p-5 min-w-[160px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
+      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6 snap-x">
+          <div className="glass-card p-5 min-w-[150px] sm:min-w-[180px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
               <div>
                   <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-2">
@@ -28,7 +28,7 @@ const AdminStats = ({ stats, loading }) => (
               <h3 className="text-display text-slate-800 dark:text-white">{loading ? "..." : stats.memberCount}</h3>
           </div>
 
-          <div className="glass-card p-5 min-w-[200px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
+          <div className="glass-card p-5 min-w-[190px] sm:min-w-[220px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
               <div>
                   <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-2">
@@ -43,11 +43,11 @@ const AdminStats = ({ stats, loading }) => (
 );
 
 const QuickActionItem = ({ to, icon, label, color }) => (
-    <Link to={to} className="flex flex-col items-center gap-3 min-w-[72px] snap-center group">
-        <div className={`w-16 h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-active:scale-95 shadow-sm border border-white/20 dark:border-white/5 ${color}`}>
-            <span className="material-icons-round text-2xl">{icon}</span>
+    <Link to={to} className="flex flex-col items-center gap-3 min-w-[72px] sm:min-w-[80px] snap-center group">
+        <div className={`w-16 h-16 sm:w-18 sm:h-18 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-active:scale-95 shadow-sm border border-white/20 dark:border-white/5 ${color}`}>
+            <span className="material-icons-round text-2xl sm:text-3xl">{icon}</span>
         </div>
-        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 text-center leading-tight max-w-[80px]">{label}</span>
+        <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 text-center leading-tight max-w-[80px] break-words">{label}</span>
     </Link>
 );
 
@@ -55,7 +55,7 @@ const QuickActions = ({ userRole }) => {
     return (
         <section className="mb-8">
             <h3 className="text-h3 text-slate-800 dark:text-white mb-4 px-1">Menu Cepat</h3>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-5 px-5 snap-x">
+            <div className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6 snap-x">
                 {hasPermission(userRole, PERMISSIONS.MANAGE_MEMBERS) && (
                     <QuickActionItem to="/members/add" icon="person_add" label="Tambah Warga" color="bg-blue-100/80 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300" />
                 )}
@@ -154,13 +154,16 @@ const Dashboard = () => {
   if (hour >= 18) greeting = 'Selamat Malam';
 
   return (
-    <div className={`font-display text-slate-800 dark:text-slate-100 h-screen overflow-hidden flex flex-col relative transition-colors duration-500
-      ${isRamadan ? 'bg-ramadan' : 'bg-glass-light dark:bg-glass-dark'}`}>
-
-      <main className="flex-1 overflow-y-auto no-scrollbar pb-32 pt-safe px-6">
+    <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
+      {/*
+         Removed manual 'h-12' spacer.
+         Main content uses 'pt-safe' via 'main-content' class or direct style.
+         Dashboard needs extra top padding for the header greeting.
+      */}
+      <main className="main-content pb-32 px-6 pt-safe mt-6">
 
         {/* Modern Header */}
-        <header className="flex items-start justify-between mb-8 mt-4">
+        <header className="flex items-start justify-between mb-8">
           <div>
             <p className="text-caption mb-1 opacity-80">{greeting},</p>
             <h1 className="text-h1 capitalize leading-tight">
@@ -191,12 +194,12 @@ const Dashboard = () => {
 
         {isRamadan && <div className="mb-8"><PrayerTimes /></div>}
 
-        {/* Stats Row (Horizontal Scroll) */}
+        {/* Stats Row */}
         {(hasPermission(userRole, PERMISSIONS.VIEW_FINANCE) || hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)) && (
             <AdminStats stats={stats} loading={loading} />
         )}
 
-        {/* Quick Actions (Horizontal Scroll) */}
+        {/* Quick Actions */}
         <QuickActions userRole={userRole} />
 
         {/* Recent Updates */}
@@ -214,7 +217,7 @@ const Dashboard = () => {
                    <p className="text-caption">Belum ada update terbaru.</p>
                </div>
             ) : (
-               recentUpdates.map((item, index) => (
+               recentUpdates.map((item) => (
                   <div key={item.id} className="glass-card p-4 flex items-start gap-4 hover:bg-white/40 dark:hover:bg-black/30 transition-colors cursor-pointer group">
                     <div className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm
                         ${item.type === 'activity'

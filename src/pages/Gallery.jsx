@@ -61,11 +61,10 @@ const Gallery = () => {
   const canDelete = hasPermission(userRole, PERMISSIONS.MANAGE_GALLERY) || userRole === 'super_admin';
 
   return (
-    <div className={`font-display min-h-screen pb-24 relative overflow-x-hidden transition-colors duration-500
-      ${isRamadan ? 'bg-ramadan text-white' : 'bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100'}`}>
+    <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
 
       {/* Header */}
-      <header className="glass-header px-5 pt-safe pb-4 flex items-center justify-between sticky top-0 z-30">
+      <header className="glass-header px-5 pb-4 flex items-center justify-between">
         <div>
             <h1 className="text-h2 text-slate-900 dark:text-white">Galeri</h1>
             <p className="text-caption">Dokumentasi Kegiatan</p>
@@ -77,7 +76,7 @@ const Gallery = () => {
         )}
       </header>
 
-      <main className="px-4 pt-4 pb-24">
+      <main className="main-content px-4 pt-4 pb-32">
         {loading ? (
             <div className="columns-2 gap-4 space-y-4">
                 {[1,2,3,4,5,6].map(i => (
@@ -135,7 +134,7 @@ const Gallery = () => {
       {canUpload && (
         <Link
             to="/gallery/add"
-            className="fixed bottom-24 right-5 w-14 h-14 bg-primary text-white rounded-2xl shadow-xl shadow-primary/40 flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all"
+            className="fixed bottom-32 right-6 w-14 h-14 bg-primary text-white rounded-2xl shadow-xl shadow-primary/40 flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all"
         >
             <span className="material-icons-round text-2xl">add</span>
         </Link>
@@ -144,7 +143,7 @@ const Gallery = () => {
       {/* Photo Detail Modal */}
       {selectedPhoto && (
         <div
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col animate-fade-in"
+            className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-md flex flex-col animate-fade-in"
             onClick={() => setSelectedPhoto(null)}
         >
             <div className="flex items-center justify-between p-4 z-10 pt-safe">

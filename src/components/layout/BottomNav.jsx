@@ -3,8 +3,8 @@ import { NavLink } from 'react-router-dom';
 
 const BottomNav = () => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 glass-nav pb-safe pt-2 px-6 z-50">
-      <div className="flex justify-around items-center h-16">
+    <nav className="fixed bottom-0 left-0 right-0 glass-nav px-6 z-50">
+      <div className="flex justify-around items-center h-16 safe-bottom-spacer">
         <NavLink to="/dashboard" className={({ isActive }) => `flex flex-col items-center justify-center w-14 h-full gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}>
             {({ isActive }) => (
                 <>
