@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useRamadan } from '../context/RamadanContext';
@@ -68,16 +68,39 @@ const MemberDetail = () => {
       return false;
   };
 
+  const checkRoleUniqueness = async (newRole) => {
+      const restrictedRoles = [ROLES.SUPER_ADMIN, ROLES.KETUA, ROLES.WAKIL_KETUA];
+      if (!restrictedRoles.includes(newRole)) return true;
+
+      // Query to check if anyone else has this role
+      const q = query(collection(db, 'users'), where('role', '==', newRole));
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+          // Check if the existing user is NOT the current user being edited
+          const existingUser = snapshot.docs.find(doc => doc.id !== id);
+          if (existingUser) {
+              const userData = existingUser.data();
+              const name = userData.fullName || userData.displayName || 'pengguna lain';
+              toast.error(`Role ${newRole.replace('_', ' ').toUpperCase()} sudah dipegang oleh ${name}.`);
+              return false;
+          }
+      }
+      return true;
+  };
+
   const handleRoleChange = async (e) => {
       const newRole = e.target.value;
 
-      // Verify permissions again for the NEW role (can I promote someone to X?)
-      // Implicitly, if I can't touch X, I shouldn't be able to promote to X either.
-      // E.g. Wakil shouldn't promote someone to Ketua.
+      // Verify permissions again for the NEW role
       if (!canChangeRoleForTarget(newRole)) {
           toast.error("Anda tidak memiliki izin untuk mengubah ke role ini.");
           return;
       }
+
+      // Verify uniqueness for specific roles
+      const isUnique = await checkRoleUniqueness(newRole);
+      if (!isUnique) return;
 
       if (!confirm(`Apakah Anda yakin ingin mengubah role menjadi ${newRole.replace('_', ' ')}?`)) {
           return;

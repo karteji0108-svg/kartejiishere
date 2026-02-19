@@ -206,7 +206,7 @@ const Finance = () => {
 
                     return (
                         <div key={t.id}
-                             onClick={() => setSelectedReceipt(t.receiptUrl || 'details')} // Show details modal if no receipt, or improve logic
+                             onClick={() => navigate('/finance/' + t.id)} // Show details modal if no receipt, or improve logic
                              className="glass-card p-4 flex items-center justify-between hover:scale-[1.01] transition-transform animate-fade-in-up group cursor-pointer"
                              style={{ animationDelay: `${index * 50}ms` }}
                         >
