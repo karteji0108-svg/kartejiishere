@@ -17,18 +17,18 @@ import { hasPermission, PERMISSIONS } from '../constants/roles';
 const AdminStats = ({ stats, loading }) => (
   <section className="mb-8">
       <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6 snap-x">
-          <div className="glass-card p-5 min-w-[150px] sm:min-w-[180px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
+          <Link to="/members" className="glass-card p-5 min-w-[150px] sm:min-w-[180px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
               <div>
                   <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-2">
                       <span className="material-icons-round text-sm">groups</span>
                   </div>
-                  <p className="text-caption">Total Warga</p>
+                  <p className="text-caption">Total Anggota</p>
               </div>
               <h3 className="text-display text-slate-800 dark:text-white">{loading ? "..." : stats.memberCount}</h3>
-          </div>
+          </Link>
 
-          <div className="glass-card p-5 min-w-[190px] sm:min-w-[220px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
+          <Link to="/finance" className="glass-card p-5 min-w-[190px] sm:min-w-[220px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
               <div>
                   <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-2">
@@ -37,7 +37,7 @@ const AdminStats = ({ stats, loading }) => (
                   <p className="text-caption">Saldo Kas</p>
               </div>
               <h3 className="text-h1 text-slate-800 dark:text-white truncate">{loading ? "..." : `Rp ${stats.balance.toLocaleString('id-ID')}`}</h3>
-          </div>
+          </Link>
       </div>
   </section>
 );
@@ -127,11 +127,6 @@ const Dashboard = () => {
 
   return (
     <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
-      {/*
-         Removed manual 'h-12' spacer.
-         Main content uses 'pt-safe' via 'main-content' class or direct style.
-         Dashboard needs extra top padding for the header greeting.
-      */}
       <main className="main-content pb-32 px-6 pt-safe mt-6">
 
         {/* Modern Header */}
@@ -210,7 +205,7 @@ const Dashboard = () => {
         </section>
       </main>
 
-      {/* FAB for Upload (Context-Aware) - Restored since Quick Actions are gone */}
+      {/* FAB for Upload (Context-Aware) */}
       {canUpload && (
         <Link
             to="/gallery/add"

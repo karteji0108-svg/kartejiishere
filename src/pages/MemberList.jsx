@@ -64,24 +64,22 @@ const MemberList = () => {
   };
 
   return (
-    <div className={`font-display h-screen flex flex-col overflow-hidden relative transition-colors duration-500
-      ${isRamadan ? 'bg-ramadan text-white' : 'bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100'}`}>
-
-      {/* Top Status Bar Simulation (iOS) */}
-      <div className="h-12 w-full shrink-0"></div>
+    <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto no-scrollbar pb-24 relative">
+      <main className="main-content pb-24 px-5 pt-safe">
         {/* Header Section */}
-        <header className="glass-header px-5 pt-4 pb-4 sticky top-0 z-40 animate-fade-in-down safe-area-top">
+        <header className="mb-6 mt-4">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Daftar Anggota</h1>
-            <button className="p-2 rounded-full hover:bg-white/30 dark:hover:bg-black/30 transition-colors text-primary">
-              <span className="material-icons-round">filter_list</span>
-            </button>
+            <div>
+                <h1 className="text-h1 text-slate-900 dark:text-white">Anggota</h1>
+                <p className="text-caption">Daftar Warga Karang Taruna</p>
+            </div>
+            {/* Filter Toggle could go here */}
           </div>
+
           {/* Search Bar */}
-          <div className="relative group">
+          <div className="relative group mb-4">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span className="material-icons-round text-gray-500 dark:text-gray-400 text-xl group-focus-within:text-primary transition-colors">search</span>
             </div>
@@ -93,16 +91,17 @@ const MemberList = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+
           {/* Quick Filter Chips */}
-          <div className="flex space-x-2 mt-4 overflow-x-auto no-scrollbar pb-1">
+          <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
             {['Semua', 'Pengurus Inti', 'Anggota Aktif'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
                   filter === f
                     ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                    : 'bg-white/20 dark:bg-black/20 border border-white/20 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-white/30'
+                    : 'bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-white/60'
                 }`}
               >
                 {f}
@@ -112,7 +111,7 @@ const MemberList = () => {
         </header>
 
         {/* Member List */}
-        <div className="px-5 py-4 space-y-3">
+        <div className="space-y-3">
           {loading ? (
              <div className="space-y-3">
                 <Skeleton className="h-20 w-full rounded-2xl" />
@@ -120,11 +119,11 @@ const MemberList = () => {
                 <Skeleton className="h-20 w-full rounded-2xl" />
              </div>
           ) : filteredMembers.length === 0 ? (
-             <div className="text-center py-10 text-gray-500 animate-fade-in-up">
+             <div className="text-center py-12 text-gray-500 animate-fade-in-up">
                 <div className="w-20 h-20 bg-white/20 dark:bg-black/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                     <span className="material-icons-round text-4xl text-slate-400">group_off</span>
                 </div>
-                Tidak ada anggota ditemukan.
+                <p className="text-body">Tidak ada anggota ditemukan.</p>
              </div>
           ) : (
             filteredMembers.map((member, index) => (
@@ -147,6 +146,7 @@ const MemberList = () => {
                           {getInitials(member.fullName || member.displayName)}
                       </div>
                     )}
+                    {/* Online indicator mock */}
                     <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white dark:ring-slate-800 bg-emerald-500"></span>
                   </div>
                   <div>
@@ -164,13 +164,11 @@ const MemberList = () => {
               </div>
             ))
           )}
-
-          <div className="h-24"></div>
         </div>
       </main>
 
       {/* Floating Action Button */}
-      <Link to="/members/add" className="fixed right-5 bottom-24 bg-primary hover:bg-primary-dark text-white w-14 h-14 rounded-full shadow-lg shadow-primary/40 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 z-40">
+      <Link to="/members/add" className="fixed right-6 bottom-24 bg-primary hover:bg-primary-dark text-white w-14 h-14 rounded-2xl shadow-xl shadow-primary/40 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 z-40">
         <span className="material-icons-round text-2xl">person_add</span>
       </Link>
 
