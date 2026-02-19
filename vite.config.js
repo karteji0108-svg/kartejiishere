@@ -1,23 +1,24 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: './',
+  base: '/',
   plugins: [react()],
   esbuild: {
     drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
-        output: {
-            manualChunks(id) {
-                if (id.includes('node_modules')) {
-                    return 'vendor';
-                }
-            }
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor'
+          }
         }
+      }
     }
   }
 }))
