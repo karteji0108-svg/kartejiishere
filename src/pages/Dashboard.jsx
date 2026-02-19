@@ -42,38 +42,6 @@ const AdminStats = ({ stats, loading }) => (
   </section>
 );
 
-const QuickActionItem = ({ to, icon, label, color }) => (
-    <Link to={to} className="flex flex-col items-center gap-3 min-w-[72px] sm:min-w-[80px] snap-center group">
-        <div className={`w-16 h-16 sm:w-18 sm:h-18 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-active:scale-95 shadow-sm border border-white/20 dark:border-white/5 ${color}`}>
-            <span className="material-icons-round text-2xl sm:text-3xl">{icon}</span>
-        </div>
-        <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 text-center leading-tight max-w-[80px] break-words">{label}</span>
-    </Link>
-);
-
-const QuickActions = ({ userRole }) => {
-    return (
-        <section className="mb-8">
-            <h3 className="text-h3 text-slate-800 dark:text-white mb-4 px-1">Menu Cepat</h3>
-            <div className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6 snap-x">
-                {hasPermission(userRole, PERMISSIONS.MANAGE_MEMBERS) && (
-                    <QuickActionItem to="/members/add" icon="person_add" label="Tambah Warga" color="bg-blue-100/80 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300" />
-                )}
-                {hasPermission(userRole, PERMISSIONS.MANAGE_FINANCE) && (
-                    <QuickActionItem to="/finance/add" icon="payments" label="Catat Kas" color="bg-green-100/80 dark:bg-green-900/40 text-green-600 dark:text-green-300" />
-                )}
-                {(hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) || hasPermission(userRole, PERMISSIONS.PROPOSE_ACTIVITY)) && (
-                    <QuickActionItem to="/activities/create" icon="event_note" label="Buat Acara" color="bg-orange-100/80 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300" />
-                )}
-                {hasPermission(userRole, PERMISSIONS.MANAGE_ANNOUNCEMENTS) && (
-                    <QuickActionItem to="/announcements/create" icon="campaign" label="Info Baru" color="bg-purple-100/80 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300" />
-                )}
-                <QuickActionItem to="/gallery/add" icon="add_a_photo" label="Upload Foto" color="bg-pink-100/80 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300" />
-            </div>
-        </section>
-    );
-};
-
 // --- Main Component ---
 
 const Dashboard = () => {
@@ -83,6 +51,10 @@ const Dashboard = () => {
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
+
+  const canUpload = hasPermission(userRole, PERMISSIONS.MANAGE_GALLERY) ||
+                    hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) ||
+                    userRole === 'anggota';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -199,9 +171,6 @@ const Dashboard = () => {
             <AdminStats stats={stats} loading={loading} />
         )}
 
-        {/* Quick Actions */}
-        <QuickActions userRole={userRole} />
-
         {/* Recent Updates */}
         <section className="mb-6">
           <div className="flex items-center justify-between mb-4 px-1">
@@ -240,6 +209,16 @@ const Dashboard = () => {
           </div>
         </section>
       </main>
+
+      {/* FAB for Upload (Context-Aware) - Restored since Quick Actions are gone */}
+      {canUpload && (
+        <Link
+            to="/gallery/add"
+            className="fixed bottom-32 right-6 w-14 h-14 bg-primary text-white rounded-2xl shadow-xl shadow-primary/40 flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all"
+        >
+            <span className="material-icons-round text-2xl">add</span>
+        </Link>
+      )}
 
       <RamadanBanner />
       <BottomNav />
