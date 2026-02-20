@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useRamadan } from '../../context/RamadanContext';
-import { IMSAKIYAH_SEMARANG_2026 } from '../../constants/imsakiyah';
 
 const PrayerTimes = () => {
   const { isRamadan } = useRamadan();
@@ -8,7 +7,8 @@ const PrayerTimes = () => {
   const [nextPrayer, setNextPrayer] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
   const [loading, setLoading] = useState(true);
-  const locationName = 'Kota Semarang';
+  const [locationName, setLocationName] = useState('Menunggu Lokasi...');
+  const [locationDenied, setLocationDenied] = useState(false);
 
   // Simulation Helpers
   const getSimulatedDate = () => {
@@ -35,33 +35,71 @@ const PrayerTimes = () => {
 
   useEffect(() => {
     if (!isRamadan) return;
-    setLoading(true);
 
-    const simulatedDate = getSimulatedDate();
-    // Format to YYYY-MM-DD manually to avoid timezone issues or use ISO split
-    // To be safe with local dates:
-    const year = simulatedDate.getFullYear();
-    const month = String(simulatedDate.getMonth() + 1).padStart(2, '0');
-    const day = String(simulatedDate.getDate()).padStart(2, '0');
-    const dateString = `${year}-${month}-${day}`;
-
-    const todaySchedule = IMSAKIYAH_SEMARANG_2026.find(s => s.date === dateString);
-
-    if (todaySchedule) {
-        setPrayerTimes(todaySchedule);
-        calculateNextPrayer(todaySchedule);
-    } else {
-        // Fallback logic
-        if (simulatedDate < new Date('2026-02-19')) {
-             setPrayerTimes(IMSAKIYAH_SEMARANG_2026[0]);
-             calculateNextPrayer(IMSAKIYAH_SEMARANG_2026[0]);
-        } else {
-             const last = IMSAKIYAH_SEMARANG_2026[IMSAKIYAH_SEMARANG_2026.length - 1];
-             setPrayerTimes(last);
-             calculateNextPrayer(last);
+    const fetchCityName = async (lat, long) => {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${long}`);
+            const data = await response.json();
+            if (data && data.address) {
+                const city = data.address.city || data.address.town || data.address.county || data.address.state || 'Lokasi Terdeteksi';
+                const sub = data.address.suburb ? `${data.address.suburb}, ` : '';
+                setLocationName(`${sub}${city}`);
+            }
+        } catch (error) {
+            console.error("Error fetching city name:", error);
+            setLocationName('Lokasi Terdeteksi');
         }
-    }
-    setLoading(false);
+    };
+
+    const getTimes = async (lat, long) => {
+        setLoading(true);
+        try {
+            const simulatedDate = getSimulatedDate();
+            // Use local noon of the simulated date to avoid timezone issues
+            simulatedDate.setHours(12, 0, 0, 0);
+            const timestamp = Math.floor(simulatedDate.getTime() / 1000);
+
+            // Method 20 is Kemenag RI
+            const response = await fetch(`https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${long}&method=20`);
+
+            const data = await response.json();
+            if (data.code === 200) {
+                setPrayerTimes(data.data.timings);
+                calculateNextPrayer(data.data.timings);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const long = position.coords.longitude;
+                    setLocationDenied(false);
+                    fetchCityName(lat, long);
+                    getTimes(lat, long);
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    setLocationDenied(true);
+                    setLocationName('Jakarta (Default)');
+                    // Fallback to Jakarta
+                    getTimes(-6.2088, 106.8456);
+                }
+            );
+        } else {
+             setLocationDenied(true);
+             setLocationName('Jakarta (Default)');
+             getTimes(-6.2088, 106.8456);
+        }
+    };
+
+    getLocation();
   }, [isRamadan]);
 
   useEffect(() => {
@@ -120,6 +158,19 @@ const PrayerTimes = () => {
       }
   };
 
+  const handleRequestLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+          (position) => {
+              window.location.reload();
+          },
+          (error) => {
+              alert("Gagal mendapatkan lokasi. Pastikan GPS aktif dan izin diberikan.");
+          }
+      );
+    }
+  };
+
   if (!isRamadan) return null;
 
   return (
@@ -137,6 +188,14 @@ const PrayerTimes = () => {
                             <span className="material-icons text-xs">location_on</span>
                             {locationName}
                         </p>
+                        {locationDenied && (
+                             <button
+                                onClick={handleRequestLocation}
+                                className="bg-emerald-600/50 hover:bg-emerald-600 text-[10px] text-white px-2 py-0.5 rounded border border-emerald-400/50 transition-colors"
+                             >
+                                Aktifkan Lokasi
+                             </button>
+                        )}
                     </div>
                 </div>
                 <div className="text-right">
