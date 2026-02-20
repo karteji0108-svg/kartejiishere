@@ -76,11 +76,6 @@ const MemberDetail = () => {
           const q = query(collection(db, 'users'), where('role', '==', ROLES.CONTENT_CREATOR));
           const snapshot = await getDocs(q);
 
-          // Filter out self if updating existing user who already has this role (unlikely in change scenario, but good practice)
-          // Wait, if I change TO Content Creator, I need to check total count.
-          // If I am already Content Creator, count is included.
-          // Correct logic: Count all users with this role. If result >= 4, check if current user is one of them.
-
           let count = snapshot.size;
           const isAlreadyRole = member.role === ROLES.CONTENT_CREATOR;
 
@@ -213,6 +208,7 @@ const MemberDetail = () => {
                           {/* Render options based on permissions */}
                           <option value={ROLES.ANGGOTA}>ANGGOTA</option>
                           <option value={ROLES.CONTENT_CREATOR}>CONTENT CREATOR</option>
+                          <option value={ROLES.HUMAS}>HUMAS</option> {/* New Role */}
                           <option value={ROLES.SEKRETARIS}>SEKRETARIS</option>
                           <option value={ROLES.BENDAHARA}>BENDAHARA</option>
 

@@ -8,6 +8,8 @@ const Correspondence = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('surat_masuk');
 
+  const DRIVE_LINK = "https://drive.google.com/drive/u/0/folders/1Ufy-BLck2pHqFkhpnPMaTIlRpcXcqolx";
+
   // Empty Data
   const letters = [];
   const archives = [];
@@ -57,6 +59,25 @@ const Correspondence = () => {
             </button>
             <h1 className="text-h2">Surat & Adm</h1>
         </div>
+        {/* Drive Link Button - Prominent */}
+        <a
+            href={DRIVE_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="glass-card p-4 mb-4 flex items-center justify-between group hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border-l-4 border-blue-500"
+        >
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <span className="material-icons-round">add_to_drive</span>
+                </div>
+                <div>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">Google Drive Arsip</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Simpan & Akses Dokumen</p>
+                </div>
+            </div>
+            <span className="material-icons-round text-slate-400 group-hover:text-blue-500">open_in_new</span>
+        </a>
+
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
             {['surat_masuk', 'surat_keluar', 'arsip'].map(tab => (

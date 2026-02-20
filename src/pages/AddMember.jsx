@@ -138,6 +138,7 @@ const AddMember = () => {
                             >
                                 <option value={ROLES.ANGGOTA}>Anggota</option>
                                 <option value={ROLES.CONTENT_CREATOR}>Content Creator</option>
+                                <option value={ROLES.HUMAS}>Humas</option> {/* New Role */}
                                 <option value={ROLES.KETUA}>Ketua</option>
                                 <option value={ROLES.WAKIL_KETUA}>Wakil</option>
                                 <option value={ROLES.SEKRETARIS}>Sekretaris</option>
