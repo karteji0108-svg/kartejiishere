@@ -8,11 +8,8 @@ const Partners = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('daftar_mitra');
 
-  const partners = [
-    { id: 1, name: 'Pemerintah Desa', type: 'Instansi', contact: '081234567890', email: 'desa@mail.com' },
-    { id: 2, name: 'Toko Bangunan Sejahtera', type: 'Sponsor', contact: '081987654321', email: '-' },
-    { id: 3, name: 'Karang Taruna Kecamatan', type: 'Organisasi', contact: '-', email: 'kt_kec@mail.com' },
-  ];
+  // Empty Data
+  const partners = [];
 
   return (
     <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
@@ -44,27 +41,16 @@ const Partners = () => {
       <main className="main-content px-6 pt-6 pb-24">
         {activeTab === 'daftar_mitra' ? (
             <div className="space-y-4">
-                {partners.map(p => (
-                    <div key={p.id} className="glass-card p-5 flex items-center gap-4 hover:scale-[1.01] transition-transform">
-                        <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 font-bold text-xl">
-                            {p.name[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-slate-900 dark:text-white truncate">{p.name}</h4>
-                            <span className="text-[10px] uppercase font-bold bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">
-                                {p.type}
-                            </span>
-                            <div className="flex gap-3 mt-2 text-xs opacity-70">
-                                {p.contact !== '-' && <span className="flex items-center gap-1"><span className="material-icons-round text-[10px]">call</span> {p.contact}</span>}
-                                {p.email !== '-' && <span className="flex items-center gap-1"><span className="material-icons-round text-[10px]">email</span> {p.email}</span>}
-                            </div>
-                        </div>
+                {partners.length === 0 && (
+                    <div className="text-center py-12 opacity-50 flex flex-col items-center">
+                        <span className="material-icons-round text-6xl mb-2 text-slate-300">handshake</span>
+                        <p>Belum ada data mitra.</p>
                     </div>
-                ))}
+                )}
             </div>
         ) : (
-            <div className="text-center py-10 opacity-50">
-                <span className="material-icons-round text-4xl mb-2">handshake</span>
+            <div className="text-center py-12 opacity-50 flex flex-col items-center">
+                <span className="material-icons-round text-6xl mb-2 text-slate-300">history_edu</span>
                 <p>Belum ada riwayat kerjasama.</p>
             </div>
         )}

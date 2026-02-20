@@ -8,11 +8,8 @@ const Inventory = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('daftar');
 
-  const items = [
-    { id: 1, name: 'Tenda Pleton', condition: 'Baik', location: 'Gudang Desa', qty: 2 },
-    { id: 2, name: 'Sound System', condition: 'Perlu Servis', location: 'Sekretariat', qty: 1 },
-    { id: 3, name: 'Kursi Plastik', condition: 'Baik', location: 'Gudang Desa', qty: 50 },
-  ];
+  // Empty Data
+  const items = [];
 
   const getConditionColor = (cond) => {
       switch(cond) {
@@ -53,25 +50,16 @@ const Inventory = () => {
       <main className="main-content px-6 pt-6 pb-24">
         {activeTab === 'daftar' ? (
             <div className="space-y-4">
-                {items.map(item => (
-                    <div key={item.id} className="glass-card p-4 flex justify-between items-center group hover:scale-[1.01] transition-transform">
-                        <div>
-                            <h4 className="font-bold text-slate-900 dark:text-white">{item.name}</h4>
-                            <p className="text-xs opacity-70 mb-2">Lokasi: {item.location}</p>
-                            <span className={`text-[10px] font-bold px-2 py-1 rounded ${getConditionColor(item.condition)}`}>
-                                {item.condition}
-                            </span>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-2xl font-bold block">{item.qty}</span>
-                            <span className="text-[10px] opacity-60">Unit</span>
-                        </div>
+                {items.length === 0 && (
+                    <div className="text-center py-12 opacity-50 flex flex-col items-center">
+                        <span className="material-icons-round text-6xl mb-2 text-slate-300">inventory_2</span>
+                        <p>Belum ada data inventaris.</p>
                     </div>
-                ))}
+                )}
             </div>
         ) : (
-            <div className="text-center py-10 opacity-50">
-                <span className="material-icons-round text-4xl mb-2">history</span>
+            <div className="text-center py-12 opacity-50 flex flex-col items-center">
+                <span className="material-icons-round text-6xl mb-2 text-slate-300">history</span>
                 <p>Belum ada riwayat pemakaian.</p>
             </div>
         )}

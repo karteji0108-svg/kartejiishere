@@ -8,17 +8,9 @@ const Correspondence = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('surat_masuk');
 
-  // Mock Data
-  const letters = [
-    { id: 1, type: 'in', no: '001/KT/I/2024', title: 'Undangan Rapat Desa', sender: 'Kepala Desa', date: '2024-02-10', status: 'read' },
-    { id: 2, type: 'in', no: '002/KT/I/2024', title: 'Proposal Sponsor', sender: 'PT. Maju Jaya', date: '2024-02-12', status: 'unread' },
-    { id: 3, type: 'out', no: '001/KT-OUT/I/2024', title: 'Permohonan Izin Kegiatan', receiver: 'Polsek', date: '2024-02-15', status: 'sent' },
-  ];
-
-  const archives = [
-    { id: 1, title: 'LPJ Agustusan 2023', category: 'LPJ', date: '2023-09-01' },
-    { id: 2, title: 'SK Pengurus 2024', category: 'SK', date: '2024-01-01' },
-  ];
+  // Empty Data
+  const letters = [];
+  const archives = [];
 
   const renderContent = () => {
     switch (activeTab) {
@@ -30,36 +22,26 @@ const Correspondence = () => {
           <div className="space-y-3">
             {filtered.map(l => (
               <div key={l.id} className="glass-card p-4 flex gap-4 items-start group hover:bg-white/40 dark:hover:bg-black/30 transition-colors">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${type === 'in' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
-                  <span className="material-icons-round">{type === 'in' ? 'move_to_inbox' : 'outbox'}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-[10px] font-mono opacity-60 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{l.no}</span>
-                    <span className="text-[10px] opacity-60">{l.date}</span>
-                  </div>
-                  <h4 className="font-bold text-slate-900 dark:text-white truncate">{l.title}</h4>
-                  <p className="text-sm opacity-70 truncate">{type === 'in' ? `Dari: ${l.sender}` : `Kpd: ${l.receiver}`}</p>
-                </div>
+                {/* Item content would go here */}
               </div>
             ))}
-            {filtered.length === 0 && <p className="text-center opacity-50 py-10">Belum ada surat.</p>}
+            {filtered.length === 0 && (
+                <div className="text-center py-12 opacity-50 flex flex-col items-center">
+                    <span className="material-icons-round text-6xl mb-2 text-slate-300">mail_outline</span>
+                    <p>Belum ada surat {type === 'in' ? 'masuk' : 'keluar'}.</p>
+                </div>
+            )}
           </div>
         );
       case 'arsip':
         return (
           <div className="grid grid-cols-2 gap-3">
-            {archives.map(a => (
-              <div key={a.id} className="glass-card p-4 flex flex-col gap-2 hover:bg-white/40 dark:hover:bg-black/30">
-                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
-                  <span className="material-icons-round">description</span>
+            {archives.length === 0 && (
+                <div className="col-span-2 text-center py-12 opacity-50 flex flex-col items-center">
+                    <span className="material-icons-round text-6xl mb-2 text-slate-300">folder_open</span>
+                    <p>Belum ada arsip dokumen.</p>
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm truncate">{a.title}</h4>
-                  <p className="text-xs opacity-60">{a.category} • {a.date}</p>
-                </div>
-              </div>
-            ))}
+            )}
           </div>
         );
       default: return null;
