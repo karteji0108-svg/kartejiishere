@@ -31,8 +31,11 @@ const Profile = lazy(() => import('./pages/Profile'));
 // New Features
 const Menu = lazy(() => import('./pages/Menu'));
 const Correspondence = lazy(() => import('./pages/Correspondence'));
+const AddCorrespondence = lazy(() => import('./pages/AddCorrespondence'));
 const Inventory = lazy(() => import('./pages/Inventory'));
+const AddInventory = lazy(() => import('./pages/AddInventory'));
 const Partners = lazy(() => import('./pages/Partners'));
+const AddPartner = lazy(() => import('./pages/AddPartner'));
 
 // Simple loading spinner for Suspense fallback
 const LoadingFallback = () => (
@@ -42,7 +45,6 @@ const LoadingFallback = () => (
 );
 
 function App() {
-  // Apply platform class to body on mount
   useEffect(() => {
     const platform = getPlatform();
     document.body.classList.add(platform);
@@ -65,7 +67,7 @@ function App() {
             },
             success: {
               style: {
-                background: '#10B981', // Emerald 500
+                background: '#10B981',
               },
               iconTheme: {
                 primary: '#fff',
@@ -74,7 +76,7 @@ function App() {
             },
             error: {
               style: {
-                background: '#EF4444', // Red 500
+                background: '#EF4444',
               },
               iconTheme: {
                 primary: '#fff',
@@ -107,7 +109,6 @@ function App() {
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/pengumuman" element={<Announcements />} />
 
-              {/* New Menu Hub */}
               <Route path="/menu" element={<Menu />} />
               <Route path="/correspondence" element={<Correspondence />} />
               <Route path="/inventory" element={<Inventory />} />
@@ -125,13 +126,18 @@ function App() {
             </Route>
 
             {/* Admin/Officer Only Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin', 'bendahara', 'wakil_ketua', 'anggota', 'content_creator']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin', 'bendahara', 'wakil_ketua', 'anggota', 'content_creator', 'humas']} />}>
               <Route path="/members/add" element={<AddMember />} />
               <Route path="/announcements/create" element={<CreateAnnouncement />} />
               <Route path="/activities/create" element={<CreateActivity />} />
               <Route path="/finance/add" element={<AddTransaction />} />
               <Route path="/finance/edit/:id" element={<AddTransaction />} />
               <Route path="/gallery/add" element={<AddGalleryPhoto />} />
+
+              {/* New Add Pages */}
+              <Route path="/correspondence/add" element={<AddCorrespondence />} />
+              <Route path="/inventory/add" element={<AddInventory />} />
+              <Route path="/partners/add" element={<AddPartner />} />
             </Route>
           </Routes>
         </Suspense>
