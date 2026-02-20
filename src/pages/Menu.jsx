@@ -26,6 +26,7 @@ const Menu = () => {
     {
       title: "Lainnya",
       items: [
+        { to: '/social-media', icon: 'public', label: 'Sosial Media', desc: 'Instagram & TikTok', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30' },
         { to: '/profile', icon: 'settings', label: 'Pengaturan', color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-100 dark:bg-slate-800' },
       ]
     }
@@ -47,7 +48,7 @@ const Menu = () => {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`glass-card p-5 flex flex-col justify-center items-start gap-3 hover:scale-[1.02] active:scale-95 transition-all group ${section.items.length === 1 ? 'col-span-2 flex-row items-center !justify-start' : ''}`}
+                  className={`glass-card p-5 flex flex-col justify-center items-start gap-3 hover:scale-[1.02] active:scale-95 transition-all group ${section.items.length === 1 && section.title !== 'Lainnya' ? 'col-span-2 flex-row items-center !justify-start' : ''}`}
                 >
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg} ${item.color} group-hover:shadow-lg transition-shadow`}>
                     <span className="material-icons-round text-2xl">{item.icon}</span>

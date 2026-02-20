@@ -36,6 +36,7 @@ const Inventory = lazy(() => import('./pages/Inventory'));
 const AddInventory = lazy(() => import('./pages/AddInventory'));
 const Partners = lazy(() => import('./pages/Partners'));
 const AddPartner = lazy(() => import('./pages/AddPartner'));
+const SocialMedia = lazy(() => import('./pages/SocialMedia')); // New
 
 // Simple loading spinner for Suspense fallback
 const LoadingFallback = () => (
@@ -113,6 +114,7 @@ function App() {
               <Route path="/correspondence" element={<Correspondence />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/partners" element={<Partners />} />
+              <Route path="/social-media" element={<SocialMedia />} /> {/* New Route */}
             </Route>
 
             {/* Role Protected Routes */}
