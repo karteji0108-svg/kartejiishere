@@ -25,15 +25,6 @@ const SocialMedia = () => {
       url: 'https://www.tiktok.com/@karteji8?_r=1&_t=ZS-944RmPfXNiS',
       color: 'bg-black',
       icon: 'music_note'
-    },
-    {
-      id: 3,
-      name: 'Kejadian Semarang',
-      platform: 'Instagram',
-      handle: '@kejadiansmg',
-      url: 'https://www.instagram.com/kejadiansmg?igsh=MTcwOHZ1b2I4aXp6Mg==',
-      color: 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500',
-      icon: 'newspaper'
     }
   ];
 
