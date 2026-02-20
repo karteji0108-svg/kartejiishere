@@ -16,8 +16,8 @@ const Finance = () => {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 });
   const [categoryStats, setCategoryStats] = useState({ income: {}, expense: {} });
-  const [fundStats, setFundStats] = useState({});
-  const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [fundStats, setFundStats] = useState({}); // New: Fund Balances
+  const [selectedReceipt, setSelectedReceipt] = useState(null); // For modal
   const { isRamadan } = useRamadan();
 
   const canManage = hasPermission(userRole, PERMISSIONS.MANAGE_FINANCE);
@@ -39,9 +39,12 @@ const Finance = () => {
 
       let inc = 0;
       let exp = 0;
-      const funds = { 'Iuran': 0, 'Donasi': 0, 'Usaha': 0, 'Lainnya': 0 };
+      const incCats = {};
+      const expCats = {};
+      const funds = { 'Iuran': 0, 'Donasi': 0, 'Usaha': 0, 'Lainnya': 0 }; // Initialize
 
       data.forEach(t => {
+        // Robust number parsing
         let amount = t.amount;
         if (typeof amount === 'string') {
             amount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
@@ -52,18 +55,38 @@ const Finance = () => {
 
         if (t.type === 'income') {
             inc += numAmount;
-            if (funds[category] !== undefined) funds[category] += numAmount;
-            else funds[category] = (funds[category] || 0) + numAmount;
+            incCats[category] = (incCats[category] || 0) + numAmount;
+
+            if (funds[category] !== undefined) {
+                funds[category] += numAmount;
+            } else {
+                funds[category] = (funds[category] || 0) + numAmount;
+            }
         }
         if (t.type === 'expense') {
             exp += numAmount;
+            expCats[category] = (expCats[category] || 0) + numAmount;
+
             const source = t.sourceFund;
-            if (source && funds[source] !== undefined) funds[source] -= numAmount;
-            else funds['Lainnya'] = (funds['Lainnya'] || 0) - numAmount;
+            if (source && funds[source] !== undefined) {
+                funds[source] -= numAmount;
+            } else if (source) {
+                funds[source] = (funds[source] || 0) - numAmount;
+            } else {
+                funds['Lainnya'] = (funds['Lainnya'] || 0) - numAmount;
+            }
         }
       });
 
-      setSummary({ income: inc, expense: exp, balance: inc - exp });
+      setSummary({
+        income: inc,
+        expense: exp,
+        balance: inc - exp
+      });
+      setCategoryStats({
+          income: incCats,
+          expense: expCats
+      });
       setFundStats(funds);
 
     } catch (error) {
@@ -79,7 +102,7 @@ const Finance = () => {
       try {
         await deleteDoc(doc(db, 'finance', id));
         setTransactions(transactions.filter(t => t.id !== id));
-        fetchFinance();
+        fetchFinance(); // Re-fetch to update summary
       } catch (error) {
         console.error("Error deleting transaction: ", error);
         alert("Gagal menghapus transaksi.");
@@ -89,6 +112,47 @@ const Finance = () => {
 
   const handleEdit = (transaction) => {
       navigate('/finance/edit/' + transaction.id, { state: { transaction } });
+  };
+
+  const handleDownloadReport = () => {
+      // CSV Export
+      const headers = ['Tanggal', 'Judul', 'Kategori', 'Tipe', 'Sumber Dana', 'Jumlah', 'Keterangan', 'Bukti Struk'];
+      const csvRows = [];
+      csvRows.push(headers.join(','));
+
+      transactions.forEach(t => {
+          const amount = typeof t.amount === 'string' ? t.amount : t.amount.toString();
+          // Format date as YYYY-MM-DD for Excel compatibility
+          let formattedDate = '';
+          try {
+            formattedDate = new Date(t.date).toISOString().split('T')[0];
+          } catch (e) {
+            formattedDate = t.date;
+          }
+
+          const row = [
+              formattedDate,
+              `"${t.title.replace(/"/g, '""')}"`,
+              t.category || '-',
+              t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
+              t.sourceFund || '-',
+              amount,
+              `"${(t.description || '').replace(/"/g, '""')}"`,
+              t.receiptUrl || '-'
+          ];
+          csvRows.push(row.join(','));
+      });
+
+      const csvString = csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('hidden', '');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `laporan_keuangan_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
   };
 
   const formatCurrency = (amount) => {
@@ -113,8 +177,11 @@ const Finance = () => {
             </div>
             {/* Added min-w-0 to prevent overflow in restricted width scenarios */}
             <div className="flex gap-2 min-w-0">
-               {/* Simplified button for cleaner look */}
-               <button className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-primary">
+               <button
+                   onClick={handleDownloadReport}
+                   className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-primary"
+                   title="Download Laporan"
+               >
                    <span className="material-icons-round">print</span>
                </button>
             </div>
@@ -123,7 +190,7 @@ const Finance = () => {
 
       {/* Main Content */}
       <main className="main-content px-6 pt-6 pb-32">
-        {/* Balance Card - Fix Overflow */}
+        {/* Balance Card */}
         <section className={`relative overflow-hidden rounded-[32px] p-6 shadow-xl text-white mb-6
             ${isRamadan ? 'bg-gradient-to-br from-emerald-600 to-emerald-900 shadow-emerald-900/30' : 'bg-gradient-to-br from-primary to-blue-600 shadow-primary/30'}`}>
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
@@ -136,13 +203,12 @@ const Finance = () => {
             {loading ? (
                 <Skeleton className="h-10 w-48 bg-white/30 mb-6" />
             ) : (
-                // Added truncate and responsive text size to fix offside
                 <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 tracking-tight truncate">
                     {formatCurrency(summary.balance)}
                 </h2>
             )}
             <div className="grid grid-cols-2 gap-4 border-t border-white/20 pt-4">
-              <div className="min-w-0"> {/* Prevent flex child overflow */}
+              <div className="min-w-0">
                 <div className="flex items-center space-x-1 mb-1 text-white/80 text-xs uppercase font-bold tracking-wider">
                   <span className="material-icons-round text-sm">arrow_downward</span>
                   <span>Masuk</span>
@@ -159,6 +225,23 @@ const Finance = () => {
             </div>
           </div>
         </section>
+
+        {/* RESTORED: Fund Balances Section */}
+        {!loading && Object.keys(fundStats).length > 0 && (
+            <section className="mb-8">
+                <h3 className="text-h3 text-slate-900 dark:text-white mb-4">Sisa Saldo Per Kategori</h3>
+                <div className="grid grid-cols-2 gap-3">
+                    {Object.entries(fundStats).map(([fund, balance]) => (
+                        <div key={fund} className="glass-card p-4 flex flex-col justify-between hover:scale-[1.02] transition-transform">
+                            <span className="text-xs uppercase font-bold opacity-60 mb-1">{fund}</span>
+                            <span className={`font-bold text-lg ${balance < 0 ? 'text-red-500' : 'text-slate-800 dark:text-white'}`}>
+                                {formatCurrency(balance)}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </section>
+        )}
 
         {/* Transaction List */}
         <section>
@@ -184,7 +267,7 @@ const Finance = () => {
                              onClick={() => navigate('/finance/' + t.id)}
                              className="glass-card p-4 flex items-center justify-between hover:scale-[1.01] transition-transform cursor-pointer group"
                         >
-                            <div className="flex items-center space-x-4 flex-1 min-w-0"> {/* min-w-0 prevents text overflow */}
+                            <div className="flex items-center space-x-4 flex-1 min-w-0">
                                 <div className={`shrink-0 h-12 w-12 rounded-2xl flex items-center justify-center
                                     ${t.type === 'income'
                                     ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
@@ -221,6 +304,48 @@ const Finance = () => {
       )}
 
       <BottomNav />
+
+      {/* Receipt / Detail Modal */}
+      {selectedReceipt && (
+        <div
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+            onClick={() => setSelectedReceipt(null)}
+        >
+            <div className="relative max-w-lg w-full max-h-[90vh]">
+                <button
+                    onClick={() => setSelectedReceipt(null)}
+                    className="absolute -top-10 right-0 text-white hover:text-gray-300 z-50"
+                >
+                    <span className="material-icons-round text-3xl">close</span>
+                </button>
+                {selectedReceipt === 'details' ? (
+                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold mb-4">Detail Transaksi</h3>
+                        <p className="text-sm opacity-60 mb-6">Fitur detail lengkap akan segera hadir. Gunakan tombol Edit untuk melihat detail lengkap.</p>
+                        <button onClick={() => setSelectedReceipt(null)} className="btn-primary w-full py-2">Tutup</button>
+                     </div>
+                ) : (
+                    <div className="relative inline-block" onClick={e => e.stopPropagation()}>
+                        <img
+                            src={selectedReceipt}
+                            alt="Bukti Struk"
+                            className="w-full h-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                        />
+                        <a
+                            href={getDownloadUrl(selectedReceipt)}
+                            download="bukti_struk"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute bottom-4 right-4 bg-white/90 text-slate-900 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:bg-white transition-colors"
+                        >
+                            <span className="material-icons-round text-base">download</span>
+                            Download
+                        </a>
+                    </div>
+                )}
+            </div>
+        </div>
+      )}
     </div>
   );
 };
