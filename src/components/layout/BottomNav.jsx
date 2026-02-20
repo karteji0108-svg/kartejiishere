@@ -5,62 +5,35 @@ import { isIOS } from '../../utils/platform';
 const BottomNav = () => {
   const isIosDevice = isIOS();
 
-  // Platform-specific active indicator
-  const getActiveStyle = (isActive) => {
-      if (isIosDevice) {
-          // iOS: Icon color change only, maybe scale
-          return isActive ? 'text-primary scale-110' : 'text-slate-400 dark:text-slate-500';
-      } else {
-          // Android: Material 3 style pill
-          return isActive ? 'text-primary' : 'text-slate-500';
-      }
-  };
-
   return (
     <nav className="fixed bottom-0 left-0 right-0 glass-nav px-6 z-50 transition-all duration-300">
-      <div className={`flex justify-around items-center h-16 safe-bottom-spacer ${isIosDevice ? 'pb-2' : ''}`}>
-        {/* Helper to render Nav Items */}
+      <div className={`flex justify-around items-center h-20 safe-bottom-spacer ${isIosDevice ? 'pb-2' : ''}`}>
         {[
-            { to: "/dashboard", icon: "dashboard", label: "Home" },
-            { to: "/activities", icon: "event", label: "Acara" },
-            { to: "/menu", icon: "grid_view", label: "Menu", isFab: true }, // Center FAB now Menu
-            { to: "/finance", icon: "account_balance_wallet", label: "Kas" },
-            { to: "/profile", icon: "person", label: "Profil" }
+            { to: "/dashboard", icon: "home_app_logo", iconName: "home" },
+            { to: "/activities", icon: "event", iconName: "event" },
+            { to: "/menu", icon: "grid_view", iconName: "grid_view", isFab: true },
+            { to: "/finance", icon: "wallet", iconName: "account_balance_wallet" },
+            { to: "/profile", icon: "person", iconName: "person" }
         ].map((item) => (
             <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
                     item.isFab
-                    ? `flex flex-col items-center justify-center w-14 h-full gap-1 transition-all ${isActive ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`
-                    : `flex flex-col items-center justify-center ${isIosDevice ? 'w-12' : 'w-16'} h-full gap-1 transition-all ${getActiveStyle(isActive)}`
+                    ? `flex items-center justify-center w-16 h-16 -mt-8 transition-transform duration-300 active:scale-90 ${isActive ? 'scale-110' : ''}`
+                    : `flex flex-col items-center justify-center w-16 h-full gap-1 transition-all duration-300 ${isActive ? 'text-primary' : 'text-slate-400 dark:text-slate-600'}`
                 }
             >
                 {({ isActive }) => (
                     <>
                     {item.isFab ? (
-                        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 -mt-8 border-4 border-white dark:border-slate-900">
-                            <span className="material-icons-round text-white text-[24px]">{item.icon}</span>
+                        <div className="w-16 h-16 bg-primary rounded-[24px] flex items-center justify-center shadow-xl shadow-primary/40 border-[6px] border-[#F7F9FC] dark:border-[#000000]">
+                            <span className="material-icons-round text-white text-3xl">{item.iconName}</span>
                         </div>
                     ) : (
-                        <>
-                            {/* Android Active Indicator Pill */}
-                            {!isIosDevice && isActive && (
-                                <div className="absolute w-12 h-8 bg-primary/10 rounded-full -z-10"></div>
-                            )}
-
-                            <span className={`material-icons-round text-[26px] transition-transform duration-300 z-10 ${isActive && isIosDevice ? '-translate-y-1' : ''}`}>
-                                {item.icon}
-                            </span>
-
-                            {/* Labels: iOS hides them usually or keeps small. Android M3 shows them. */}
-                            <span className={`text-[10px] font-bold transition-opacity duration-300 z-10 ${isActive ? 'opacity-100' : 'opacity-0 hidden'} ${isIosDevice ? 'mt-0.5' : ''}`}>
-                                {item.label}
-                            </span>
-
-                            {/* iOS Dot Indicator */}
-                            {isIosDevice && !isActive && <div className="w-1 h-1 rounded-full bg-transparent mt-1"></div>}
-                        </>
+                        <span className={`material-icons-round text-3xl transition-all duration-300 ${isActive ? 'scale-110 drop-shadow-md' : 'scale-100'}`}>
+                            {item.iconName}
+                        </span>
                     )}
                     </>
                 )}

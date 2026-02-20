@@ -15,28 +15,28 @@ import { hasPermission, PERMISSIONS } from '../constants/roles';
 // --- Widget Components ---
 
 const AdminStats = ({ stats, loading }) => (
-  <section className="mb-8">
-      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6 snap-x">
-          <Link to="/members" className="glass-card p-5 min-w-[150px] sm:min-w-[180px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-              <div>
-                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-2">
-                      <span className="material-icons-round text-sm">groups</span>
+  <section className="mb-10 px-1">
+      <div className="grid grid-cols-2 gap-4">
+          <Link to="/members" className="glass-card p-6 flex flex-col justify-between h-40 relative overflow-hidden group hover:scale-[1.02] transition-transform">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-bl-[40px] -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+              <div className="z-10">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-3">
+                      <span className="material-icons-round text-xl">groups</span>
                   </div>
-                  <p className="text-caption">Total Anggota</p>
+                  <p className="text-caption font-bold uppercase tracking-wider opacity-70">Anggota</p>
               </div>
-              <h3 className="text-display text-slate-800 dark:text-white">{loading ? "..." : stats.memberCount}</h3>
+              <h3 className="text-display text-slate-800 dark:text-white z-10">{loading ? "..." : stats.memberCount}</h3>
           </Link>
 
-          <Link to="/finance" className="glass-card p-5 min-w-[190px] sm:min-w-[220px] snap-center flex flex-col justify-between h-32 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
-              <div>
-                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-2">
-                      <span className="material-icons-round text-sm">account_balance_wallet</span>
+          <Link to="/finance" className="glass-card p-6 flex flex-col justify-between h-40 relative overflow-hidden group hover:scale-[1.02] transition-transform">
+              <div className="absolute top-0 right-0 w-28 h-28 bg-green-500/10 rounded-bl-[40px] -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
+              <div className="z-10">
+                  <div className="w-10 h-10 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-3">
+                      <span className="material-icons-round text-xl">account_balance_wallet</span>
                   </div>
-                  <p className="text-caption">Saldo Kas</p>
+                  <p className="text-caption font-bold uppercase tracking-wider opacity-70">Saldo Kas</p>
               </div>
-              <h3 className="text-h1 text-slate-800 dark:text-white truncate">{loading ? "..." : `Rp ${stats.balance.toLocaleString('id-ID')}`}</h3>
+              <h3 className="text-h2 text-slate-800 dark:text-white truncate z-10">{loading ? "..." : `Rp ${(stats.balance/1000).toLocaleString('id-ID')}k`}</h3>
           </Link>
       </div>
   </section>
@@ -118,48 +118,50 @@ const Dashboard = () => {
   const displayName = userProfile?.fullName || userProfile?.displayName || currentUser?.displayName || 'Pengguna';
   const photoURL = userProfile?.photoURL || currentUser?.photoURL;
 
-  // Get greeting based on time
   const hour = new Date().getHours();
-  let greeting = 'Selamat Pagi';
-  if (hour >= 10) greeting = 'Selamat Siang';
-  if (hour >= 15) greeting = 'Selamat Sore';
-  if (hour >= 18) greeting = 'Selamat Malam';
+  let greeting = 'Pagi';
+  if (hour >= 10) greeting = 'Siang';
+  if (hour >= 15) greeting = 'Sore';
+  if (hour >= 18) greeting = 'Malam';
 
   return (
     <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
-      <main className="main-content pb-32 px-6 pt-safe mt-6">
+      <main className="main-content pb-32 px-6 pt-safe mt-8">
 
         {/* Modern Header */}
-        <header className="flex items-start justify-between mb-8">
-          <div>
-            <p className="text-caption mb-1 opacity-80">{greeting},</p>
-            <h1 className="text-h1 capitalize leading-tight">
-                {displayName.split(' ')[0]}
-            </h1>
-          </div>
-          <div className="flex gap-3">
-             <button className="w-10 h-10 rounded-full glass-card flex items-center justify-center relative hover:scale-105 transition-transform">
-                <span className="material-icons-round text-slate-700 dark:text-white">notifications</span>
-                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-800"></span>
-             </button>
-             <Link to="/profile" className="w-10 h-10 rounded-full overflow-hidden glass-card p-0.5 shadow-md hover:scale-105 transition-transform">
-                 {photoURL ? (
-                    <img src={photoURL} alt="Avatar" className="w-full h-full object-cover rounded-full" />
-                 ) : (
-                    <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center rounded-full">
-                        <span className="material-icons text-slate-400 text-lg">person</span>
-                    </div>
-                 )}
+        <header className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-4">
+             <Link to="/profile" className="relative group">
+                 <div className="w-14 h-14 rounded-full overflow-hidden glass-card p-0.5 shadow-xl transition-transform group-hover:scale-105">
+                     {photoURL ? (
+                        <img src={photoURL} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                     ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-cyan-400 flex items-center justify-center rounded-full text-white font-bold text-xl">
+                            {displayName[0]}
+                        </div>
+                     )}
+                 </div>
+                 <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white dark:border-black rounded-full"></span>
              </Link>
+             <div>
+                <p className="text-caption opacity-80 font-medium">Selamat {greeting},</p>
+                <h1 className="text-h1 font-extrabold capitalize text-slate-900 dark:text-white">
+                    {displayName.split(' ')[0]}
+                </h1>
+             </div>
           </div>
+          <button className="w-12 h-12 rounded-full glass-card flex items-center justify-center relative hover:scale-105 transition-transform text-slate-700 dark:text-white">
+            <span className="material-icons-round text-2xl">notifications_none</span>
+            <span className="absolute top-3 right-3.5 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
         </header>
 
         {/* Hero Section */}
-        <div className="mb-8 -mx-1">
+        <div className="mb-10 -mx-2">
             <HeroCarousel />
         </div>
 
-        {isRamadan && <div className="mb-8"><PrayerTimes /></div>}
+        {isRamadan && <div className="mb-10"><PrayerTimes /></div>}
 
         {/* Stats Row */}
         {(hasPermission(userRole, PERMISSIONS.VIEW_FINANCE) || hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)) && (
@@ -167,36 +169,40 @@ const Dashboard = () => {
         )}
 
         {/* Recent Updates */}
-        <section className="mb-6">
-          <div className="flex items-center justify-between mb-4 px-1">
-            <h3 className="text-h3 text-slate-800 dark:text-white">Terbaru</h3>
-            <Link to="/announcements" className="text-sm font-semibold text-primary hover:text-blue-600 transition-colors">Lihat Semua</Link>
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-6 px-1">
+            <h3 className="text-h2 font-bold text-slate-900 dark:text-white">Update Terbaru</h3>
+            <Link to="/announcements" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 transition-colors">
+                <span className="material-icons-round text-slate-600 dark:text-slate-400">arrow_forward</span>
+            </Link>
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             {loading ? (
-               <Skeleton className="h-24 w-full rounded-3xl" />
+               <Skeleton className="h-28 w-full rounded-[24px]" />
             ) : recentUpdates.length === 0 ? (
-               <div className="glass-card p-8 text-center">
-                   <span className="material-icons-round text-4xl text-slate-300 mb-2">inbox</span>
-                   <p className="text-caption">Belum ada update terbaru.</p>
+               <div className="glass-card p-10 text-center flex flex-col items-center">
+                   <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                        <span className="material-icons-round text-4xl text-slate-300">inbox</span>
+                   </div>
+                   <p className="text-body font-medium">Belum ada update terbaru.</p>
                </div>
             ) : (
                recentUpdates.map((item) => (
-                  <div key={item.id} className="glass-card p-4 flex items-start gap-4 hover:bg-white/40 dark:hover:bg-black/30 transition-colors cursor-pointer group">
-                    <div className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm
+                  <div key={item.id} className="glass-card p-5 flex items-start gap-5 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer group relative overflow-hidden">
+                    <div className={`shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm
                         ${item.type === 'activity'
-                            ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                            : 'bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400'}`}>
-                      <span className="material-icons-round text-2xl">{item.type === 'activity' ? 'event' : 'campaign'}</span>
+                            ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                            : 'bg-teal-500/10 text-teal-600 dark:text-teal-400'}`}>
+                      <span className="material-icons-round text-3xl">{item.type === 'activity' ? 'event' : 'campaign'}</span>
                     </div>
                     <div className="flex-1 min-w-0 py-1">
-                      <div className="flex justify-between items-start">
-                          <h4 className="text-base font-bold text-slate-900 dark:text-white truncate pr-2">{item.title}</h4>
-                          <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500 font-medium">
+                      <div className="flex flex-col gap-1 mb-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                               {item.type === 'activity' ? 'Event' : 'Info'}
                           </span>
+                          <h4 className="text-h3 font-bold text-slate-900 dark:text-white leading-tight line-clamp-1">{item.title}</h4>
                       </div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">{item.description || item.content}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{item.description || item.content}</p>
                     </div>
                   </div>
                ))
@@ -209,9 +215,9 @@ const Dashboard = () => {
       {canUpload && (
         <Link
             to="/gallery/add"
-            className="fixed bottom-32 right-6 w-14 h-14 bg-primary text-white rounded-2xl shadow-xl shadow-primary/40 flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all"
+            className="fixed bottom-32 right-6 w-16 h-16 bg-primary text-white rounded-[24px] shadow-2xl shadow-primary/30 flex items-center justify-center z-40 hover:scale-110 active:scale-90 transition-all"
         >
-            <span className="material-icons-round text-2xl">add</span>
+            <span className="material-icons-round text-3xl">add</span>
         </Link>
       )}
 
