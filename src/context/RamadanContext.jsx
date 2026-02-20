@@ -30,7 +30,7 @@ export const RamadanProvider = ({ children }) => {
       const now = new Date();
 
       // Ramadan Auto-Activation: Feb 18, 2026, 15:00 Local Time
-      const activationDate = new Date('2026-02-18T15:00:00');
+      const activationDate = new Date('2024-02-18T15:00:00');
 
       // End date (approximate based on 30 days)
       const endDate = new Date('2026-03-21T23:59:59');

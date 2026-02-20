@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRamadan } from '../../context/RamadanContext';
+import { IMSAKIYAH_SEMARANG_2026 } from '../../constants/imsakiyah';
 
 const PrayerTimes = () => {
   const { isRamadan } = useRamadan();
@@ -7,71 +8,60 @@ const PrayerTimes = () => {
   const [nextPrayer, setNextPrayer] = useState(null);
   const [timeLeft, setTimeLeft] = useState('');
   const [loading, setLoading] = useState(true);
-  const [locationName, setLocationName] = useState('Jakarta (Default)');
-  const [locationDenied, setLocationDenied] = useState(false);
+  const locationName = 'Kota Semarang';
+
+  // Simulation Helpers
+  const getSimulatedDate = () => {
+      const now = new Date();
+      let anchorTimestamp = localStorage.getItem('imsakiyah_start_anchor');
+
+      if (!anchorTimestamp) {
+          anchorTimestamp = now.getTime().toString();
+          localStorage.setItem('imsakiyah_start_anchor', anchorTimestamp);
+      }
+
+      const anchor = new Date(parseInt(anchorTimestamp, 10));
+      // Calculate days passed since anchor
+      const diffMs = now - anchor;
+      const daysPassed = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      // Target start date: 2026-02-20
+      const targetStart = new Date('2026-02-20T00:00:00');
+      const simulatedDate = new Date(targetStart);
+      simulatedDate.setDate(targetStart.getDate() + daysPassed);
+
+      return simulatedDate;
+  };
 
   useEffect(() => {
     if (!isRamadan) return;
+    setLoading(true);
 
-    const fetchCityName = async (lat, long) => {
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${long}`);
-            const data = await response.json();
-            if (data && data.address) {
-                const city = data.address.city || data.address.town || data.address.county || data.address.state || 'Lokasi Terdeteksi';
-                // Clean up if it's too long
-                const sub = data.address.suburb ? `${data.address.suburb}, ` : '';
-                setLocationName(`${sub}${city}`);
-            }
-        } catch (error) {
-            console.error("Error fetching city name:", error);
-            // Fallback is kept
-        }
-    };
+    const simulatedDate = getSimulatedDate();
+    // Format to YYYY-MM-DD manually to avoid timezone issues or use ISO split
+    // To be safe with local dates:
+    const year = simulatedDate.getFullYear();
+    const month = String(simulatedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(simulatedDate.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
 
-    const getTimes = async (lat, long) => {
-        setLoading(true);
-        try {
-            const date = new Date();
-            const timestamp = Math.floor(date.getTime() / 1000);
-            const response = await fetch(`https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${long}&method=20`);
+    const todaySchedule = IMSAKIYAH_SEMARANG_2026.find(s => s.date === dateString);
 
-            const data = await response.json();
-            if (data.code === 200) {
-                setPrayerTimes(data.data.timings);
-                calculateNextPrayer(data.data.timings);
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const getLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const long = position.coords.longitude;
-                    setLocationDenied(false);
-                    fetchCityName(lat, long);
-                    getTimes(lat, long);
-                },
-                (error) => {
-                    console.error("Geolocation error:", error);
-                    setLocationDenied(true);
-                    // Fallback to Jakarta
-                    getTimes(-6.2088, 106.8456);
-                }
-            );
+    if (todaySchedule) {
+        setPrayerTimes(todaySchedule);
+        calculateNextPrayer(todaySchedule);
+    } else {
+        // Fallback logic
+        if (simulatedDate < new Date('2026-02-19')) {
+             setPrayerTimes(IMSAKIYAH_SEMARANG_2026[0]);
+             calculateNextPrayer(IMSAKIYAH_SEMARANG_2026[0]);
         } else {
-             setLocationDenied(true);
-             getTimes(-6.2088, 106.8456);
+             const last = IMSAKIYAH_SEMARANG_2026[IMSAKIYAH_SEMARANG_2026.length - 1];
+             setPrayerTimes(last);
+             calculateNextPrayer(last);
         }
-    };
-
-    getLocation();
+    }
+    setLoading(false);
   }, [isRamadan]);
 
   useEffect(() => {
@@ -114,7 +104,10 @@ const PrayerTimes = () => {
       const targetTime = new Date();
       const [h, m] = next.time.split(':');
       targetTime.setHours(h, m, 0);
-      if (next.isTomorrow) targetTime.setDate(targetTime.getDate() + 1);
+
+      if (next.isTomorrow) {
+          targetTime.setDate(targetTime.getDate() + 1);
+      }
 
       const diff = targetTime - now;
       if (diff > 0) {
@@ -125,20 +118,6 @@ const PrayerTimes = () => {
       } else {
           setTimeLeft('Waktu Tiba!');
       }
-  };
-
-  const handleRequestLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-          (position) => {
-              // Simply reload to re-trigger the initial effect logic cleanly
-              window.location.reload();
-          },
-          (error) => {
-              alert("Gagal mendapatkan lokasi. Pastikan GPS aktif dan izin diberikan.");
-          }
-      );
-    }
   };
 
   if (!isRamadan) return null;
@@ -158,14 +137,6 @@ const PrayerTimes = () => {
                             <span className="material-icons text-xs">location_on</span>
                             {locationName}
                         </p>
-                        {locationDenied && (
-                             <button
-                                onClick={handleRequestLocation}
-                                className="bg-emerald-600/50 hover:bg-emerald-600 text-[10px] text-white px-2 py-0.5 rounded border border-emerald-400/50 transition-colors"
-                             >
-                                Aktifkan Lokasi
-                             </button>
-                        )}
                     </div>
                 </div>
                 <div className="text-right">
