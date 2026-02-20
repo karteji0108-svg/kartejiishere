@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRamadan } from '../../context/RamadanContext';
 
-const CURRENT_VERSION = '1.5.0';
+const CURRENT_VERSION = '2.0.0';
 
 const WhatsNewModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,54 +40,54 @@ const WhatsNewModal = () => {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto pr-2 space-y-5 custom-scrollbar">
 
-            {/* Ramadan */}
+            {/* UI Redesign */}
             <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
-                    <span className="material-icons-round">mosque</span>
+                <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center shrink-0 text-indigo-600 dark:text-indigo-400">
+                    <span className="material-icons-round">palette</span>
                 </div>
                 <div>
-                    <h3 className="font-bold text-sm mb-1">Spesial Ramadan</h3>
+                    <h3 className="font-bold text-sm mb-1">Tampilan Baru & Modern</h3>
                     <p className="text-xs opacity-70 leading-relaxed">
-                        Jadwal imsyakiyah akurat sesuai lokasi GPS & nama daerah Anda. Tema visual baru yang lebih segar.
+                        Desain lebih bersih, navigasi lebih mudah, dan tampilan layar penuh (Edge-to-Edge) yang memanjakan mata.
                     </p>
                 </div>
             </div>
 
-            {/* Install */}
+            {/* Platform Adaptive */}
             <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center shrink-0 text-blue-600 dark:text-blue-400">
-                    <span className="material-icons-round">download</span>
+                    <span className="material-icons-round">smartphone</span>
                 </div>
                 <div>
-                    <h3 className="font-bold text-sm mb-1">Install Aplikasi</h3>
+                    <h3 className="font-bold text-sm mb-1">iOS & Android Friendly</h3>
                     <p className="text-xs opacity-70 leading-relaxed">
-                        Tambahkan ke Layar Utama (Home Screen) lebih mudah dengan tombol install otomatis.
+                        Aplikasi kini menyesuaikan gaya visual HP Anda. Terasa lebih native dan nyaman digunakan.
                     </p>
                 </div>
             </div>
 
-            {/* Profil */}
-            <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center shrink-0 text-purple-600 dark:text-purple-400">
-                    <span className="material-icons-round">person</span>
-                </div>
-                <div>
-                    <h3 className="font-bold text-sm mb-1">Perbaikan Profil</h3>
-                    <p className="text-xs opacity-70 leading-relaxed">
-                        Login otomatis saat buka aplikasi & perbaikan bug saat mengubah foto profil.
-                    </p>
-                </div>
-            </div>
-
-            {/* Keuangan */}
+            {/* New Modules */}
             <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-2xl bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center shrink-0 text-orange-600 dark:text-orange-400">
-                    <span className="material-icons-round">account_balance_wallet</span>
+                    <span className="material-icons-round">widgets</span>
                 </div>
                 <div>
-                    <h3 className="font-bold text-sm mb-1">Update Keuangan</h3>
+                    <h3 className="font-bold text-sm mb-1">Fitur Organisasi Lengkap</h3>
                     <p className="text-xs opacity-70 leading-relaxed">
-                        Input uang lebih mudah dengan format ribuan otomatis. Tampilan lebih bersih tanpa chart.
+                        Kelola Surat, Inventaris Barang, dan Data Mitra (Sponsor/Desa) langsung dari Menu aplikasi.
+                    </p>
+                </div>
+            </div>
+
+            {/* Content Creator */}
+            <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center shrink-0 text-pink-600 dark:text-pink-400">
+                    <span className="material-icons-round">video_camera_front</span>
+                </div>
+                <div>
+                    <h3 className="font-bold text-sm mb-1">Role Content Creator</h3>
+                    <p className="text-xs opacity-70 leading-relaxed">
+                        Peran khusus untuk tim dokumentasi dan media sosial organisasi (Maksimal 4 orang).
                     </p>
                 </div>
             </div>
@@ -100,7 +100,7 @@ const WhatsNewModal = () => {
                 onClick={handleClose}
                 className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark transition-transform active:scale-[0.98]"
             >
-                Keren, Lanjutkan!
+                Mulai Jelajahi
             </button>
         </div>
 
