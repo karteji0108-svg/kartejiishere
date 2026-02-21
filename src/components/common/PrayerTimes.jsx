@@ -11,39 +11,7 @@ const PrayerTimes = () => {
   const [loading, setLoading] = useState(true);
   const [locationName, setLocationName] = useState('Menunggu Lokasi...');
   const [locationDenied, setLocationDenied] = useState(false);
-  const [simulatedDateInfo, setSimulatedDateInfo] = useState('');
-
-  // Simulation Helpers
-  const getSimulatedDate = () => {
-      const now = new Date();
-      let anchorTimestamp = localStorage.getItem('imsakiyah_start_anchor_v2');
-
-      if (!anchorTimestamp) {
-          anchorTimestamp = now.getTime().toString();
-          localStorage.setItem('imsakiyah_start_anchor_v2', anchorTimestamp);
-      }
-
-      const anchor = new Date(parseInt(anchorTimestamp, 10));
-      // Calculate days passed since anchor
-      const diffMs = now - anchor;
-      const daysPassed = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      // Target start date: 2026-02-20
-      const targetStart = new Date('2026-02-20T00:00:00');
-      const simulatedDate = new Date(targetStart);
-      simulatedDate.setDate(targetStart.getDate() + daysPassed);
-
-      return { simulatedDate, daysPassed };
-  };
-
-  const getHijriDate = (daysPassed) => {
-      // Base: 20 Feb 2026 = 2 Ramadhan 1447 H
-      const currentHijriDay = 2 + daysPassed;
-      if (currentHijriDay > 30) {
-          return `${currentHijriDay - 30} Syawal 1447 H`; // Simplified overflow
-      }
-      return `${currentHijriDay} Ramadhan 1447 H`;
-  };
+  const [currentDateInfo, setCurrentDateInfo] = useState('');
 
   const formatDate = (date) => {
       const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -53,10 +21,9 @@ const PrayerTimes = () => {
   useEffect(() => {
     if (!isRamadan) return;
 
-    const { simulatedDate, daysPassed } = getSimulatedDate();
-    const hijri = getHijriDate(daysPassed);
-    const gregorian = formatDate(simulatedDate);
-    setSimulatedDateInfo(`${gregorian} | ${hijri}`);
+    // Use Real Date
+    const now = new Date();
+    setCurrentDateInfo(formatDate(now));
 
     const fetchCityName = async (lat, long) => {
         try {
@@ -77,36 +44,26 @@ const PrayerTimes = () => {
     const updateTimes = async (lat, long) => {
         setLoading(true);
         try {
-            // Get location name first
             const locName = await fetchCityName(lat, long);
             setLocationName(locName);
 
-            // Logic: If Semarang, use static schedule. Else use calculation.
+            // Use Real Date for lookup/calc
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+
+            // Check if user is in Semarang AND we have a static schedule match for TODAY
             const isSemarang = /semarang/i.test(locName);
+            const staticSchedule = IMSAKIYAH_SEMARANG_2026.find(s => s.date === dateString);
 
-            // Get simulated date again to be safe inside async
-            const { simulatedDate } = getSimulatedDate();
-
-            if (isSemarang) {
-                const year = simulatedDate.getFullYear();
-                const month = String(simulatedDate.getMonth() + 1).padStart(2, '0');
-                const day = String(simulatedDate.getDate()).padStart(2, '0');
-                const dateString = `${year}-${month}-${day}`;
-
-                const staticSchedule = IMSAKIYAH_SEMARANG_2026.find(s => s.date === dateString);
-
-                if (staticSchedule) {
-                    setPrayerTimes(staticSchedule);
-                    calculateNextPrayer(staticSchedule);
-                } else {
-                    // Fallback if date out of range but still Semarang -> Calc
-                    const times = calculatePrayerTimes(simulatedDate, lat, long);
-                    setPrayerTimes(times);
-                    calculateNextPrayer(times);
-                }
+            if (isSemarang && staticSchedule) {
+                setPrayerTimes(staticSchedule);
+                calculateNextPrayer(staticSchedule);
             } else {
-                // Not Semarang -> Calc
-                const times = calculatePrayerTimes(simulatedDate, lat, long);
+                // Fallback to calculation (works for any date/location)
+                const times = calculatePrayerTimes(now, lat, long);
                 setPrayerTimes(times);
                 calculateNextPrayer(times);
             }
@@ -224,7 +181,7 @@ const PrayerTimes = () => {
         <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-emerald-100 font-bold text-lg">Jadwal Imsyakiyah</h3>
+                    <h3 className="text-emerald-100 font-bold text-lg">Jadwal Sholat</h3>
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                             <p className="text-emerald-200/70 text-xs flex items-center gap-1">
@@ -241,7 +198,7 @@ const PrayerTimes = () => {
                             )}
                         </div>
                         <p className="text-emerald-100/60 text-[10px] italic">
-                           {simulatedDateInfo}
+                           {currentDateInfo}
                         </p>
                     </div>
                 </div>
@@ -282,7 +239,7 @@ const PrayerTimes = () => {
                     rel="noopener noreferrer"
                     className="text-[10px] text-emerald-200/50 hover:text-emerald-200 hover:underline transition-colors"
                 >
-                    Sumber: Bimas Islam (Kemenag RI)
+                    Sumber: Kemenag RI & Perhitungan Lokal
                 </a>
             </div>
         </div>

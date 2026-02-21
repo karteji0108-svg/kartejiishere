@@ -83,7 +83,7 @@
 
   .bg-ramadan {
       @apply bg-cover bg-center bg-no-repeat bg-fixed;
-      background-image: url('./assets/ramadan-bg.png');
+      background-image: none;
       background-color: #064E3B;
   }
 
