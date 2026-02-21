@@ -16,11 +16,11 @@ const PrayerTimes = () => {
   // Simulation Helpers
   const getSimulatedDate = () => {
       const now = new Date();
-      let anchorTimestamp = localStorage.getItem('imsakiyah_start_anchor');
+      let anchorTimestamp = localStorage.getItem('imsakiyah_start_anchor_v2');
 
       if (!anchorTimestamp) {
           anchorTimestamp = now.getTime().toString();
-          localStorage.setItem('imsakiyah_start_anchor', anchorTimestamp);
+          localStorage.setItem('imsakiyah_start_anchor_v2', anchorTimestamp);
       }
 
       const anchor = new Date(parseInt(anchorTimestamp, 10));
