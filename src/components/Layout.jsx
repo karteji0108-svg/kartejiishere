@@ -1,70 +1,95 @@
 import React from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useRamadan } from '../context/RamadanContext';
-import RamadanDecorations from './common/RamadanDecorations';
-import RamadanBanner from './common/RamadanBanner';
 
 const Layout = () => {
   const location = useLocation();
   const { currentUser, logout } = useAuth();
-  const { isRamadan } = useRamadan();
 
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className={`flex flex-col h-screen ${isRamadan ? 'bg-black' : 'bg-gray-50'} transition-colors duration-1000`}>
-      <RamadanDecorations />
-      <RamadanBanner />
+    <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300 font-sans text-slate-900 dark:text-slate-100">
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pb-20 relative z-10">
-        <div className={`max-w-md mx-auto min-h-full shadow-xl relative transition-all duration-500 ${
-            isRamadan
-              ? 'bg-black/40 text-emerald-50 backdrop-blur-sm'
-              : 'bg-white text-gray-900'
-        }`}>
-            {/* Header */}
-            <header className={`${isRamadan ? 'bg-emerald-900/80 backdrop-blur-md text-emerald-50 border-b border-emerald-800/50' : 'bg-indigo-600 text-white shadow-md'} p-4 sticky top-0 z-30 transition-all duration-500`}>
-                <div className="flex justify-between items-center">
-                    <h1 className="font-bold text-lg tracking-tight flex items-center gap-2">
-                        {isRamadan && <span className="text-xl">🌙</span>}
-                        {isRamadan ? 'Ramadhan Kareem' : 'Karang Taruna'}
+      {/* Main Content Area - Full Height, Scrollable */}
+      <main className="flex-1 overflow-y-auto pb-24 relative w-full max-w-md mx-auto bg-white dark:bg-slate-950 shadow-2xl min-h-screen">
+            {/* Modern Header - Sticky & Clean */}
+            <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-5 py-4 flex justify-between items-center transition-all">
+                <div>
+                    <h1 className="font-display font-extrabold text-xl text-primary tracking-tight">
+                        Karang Taruna
                     </h1>
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs opacity-90 font-medium">{currentUser?.name}</span>
-                        <button onClick={logout} className="text-xs bg-white/20 p-1.5 rounded hover:bg-white/30 transition active:scale-95">
-                            <span className="material-icons text-sm">logout</span>
-                        </button>
+                    <p className="text-xs text-slate-500 font-medium tracking-wide uppercase">Aditya Karya Mahatva Yodha</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    {/* User Avatar - Professional Look */}
+                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-full pl-1 pr-3 py-1 border border-slate-200 dark:border-slate-700">
+                        <div className="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold uppercase">
+                            {currentUser?.name?.charAt(0) || 'U'}
+                        </div>
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[80px]">
+                            {currentUser?.name?.split(' ')[0]}
+                        </span>
                     </div>
                 </div>
             </header>
 
-            <div className="p-4 space-y-4">
+            <div className="p-5 space-y-6">
                 <Outlet />
             </div>
-        </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className={`fixed bottom-0 left-0 right-0 z-40 border-t transition-colors duration-500 ${
-          isRamadan
-            ? 'bg-emerald-900/90 border-emerald-800/50 backdrop-blur-md text-emerald-100'
-            : 'bg-white border-gray-200 text-gray-500'
-      }`}>
-        <div className="max-w-md mx-auto flex justify-around">
-          <Link to="/dashboard" className={`flex flex-col items-center py-3 px-2 w-full transition ${isActive('/dashboard') ? (isRamadan ? 'text-emerald-400 font-bold scale-105' : 'text-indigo-600') : (isRamadan ? 'text-emerald-100/60 hover:text-emerald-100' : 'text-gray-400 hover:text-gray-600')}`}>
-            <span className="material-icons">dashboard</span>
-            <span className="text-[10px] mt-1">Dashboard</span>
+      {/* Modern Bottom Navigation - Thumb Friendly & Clear */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 pb-safe">
+        <div className="max-w-md mx-auto flex justify-around items-center h-16 px-2">
+
+          <Link to="/dashboard" className="flex-1 flex flex-col items-center justify-center h-full group active:scale-95 transition-transform">
+            <div className={`p-1.5 rounded-full transition-colors mb-1 ${isActive('/dashboard') ? 'bg-accent/10 text-accent' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                <span className="material-icons text-2xl">dashboard</span>
+            </div>
+            <span className={`text-[10px] font-bold tracking-wide ${isActive('/dashboard') ? 'text-accent' : 'text-slate-400'}`}>
+                Beranda
+            </span>
           </Link>
-          <Link to="/activities" className={`flex flex-col items-center py-3 px-2 w-full transition ${isActive('/activities') ? (isRamadan ? 'text-emerald-400 font-bold scale-105' : 'text-indigo-600') : (isRamadan ? 'text-emerald-100/60 hover:text-emerald-100' : 'text-gray-400 hover:text-gray-600')}`}>
-            <span className="material-icons">event</span>
-            <span className="text-[10px] mt-1">Kegiatan</span>
+
+          <Link to="/activities" className="flex-1 flex flex-col items-center justify-center h-full group active:scale-95 transition-transform">
+            <div className={`p-1.5 rounded-full transition-colors mb-1 ${isActive('/activities') ? 'bg-accent/10 text-accent' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                <span className="material-icons text-2xl">event_note</span>
+            </div>
+            <span className={`text-[10px] font-bold tracking-wide ${isActive('/activities') ? 'text-accent' : 'text-slate-400'}`}>
+                Kegiatan
+            </span>
           </Link>
-          <Link to="/announcements" className={`flex flex-col items-center py-3 px-2 w-full transition ${isActive('/announcements') ? (isRamadan ? 'text-emerald-400 font-bold scale-105' : 'text-indigo-600') : (isRamadan ? 'text-emerald-100/60 hover:text-emerald-100' : 'text-gray-400 hover:text-gray-600')}`}>
-            <span className="material-icons">campaign</span>
-            <span className="text-[10px] mt-1">Info</span>
+
+          {/* Center Action Button (Floating Look) - Optional for future features like 'Scan QR' or 'Add Post' */}
+          {/*
+          <div className="relative -top-5">
+            <button className="w-14 h-14 bg-secondary rounded-full shadow-lg shadow-secondary/30 flex items-center justify-center text-white active:scale-90 transition-transform border-4 border-white dark:border-slate-950">
+                <span className="material-icons text-3xl">add</span>
+            </button>
+          </div>
+          */}
+
+          <Link to="/announcements" className="flex-1 flex flex-col items-center justify-center h-full group active:scale-95 transition-transform">
+            <div className={`p-1.5 rounded-full transition-colors mb-1 ${isActive('/announcements') ? 'bg-accent/10 text-accent' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                <span className="material-icons text-2xl">campaign</span>
+            </div>
+            <span className={`text-[10px] font-bold tracking-wide ${isActive('/announcements') ? 'text-accent' : 'text-slate-400'}`}>
+                Info
+            </span>
           </Link>
+
+          <Link to="/profile" className="flex-1 flex flex-col items-center justify-center h-full group active:scale-95 transition-transform">
+             {/* Profile tab usually links to account settings */}
+            <div className={`p-1.5 rounded-full transition-colors mb-1 ${isActive('/profile') ? 'bg-accent/10 text-accent' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                <span className="material-icons text-2xl">person</span>
+            </div>
+            <span className={`text-[10px] font-bold tracking-wide ${isActive('/profile') ? 'text-accent' : 'text-slate-400'}`}>
+                Akun
+            </span>
+          </Link>
+
         </div>
       </nav>
     </div>

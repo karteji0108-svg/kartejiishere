@@ -1,109 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import BottomNav from '../components/layout/BottomNav';
-import ThemeToggle from '../components/common/ThemeToggle';
-import RamadanBanner from '../components/common/RamadanBanner';
-import PrayerTimes from '../components/common/PrayerTimes';
-import HeroCarousel from '../components/common/HeroCarousel';
-import { useRamadan } from '../context/RamadanContext';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, getDocs, query, orderBy, limit, doc, getDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  getCountFromServer,
+  getAggregateFromServer,
+  sum
+} from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { formatCurrency, formatNumber } from '../utils/currency';
+import { formatDate } from '../utils/date';
 import Skeleton from '../components/common/Skeleton';
-import { hasPermission, PERMISSIONS } from '../constants/roles';
-
-// --- Widget Components ---
-
-const AdminStats = ({ stats, loading }) => (
-  <section className="mb-10 px-1">
-      <div className="grid grid-cols-2 gap-4">
-          <Link to="/members" className="glass-card p-6 flex flex-col justify-between h-40 relative overflow-hidden group hover:scale-[1.02] transition-transform">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-bl-[40px] -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-              <div className="z-10">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-3">
-                      <span className="material-icons-round text-xl">groups</span>
-                  </div>
-                  <p className="text-caption font-bold uppercase tracking-wider opacity-70">Anggota</p>
-              </div>
-              <h3 className="text-display text-slate-800 dark:text-white z-10">{loading ? "..." : stats.memberCount}</h3>
-          </Link>
-
-          <Link to="/finance" className="glass-card p-6 flex flex-col justify-between h-40 relative overflow-hidden group hover:scale-[1.02] transition-transform">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-green-500/10 rounded-bl-[40px] -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
-              <div className="z-10">
-                  <div className="w-10 h-10 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-3">
-                      <span className="material-icons-round text-xl">account_balance_wallet</span>
-                  </div>
-                  <p className="text-caption font-bold uppercase tracking-wider opacity-70">Saldo Kas</p>
-              </div>
-              <h3 className="text-h2 text-slate-800 dark:text-white truncate z-10">{loading ? "..." : `Rp ${(stats.balance/1000).toLocaleString('id-ID')}k`}</h3>
-          </Link>
-      </div>
-  </section>
-);
-
-// --- Main Component ---
+import HeroCarousel from '../components/common/HeroCarousel';
 
 const Dashboard = () => {
-  const { isRamadan } = useRamadan();
-  const { currentUser, userRole } = useAuth();
-  const [stats, setStats] = useState({ balance: 0, memberCount: 0, activityCount: 0 });
-  const [recentUpdates, setRecentUpdates] = useState([]);
+  const { currentUser, userRole, hasRole } = useAuth();
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    members: 0,
+    activities: 0,
+    balance: 0
+  });
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState(null);
 
-  const canUpload = hasPermission(userRole, PERMISSIONS.MANAGE_GALLERY) ||
-                    hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) ||
-                    userRole === 'anggota';
+  // Permission Checks
+  const canViewFinance = hasRole('bendahara') || hasRole('ketua') || hasRole('wakil_ketua') || hasRole('super_admin');
+  const canManageMembers = hasRole('sekretaris') || hasRole('ketua') || hasRole('wakil_ketua') || hasRole('super_admin');
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       try {
-        if (currentUser) {
-            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-            if (userDoc.exists()) {
-                setUserProfile(userDoc.data());
-            }
-        }
+        // 1. Fetch Stats (Parallel)
+        const membersColl = collection(db, 'users');
+        const activitiesColl = collection(db, 'activities');
+        const financeColl = collection(db, 'finance');
 
-        let memberCount = 0;
+        const [membersSnapshot, activitiesSnapshot] = await Promise.all([
+            getCountFromServer(query(membersColl, where('status', '==', 'active'))),
+            getCountFromServer(activitiesColl)
+        ]);
+
         let balance = 0;
-
-        if (hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)) {
-            const usersSnap = await getDocs(collection(db, 'users'));
-            memberCount = usersSnap.size;
-        }
-
-        if (hasPermission(userRole, PERMISSIONS.VIEW_FINANCE)) {
-            const financeSnap = await getDocs(collection(db, 'finance'));
-            financeSnap.forEach(doc => {
-                const data = doc.data();
-                let amount = data.amount;
-                if (typeof amount === 'string') {
-                    amount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
-                }
-                const numAmount = Number(amount) || 0;
-                if (data.type === 'income') balance += numAmount;
-                if (data.type === 'expense') balance -= numAmount;
+        if (canViewFinance) {
+            const balanceSnapshot = await getAggregateFromServer(financeColl, {
+                totalBalance: sum('amount')
             });
+            balance = balanceSnapshot.data().totalBalance;
         }
 
-        const activitiesSnap = await getDocs(collection(db, 'activities'));
-        const activityCount = activitiesSnap.size;
+        setStats({
+            members: membersSnapshot.data().count,
+            activities: activitiesSnapshot.data().count,
+            balance
+        });
 
-        setStats({ balance, memberCount, activityCount });
+        // 2. Fetch Recent Activities (Top 3)
+        const activitiesQuery = query(
+            activitiesColl,
+            orderBy('date', 'desc'),
+            limit(3)
+        );
+        const activitiesDocs = await getDocs(activitiesQuery);
+        setRecentActivities(activitiesDocs.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-        const updates = [];
-        const recentActQ = query(collection(db, 'activities'), orderBy('date', 'asc'), limit(2));
-        const recentActSnap = await getDocs(recentActQ);
-        recentActSnap.forEach(doc => updates.push({ id: doc.id, type: 'activity', ...doc.data() }));
-
-        const recentAnnQ = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(2));
-        const recentAnnSnap = await getDocs(recentAnnQ);
-        recentAnnSnap.forEach(doc => updates.push({ id: doc.id, type: 'announcement', ...doc.data() }));
-
-        setRecentUpdates(updates);
+        // 3. Fetch Recent Announcements (Top 3)
+        const announcementsQuery = query(
+            collection(db, 'announcements'),
+            orderBy('createdAt', 'desc'),
+            limit(3)
+        );
+        const announcementsDocs = await getDocs(announcementsQuery);
+        setAnnouncements(announcementsDocs.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -113,118 +87,223 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [userRole, currentUser]);
+  }, [canViewFinance]);
 
-  const displayName = userProfile?.fullName || userProfile?.displayName || currentUser?.displayName || 'Pengguna';
-  const photoURL = userProfile?.photoURL || currentUser?.photoURL;
-
-  const hour = new Date().getHours();
-  let greeting = 'Pagi';
-  if (hour >= 10) greeting = 'Siang';
-  if (hour >= 15) greeting = 'Sore';
-  if (hour >= 18) greeting = 'Malam';
+  if (loading) return <DashboardSkeleton />;
 
   return (
-    <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
-      <main className="main-content pb-32 px-6 pt-safe mt-8">
+    <div className="space-y-8 pb-20">
 
-        {/* Modern Header */}
-        <header className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-4">
-             <Link to="/profile" className="relative group">
-                 <div className="w-14 h-14 rounded-full overflow-hidden glass-card p-0.5 shadow-xl transition-transform group-hover:scale-105">
-                     {photoURL ? (
-                        <img src={photoURL} alt="Avatar" className="w-full h-full object-cover rounded-full" />
-                     ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-cyan-400 flex items-center justify-center rounded-full text-white font-bold text-xl">
-                            {displayName[0]}
-                        </div>
-                     )}
-                 </div>
-                 <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white dark:border-black rounded-full"></span>
-             </Link>
-             <div>
-                <p className="text-caption opacity-80 font-medium">Selamat {greeting},</p>
-                <h1 className="text-h1 font-extrabold capitalize text-slate-900 dark:text-white">
-                    {displayName.split(' ')[0]}
-                </h1>
-             </div>
-          </div>
-          <button className="w-12 h-12 rounded-full glass-card flex items-center justify-center relative hover:scale-105 transition-transform text-slate-700 dark:text-white">
-            <span className="material-icons-round text-2xl">notifications_none</span>
-            <span className="absolute top-3 right-3.5 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
-        </header>
+      {/* 1. Hero Section - Carousel */}
+      {/* HeroCarousel handles its own rounded corners and shadows */}
+      <section>
+        <HeroCarousel />
+      </section>
 
-        {/* Hero Section */}
-        <div className="mb-10 -mx-2">
-            <HeroCarousel />
+      {/* 2. Quick Actions Grid - Thumb Friendly */}
+      <section>
+        <h2 className="text-lg font-bold text-primary dark:text-white mb-4 flex items-center gap-2">
+            <span className="material-icons text-accent text-xl">grid_view</span>
+            Menu Utama
+        </h2>
+        <div className="grid grid-cols-4 gap-4">
+            <MenuButton
+                to="/activities"
+                icon="event"
+                label="Kegiatan"
+                bg="bg-blue-50 dark:bg-blue-900/20"
+                text="text-blue-600 dark:text-blue-400"
+            />
+            <MenuButton
+                to="/members"
+                icon="people"
+                label="Anggota"
+                bg="bg-indigo-50 dark:bg-indigo-900/20"
+                text="text-indigo-600 dark:text-indigo-400"
+            />
+            <MenuButton
+                to="/gallery"
+                icon="collections"
+                label="Galeri"
+                bg="bg-purple-50 dark:bg-purple-900/20"
+                text="text-purple-600 dark:text-purple-400"
+            />
+             {canViewFinance ? (
+                <MenuButton
+                    to="/finance"
+                    icon="payments"
+                    label="Keuangan"
+                    bg="bg-emerald-50 dark:bg-emerald-900/20"
+                    text="text-emerald-600 dark:text-emerald-400"
+                />
+            ) : (
+                 <MenuButton
+                    to="/announcements"
+                    icon="campaign"
+                    label="Info"
+                    bg="bg-orange-50 dark:bg-orange-900/20"
+                    text="text-orange-600 dark:text-orange-400"
+                />
+            )}
+
+            {/* Expandable Rows for more features if needed */}
+        </div>
+      </section>
+
+      {/* 3. Stats Overview - Minimalist Cards */}
+      <section className="grid grid-cols-2 gap-4">
+        <StatCard
+            label="Total Anggota"
+            value={formatNumber(stats.members)}
+            icon="groups"
+            color="text-indigo-600"
+            bgColor="bg-indigo-50"
+        />
+        <StatCard
+            label="Kegiatan"
+            value={formatNumber(stats.activities)}
+            icon="history_edu"
+             color="text-blue-600"
+            bgColor="bg-blue-50"
+        />
+        {canViewFinance && (
+            <div className="col-span-2 bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-5 shadow-lg text-white flex justify-between items-center relative overflow-hidden group cursor-pointer active:scale-95 transition-all" onClick={() => navigate('/finance')}>
+                <div className="relative z-10">
+                    <p className="text-emerald-100 text-sm font-medium mb-1">Saldo Kas Saat Ini</p>
+                    <h3 className="text-2xl font-bold font-mono tracking-tight">{formatCurrency(stats.balance)}</h3>
+                </div>
+                <div className="bg-white/20 p-3 rounded-full backdrop-blur-sm group-hover:scale-110 transition-transform">
+                    <span className="material-icons text-white">account_balance_wallet</span>
+                </div>
+                {/* Decorative BG Pattern */}
+                <div className="absolute -right-5 -bottom-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            </div>
+        )}
+      </section>
+
+      {/* 4. Recent Updates Feed */}
+      <section>
+         <div className="flex justify-between items-end mb-4">
+            <h2 className="text-lg font-bold text-primary dark:text-white flex items-center gap-2">
+                <span className="material-icons text-secondary text-xl">new_releases</span>
+                Terkini
+            </h2>
+            <Link to="/announcements" className="text-xs font-semibold text-accent hover:text-accent-dark transition-colors">
+                Lihat Semua
+            </Link>
         </div>
 
-        {isRamadan && <div className="mb-10"><PrayerTimes /></div>}
-
-        {/* Stats Row */}
-        {(hasPermission(userRole, PERMISSIONS.VIEW_FINANCE) || hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)) && (
-            <AdminStats stats={stats} loading={loading} />
-        )}
-
-        {/* Recent Updates */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-6 px-1">
-            <h3 className="text-h2 font-bold text-slate-900 dark:text-white">Update Terbaru</h3>
-            <Link to="/announcements" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 transition-colors">
-                <span className="material-icons-round text-slate-600 dark:text-slate-400">arrow_forward</span>
-            </Link>
-          </div>
-          <div className="flex flex-col gap-5">
-            {loading ? (
-               <Skeleton className="h-28 w-full rounded-[24px]" />
-            ) : recentUpdates.length === 0 ? (
-               <div className="glass-card p-10 text-center flex flex-col items-center">
-                   <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                        <span className="material-icons-round text-4xl text-slate-300">inbox</span>
-                   </div>
-                   <p className="text-body font-medium">Belum ada update terbaru.</p>
-               </div>
+        <div className="space-y-4">
+            {announcements.length > 0 ? (
+                announcements.map(ann => (
+                    <div key={ann.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-soft border border-slate-100 dark:border-slate-700 flex gap-4 items-start active:scale-[0.99] transition-transform">
+                        <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center flex-shrink-0">
+                            <span className="material-icons text-lg">campaign</span>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm line-clamp-1">{ann.title}</h4>
+                            <p className="text-xs text-slate-500 mt-1 line-clamp-2">{ann.content}</p>
+                            <p className="text-[10px] text-slate-400 mt-2 font-medium">{formatDate(ann.createdAt?.toDate())}</p>
+                        </div>
+                    </div>
+                ))
             ) : (
-               recentUpdates.map((item) => (
-                  <div key={item.id} className="glass-card p-5 flex items-start gap-5 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer group relative overflow-hidden">
-                    <div className={`shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm
-                        ${item.type === 'activity'
-                            ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
-                            : 'bg-teal-500/10 text-teal-600 dark:text-teal-400'}`}>
-                      <span className="material-icons-round text-3xl">{item.type === 'activity' ? 'event' : 'campaign'}</span>
-                    </div>
-                    <div className="flex-1 min-w-0 py-1">
-                      <div className="flex flex-col gap-1 mb-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                              {item.type === 'activity' ? 'Event' : 'Info'}
-                          </span>
-                          <h4 className="text-h3 font-bold text-slate-900 dark:text-white leading-tight line-clamp-1">{item.title}</h4>
-                      </div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{item.description || item.content}</p>
-                    </div>
-                  </div>
-               ))
+                <EmptyState message="Belum ada pengumuman terbaru." />
             )}
-          </div>
-        </section>
-      </main>
+        </div>
+      </section>
 
-      {/* FAB for Upload (Context-Aware) */}
-      {canUpload && (
-        <Link
-            to="/gallery/add"
-            className="fixed bottom-32 right-6 w-16 h-16 bg-primary text-white rounded-[24px] shadow-2xl shadow-primary/30 flex items-center justify-center z-40 hover:scale-110 active:scale-90 transition-all"
-        >
-            <span className="material-icons-round text-3xl">add</span>
-        </Link>
-      )}
+       {/* 5. Upcoming Activities Preview */}
+       <section>
+         <div className="flex justify-between items-end mb-4">
+            <h2 className="text-lg font-bold text-primary dark:text-white flex items-center gap-2">
+                <span className="material-icons text-accent text-xl">event_available</span>
+                Kegiatan Terbaru
+            </h2>
+            <Link to="/activities" className="text-xs font-semibold text-accent hover:text-accent-dark transition-colors">
+                Lihat Semua
+            </Link>
+        </div>
 
-      <RamadanBanner />
-      <BottomNav />
+        <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 no-scrollbar">
+            {recentActivities.length > 0 ? (
+                recentActivities.map(act => (
+                    <div key={act.id} className="min-w-[240px] w-[240px] bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col active:scale-95 transition-transform">
+                        <div className="h-24 bg-slate-200 dark:bg-slate-700 relative">
+                             {/* Ideally, an image here. Placeholder for now. */}
+                             <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                                <span className="material-icons text-4xl">image</span>
+                             </div>
+                             <div className="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-300 shadow-sm">
+                                {formatDate(new Date(act.date))}
+                             </div>
+                        </div>
+                        <div className="p-3">
+                             <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1 truncate">{act.title}</h4>
+                             <p className="text-xs text-slate-500 line-clamp-2">{act.description}</p>
+                        </div>
+                    </div>
+                ))
+            ) : (
+                 <div className="w-full py-8 text-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+                    <p className="text-sm text-slate-500">Belum ada kegiatan.</p>
+                 </div>
+            )}
+        </div>
+
+       </section>
+
     </div>
   );
 };
+
+// Sub-components for cleaner code
+const MenuButton = ({ to, icon, label, bg, text }) => (
+    <Link to={to} className="flex flex-col items-center gap-2 group cursor-pointer">
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${bg} ${text} shadow-sm group-hover:scale-105 group-active:scale-95 transition-all duration-200 border border-transparent dark:border-slate-700`}>
+            <span className="material-icons text-2xl">{icon}</span>
+        </div>
+        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">{label}</span>
+    </Link>
+);
+
+const StatCard = ({ label, value, icon, color, bgColor }) => (
+    <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-soft border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-28 relative overflow-hidden">
+        <div className="flex justify-between items-start z-10">
+            <span className="text-xs text-slate-500 font-medium">{label}</span>
+            <div className={`p-1.5 rounded-lg ${bgColor} ${color}`}>
+                <span className="material-icons text-base">{icon}</span>
+            </div>
+        </div>
+        <div className="z-10">
+             <h3 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">{value}</h3>
+        </div>
+        {/* Subtle decorative circle */}
+        <div className={`absolute -bottom-4 -left-4 w-16 h-16 rounded-full ${bgColor} opacity-50 blur-xl`}></div>
+    </div>
+);
+
+const EmptyState = ({ message }) => (
+    <div className="py-6 text-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+        <span className="material-icons text-slate-300 text-3xl mb-2">inbox</span>
+        <p className="text-sm text-slate-500">{message}</p>
+    </div>
+);
+
+const DashboardSkeleton = () => (
+    <div className="space-y-6 p-4">
+        <Skeleton className="h-48 w-full rounded-2xl" />
+        <div className="grid grid-cols-4 gap-4">
+            <Skeleton className="h-16 w-16 rounded-2xl" />
+            <Skeleton className="h-16 w-16 rounded-2xl" />
+            <Skeleton className="h-16 w-16 rounded-2xl" />
+            <Skeleton className="h-16 w-16 rounded-2xl" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+            <Skeleton className="h-28 rounded-xl" />
+            <Skeleton className="h-28 rounded-xl" />
+        </div>
+    </div>
+);
 
 export default Dashboard;
