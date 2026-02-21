@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRamadan } from '../../context/RamadanContext';
 import { calculatePrayerTimes } from '../../utils/prayer-calculation';
+import { IMSAKIYAH_SEMARANG_2026 } from '../../constants/imsakiyah_semarang';
 
 const PrayerTimes = () => {
   const { isRamadan } = useRamadan();
@@ -10,6 +11,7 @@ const PrayerTimes = () => {
   const [loading, setLoading] = useState(true);
   const [locationName, setLocationName] = useState('Menunggu Lokasi...');
   const [locationDenied, setLocationDenied] = useState(false);
+  const [simulatedDateInfo, setSimulatedDateInfo] = useState('');
 
   // Simulation Helpers
   const getSimulatedDate = () => {
@@ -31,11 +33,30 @@ const PrayerTimes = () => {
       const simulatedDate = new Date(targetStart);
       simulatedDate.setDate(targetStart.getDate() + daysPassed);
 
-      return simulatedDate;
+      return { simulatedDate, daysPassed };
+  };
+
+  const getHijriDate = (daysPassed) => {
+      // Base: 20 Feb 2026 = 2 Ramadhan 1447 H
+      const currentHijriDay = 2 + daysPassed;
+      if (currentHijriDay > 30) {
+          return `${currentHijriDay - 30} Syawal 1447 H`; // Simplified overflow
+      }
+      return `${currentHijriDay} Ramadhan 1447 H`;
+  };
+
+  const formatDate = (date) => {
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString('id-ID', options);
   };
 
   useEffect(() => {
     if (!isRamadan) return;
+
+    const { simulatedDate, daysPassed } = getSimulatedDate();
+    const hijri = getHijriDate(daysPassed);
+    const gregorian = formatDate(simulatedDate);
+    setSimulatedDateInfo(`${gregorian} | ${hijri}`);
 
     const fetchCityName = async (lat, long) => {
         try {
@@ -44,21 +65,51 @@ const PrayerTimes = () => {
             if (data && data.address) {
                 const city = data.address.city || data.address.town || data.address.county || data.address.state || 'Lokasi Terdeteksi';
                 const sub = data.address.suburb ? `${data.address.suburb}, ` : '';
-                setLocationName(`${sub}${city}`);
+                return `${sub}${city}`;
             }
         } catch (error) {
             console.error("Error fetching city name:", error);
-            setLocationName('Lokasi Terdeteksi');
+            return 'Lokasi Terdeteksi';
         }
+        return 'Lokasi Terdeteksi';
     };
 
-    const updateTimes = (lat, long) => {
+    const updateTimes = async (lat, long) => {
         setLoading(true);
         try {
-            const simulatedDate = getSimulatedDate();
-            const times = calculatePrayerTimes(simulatedDate, lat, long);
-            setPrayerTimes(times);
-            calculateNextPrayer(times);
+            // Get location name first
+            const locName = await fetchCityName(lat, long);
+            setLocationName(locName);
+
+            // Logic: If Semarang, use static schedule. Else use calculation.
+            const isSemarang = /semarang/i.test(locName);
+
+            // Get simulated date again to be safe inside async
+            const { simulatedDate } = getSimulatedDate();
+
+            if (isSemarang) {
+                const year = simulatedDate.getFullYear();
+                const month = String(simulatedDate.getMonth() + 1).padStart(2, '0');
+                const day = String(simulatedDate.getDate()).padStart(2, '0');
+                const dateString = `${year}-${month}-${day}`;
+
+                const staticSchedule = IMSAKIYAH_SEMARANG_2026.find(s => s.date === dateString);
+
+                if (staticSchedule) {
+                    setPrayerTimes(staticSchedule);
+                    calculateNextPrayer(staticSchedule);
+                } else {
+                    // Fallback if date out of range but still Semarang -> Calc
+                    const times = calculatePrayerTimes(simulatedDate, lat, long);
+                    setPrayerTimes(times);
+                    calculateNextPrayer(times);
+                }
+            } else {
+                // Not Semarang -> Calc
+                const times = calculatePrayerTimes(simulatedDate, lat, long);
+                setPrayerTimes(times);
+                calculateNextPrayer(times);
+            }
         } catch (e) {
             console.error("Error calculating times:", e);
         } finally {
@@ -73,7 +124,6 @@ const PrayerTimes = () => {
                     const lat = position.coords.latitude;
                     const long = position.coords.longitude;
                     setLocationDenied(false);
-                    fetchCityName(lat, long);
                     updateTimes(lat, long);
                 },
                 (error) => {
@@ -175,19 +225,24 @@ const PrayerTimes = () => {
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h3 className="text-emerald-100 font-bold text-lg">Jadwal Imsyakiyah</h3>
-                    <div className="flex items-center gap-2">
-                        <p className="text-emerald-200/70 text-xs flex items-center gap-1">
-                            <span className="material-icons text-xs">location_on</span>
-                            {locationName}
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <p className="text-emerald-200/70 text-xs flex items-center gap-1">
+                                <span className="material-icons text-xs">location_on</span>
+                                {locationName}
+                            </p>
+                            {locationDenied && (
+                                <button
+                                    onClick={handleRequestLocation}
+                                    className="bg-emerald-600/50 hover:bg-emerald-600 text-[10px] text-white px-2 py-0.5 rounded border border-emerald-400/50 transition-colors"
+                                >
+                                    Aktifkan Lokasi
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-emerald-100/60 text-[10px] italic">
+                           {simulatedDateInfo}
                         </p>
-                        {locationDenied && (
-                             <button
-                                onClick={handleRequestLocation}
-                                className="bg-emerald-600/50 hover:bg-emerald-600 text-[10px] text-white px-2 py-0.5 rounded border border-emerald-400/50 transition-colors"
-                             >
-                                Aktifkan Lokasi
-                             </button>
-                        )}
                     </div>
                 </div>
                 <div className="text-right">
