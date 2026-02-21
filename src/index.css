@@ -81,11 +81,6 @@
   .bg-surface-light { @apply bg-white; }
   .bg-surface-dark { @apply bg-[#1C1C1E]; }
 
-  .bg-ramadan {
-      @apply bg-cover bg-center bg-no-repeat bg-fixed;
-      background-image: none;
-      background-color: #064E3B;
-  }
 
   /* Typography - Modern Scale (Plus Jakarta Sans / Inter feel) */
   .text-display { @apply text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight; }
