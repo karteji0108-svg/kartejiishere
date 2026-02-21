@@ -228,6 +228,9 @@ const PrayerTimes = () => {
                     })}
                 </div>
             )}
+            <div className="mt-4 text-center">
+                <p className="text-[10px] text-emerald-200/50">Sumber: Bimas Islam (Kemenag RI)</p>
+            </div>
         </div>
     </div>
   );
