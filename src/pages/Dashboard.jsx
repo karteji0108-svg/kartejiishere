@@ -17,6 +17,8 @@ import { formatCurrency, formatNumber } from '../utils/currency';
 import { formatDate } from '../utils/date';
 import Skeleton from '../components/common/Skeleton';
 import HeroCarousel from '../components/common/HeroCarousel';
+import PrayerTimes from '../components/common/PrayerTimes';
+import BottomNav from '../components/layout/BottomNav';
 
 const Dashboard = () => {
   const { currentUser, userRole, hasRole } = useAuth();
@@ -49,33 +51,25 @@ const Dashboard = () => {
 
         let balance = 0;
         if (canViewFinance) {
-            const balanceSnapshot = await getAggregateFromServer(financeColl, {
+             const financeSnapshot = await getAggregateFromServer(financeColl, {
                 totalBalance: sum('amount')
-            });
-            balance = balanceSnapshot.data().totalBalance;
+             });
+             balance = financeSnapshot.data().totalBalance || 0;
         }
 
         setStats({
             members: membersSnapshot.data().count,
             activities: activitiesSnapshot.data().count,
-            balance
+            balance: balance
         });
 
-        // 2. Fetch Recent Activities (Top 3)
-        const activitiesQuery = query(
-            activitiesColl,
-            orderBy('date', 'desc'),
-            limit(3)
-        );
+        // 2. Fetch Recent Activities
+        const activitiesQuery = query(activitiesColl, orderBy('date', 'desc'), limit(5));
         const activitiesDocs = await getDocs(activitiesQuery);
         setRecentActivities(activitiesDocs.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-        // 3. Fetch Recent Announcements (Top 3)
-        const announcementsQuery = query(
-            collection(db, 'announcements'),
-            orderBy('createdAt', 'desc'),
-            limit(3)
-        );
+        // 3. Fetch Announcements
+        const announcementsQuery = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(3));
         const announcementsDocs = await getDocs(announcementsQuery);
         setAnnouncements(announcementsDocs.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
@@ -92,18 +86,15 @@ const Dashboard = () => {
   if (loading) return <DashboardSkeleton />;
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="p-4 space-y-6 pb-24 max-w-lg mx-auto md:max-w-4xl relative">
+      {/* 1. Hero Carousel */}
+      <HeroCarousel />
+      <PrayerTimes />
 
-      {/* 1. Hero Section - Carousel */}
-      {/* HeroCarousel handles its own rounded corners and shadows */}
+      {/* 2. Quick Actions Grid */}
       <section>
-        <HeroCarousel />
-      </section>
-
-      {/* 2. Quick Actions Grid - Thumb Friendly */}
-      <section>
-        <h2 className="text-lg font-bold text-primary dark:text-white mb-4 flex items-center gap-2">
-            <span className="material-icons text-accent text-xl">grid_view</span>
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-primary dark:text-white">
+            <span className="material-icons text-secondary text-xl">grid_view</span>
             Menu Utama
         </h2>
         <div className="grid grid-cols-4 gap-4">
@@ -253,6 +244,7 @@ const Dashboard = () => {
 
        </section>
 
+      <BottomNav />
     </div>
   );
 };
