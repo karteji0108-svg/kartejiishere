@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRamadan } from '../../context/RamadanContext';
+import { calculatePrayerTimes } from '../../utils/prayer-calculation';
 
 const PrayerTimes = () => {
   const { isRamadan } = useRamadan();
@@ -41,71 +42,25 @@ const PrayerTimes = () => {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${long}`);
             const data = await response.json();
             if (data && data.address) {
-                // Prioritize City, then Town, then County (Kabupaten)
-                const city = data.address.city || data.address.town || data.address.county || data.address.state;
+                const city = data.address.city || data.address.town || data.address.county || data.address.state || 'Lokasi Terdeteksi';
                 const sub = data.address.suburb ? `${data.address.suburb}, ` : '';
-                const displayLocation = city ? `${sub}${city}` : 'Lokasi Terdeteksi';
-
-                setLocationName(displayLocation);
-
-                // Return clean city name for API search
-                // Remove "Kota " or "Kabupaten " if present to improve search results
-                let searchName = city || '';
-                searchName = searchName.replace(/^(Kota|Kabupaten|Kab\.)\s+/i, '');
-                return searchName;
+                setLocationName(`${sub}${city}`);
             }
         } catch (error) {
             console.error("Error fetching city name:", error);
             setLocationName('Lokasi Terdeteksi');
         }
-        return null;
     };
 
-    const fetchCityId = async (cityName) => {
-        if (!cityName) return null;
-        try {
-            const response = await fetch(`https://api.myquran.com/v2/sholat/kota/cari/${cityName}`);
-            const data = await response.json();
-            if (data.status && data.data.length > 0) {
-                // If multiple results, try to find "KOTA" if available, else first
-                // e.g. "Semarang" -> "KAB. SEMARANG", "KOTA SEMARANG"
-                const kotaMatch = data.data.find(item => item.lokasi.includes('KOTA'));
-                return kotaMatch ? kotaMatch.id : data.data[0].id;
-            }
-        } catch (error) {
-            console.error("Error searching city ID:", error);
-        }
-        return null; // Fallback?
-    };
-
-    const getTimes = async (cityId) => {
-        if (!cityId) return;
+    const updateTimes = (lat, long) => {
         setLoading(true);
         try {
             const simulatedDate = getSimulatedDate();
-            const year = simulatedDate.getFullYear();
-            const month = String(simulatedDate.getMonth() + 1).padStart(2, '0');
-            const day = String(simulatedDate.getDate()).padStart(2, '0');
-
-            const response = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${cityId}/${year}/${month}/${day}`);
-            const data = await response.json();
-
-            if (data.status && data.data && data.data.jadwal) {
-                const jadwal = data.data.jadwal;
-                // Map to consistent format
-                const mappedTimings = {
-                    Imsak: jadwal.imsak,
-                    Fajr: jadwal.subuh,
-                    Dhuhr: jadwal.dzuhur,
-                    Asr: jadwal.ashar,
-                    Maghrib: jadwal.maghrib,
-                    Isha: jadwal.isya
-                };
-                setPrayerTimes(mappedTimings);
-                calculateNextPrayer(mappedTimings);
-            }
+            const times = calculatePrayerTimes(simulatedDate, lat, long);
+            setPrayerTimes(times);
+            calculateNextPrayer(times);
         } catch (e) {
-            console.error(e);
+            console.error("Error calculating times:", e);
         } finally {
             setLoading(false);
         }
@@ -114,37 +69,25 @@ const PrayerTimes = () => {
     const getLocation = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                async (position) => {
+                (position) => {
                     const lat = position.coords.latitude;
                     const long = position.coords.longitude;
                     setLocationDenied(false);
-
-                    const cityName = await fetchCityName(lat, long);
-                    if (cityName) {
-                        const cityId = await fetchCityId(cityName);
-                        if (cityId) {
-                            getTimes(cityId);
-                        } else {
-                            // Fallback to Jakarta ID (1301)
-                             getTimes('1301');
-                        }
-                    } else {
-                        // Fallback to Jakarta
-                        getTimes('1301');
-                    }
+                    fetchCityName(lat, long);
+                    updateTimes(lat, long);
                 },
                 (error) => {
                     console.error("Geolocation error:", error);
                     setLocationDenied(true);
                     setLocationName('Jakarta (Default)');
-                    // Fallback to Jakarta ID
-                    getTimes('1301');
+                    // Fallback to Jakarta
+                    updateTimes(-6.2088, 106.8456);
                 }
             );
         } else {
              setLocationDenied(true);
              setLocationName('Jakarta (Default)');
-             getTimes('1301');
+             updateTimes(-6.2088, 106.8456);
         }
     };
 
