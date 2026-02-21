@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
-import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, getCountFromServer, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import Skeleton from '../components/Skeleton';
 import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
@@ -132,8 +132,8 @@ const Dashboard = () => {
             });
         }
 
-        const activitiesSnap = await getDocs(collection(db, 'activities')); // Public read usually
-        const activityCount = activitiesSnap.size;
+        const activitiesSnap = await getCountFromServer(collection(db, 'activities')); // Public read usually
+        const activityCount = activitiesSnap.data().count;
 
         setStats({ balance, memberCount, activityCount });
 
