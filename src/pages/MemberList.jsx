@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import BottomNav from '../components/BottomNav';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -32,18 +32,20 @@ const MemberList = () => {
     fetchMembers();
   }, []);
 
-  const filteredMembers = members.filter(member => {
-    const nameMatch = member.fullName?.toLowerCase().includes(search.toLowerCase()) || false;
-    const roleMatch = member.role?.toLowerCase().includes(search.toLowerCase()) || false;
+  const filteredMembers = useMemo(() => {
+    return members.filter(member => {
+      const nameMatch = member.fullName?.toLowerCase().includes(search.toLowerCase()) || false;
+      const roleMatch = member.role?.toLowerCase().includes(search.toLowerCase()) || false;
 
-    if (!nameMatch && !roleMatch) return false;
+      if (!nameMatch && !roleMatch) return false;
 
-    if (filter === 'Semua') return true;
-    if (filter === 'Pengurus Inti') return ['ketua', 'wakil ketua', 'sekretaris', 'bendahara'].includes(member.role?.toLowerCase());
-    if (filter === 'Anggota Aktif') return member.status === 'active';
+      if (filter === 'Semua') return true;
+      if (filter === 'Pengurus Inti') return ['ketua', 'wakil ketua', 'sekretaris', 'bendahara'].includes(member.role?.toLowerCase());
+      if (filter === 'Anggota Aktif') return member.status === 'active';
 
-    return true;
-  });
+      return true;
+    });
+  }, [members, search, filter]);
 
   const getRoleColor = (role) => {
     switch(role?.toLowerCase()) {
