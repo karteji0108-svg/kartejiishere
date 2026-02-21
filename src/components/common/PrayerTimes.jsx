@@ -41,31 +41,68 @@ const PrayerTimes = () => {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${long}`);
             const data = await response.json();
             if (data && data.address) {
-                const city = data.address.city || data.address.town || data.address.county || data.address.state || 'Lokasi Terdeteksi';
+                // Prioritize City, then Town, then County (Kabupaten)
+                const city = data.address.city || data.address.town || data.address.county || data.address.state;
                 const sub = data.address.suburb ? `${data.address.suburb}, ` : '';
-                setLocationName(`${sub}${city}`);
+                const displayLocation = city ? `${sub}${city}` : 'Lokasi Terdeteksi';
+
+                setLocationName(displayLocation);
+
+                // Return clean city name for API search
+                // Remove "Kota " or "Kabupaten " if present to improve search results
+                let searchName = city || '';
+                searchName = searchName.replace(/^(Kota|Kabupaten|Kab\.)\s+/i, '');
+                return searchName;
             }
         } catch (error) {
             console.error("Error fetching city name:", error);
             setLocationName('Lokasi Terdeteksi');
         }
+        return null;
     };
 
-    const getTimes = async (lat, long) => {
+    const fetchCityId = async (cityName) => {
+        if (!cityName) return null;
+        try {
+            const response = await fetch(`https://api.myquran.com/v2/sholat/kota/cari/${cityName}`);
+            const data = await response.json();
+            if (data.status && data.data.length > 0) {
+                // If multiple results, try to find "KOTA" if available, else first
+                // e.g. "Semarang" -> "KAB. SEMARANG", "KOTA SEMARANG"
+                const kotaMatch = data.data.find(item => item.lokasi.includes('KOTA'));
+                return kotaMatch ? kotaMatch.id : data.data[0].id;
+            }
+        } catch (error) {
+            console.error("Error searching city ID:", error);
+        }
+        return null; // Fallback?
+    };
+
+    const getTimes = async (cityId) => {
+        if (!cityId) return;
         setLoading(true);
         try {
             const simulatedDate = getSimulatedDate();
-            // Use local noon of the simulated date to avoid timezone issues
-            simulatedDate.setHours(12, 0, 0, 0);
-            const timestamp = Math.floor(simulatedDate.getTime() / 1000);
+            const year = simulatedDate.getFullYear();
+            const month = String(simulatedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(simulatedDate.getDate()).padStart(2, '0');
 
-            // Method 20 is Kemenag RI
-            const response = await fetch(`https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${long}&method=20`);
-
+            const response = await fetch(`https://api.myquran.com/v2/sholat/jadwal/${cityId}/${year}/${month}/${day}`);
             const data = await response.json();
-            if (data.code === 200) {
-                setPrayerTimes(data.data.timings);
-                calculateNextPrayer(data.data.timings);
+
+            if (data.status && data.data && data.data.jadwal) {
+                const jadwal = data.data.jadwal;
+                // Map to consistent format
+                const mappedTimings = {
+                    Imsak: jadwal.imsak,
+                    Fajr: jadwal.subuh,
+                    Dhuhr: jadwal.dzuhur,
+                    Asr: jadwal.ashar,
+                    Maghrib: jadwal.maghrib,
+                    Isha: jadwal.isya
+                };
+                setPrayerTimes(mappedTimings);
+                calculateNextPrayer(mappedTimings);
             }
         } catch (e) {
             console.error(e);
@@ -77,25 +114,37 @@ const PrayerTimes = () => {
     const getLocation = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                async (position) => {
                     const lat = position.coords.latitude;
                     const long = position.coords.longitude;
                     setLocationDenied(false);
-                    fetchCityName(lat, long);
-                    getTimes(lat, long);
+
+                    const cityName = await fetchCityName(lat, long);
+                    if (cityName) {
+                        const cityId = await fetchCityId(cityName);
+                        if (cityId) {
+                            getTimes(cityId);
+                        } else {
+                            // Fallback to Jakarta ID (1301)
+                             getTimes('1301');
+                        }
+                    } else {
+                        // Fallback to Jakarta
+                        getTimes('1301');
+                    }
                 },
                 (error) => {
                     console.error("Geolocation error:", error);
                     setLocationDenied(true);
                     setLocationName('Jakarta (Default)');
-                    // Fallback to Jakarta
-                    getTimes(-6.2088, 106.8456);
+                    // Fallback to Jakarta ID
+                    getTimes('1301');
                 }
             );
         } else {
              setLocationDenied(true);
              setLocationName('Jakarta (Default)');
-             getTimes(-6.2088, 106.8456);
+             getTimes('1301');
         }
     };
 
