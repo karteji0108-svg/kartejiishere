@@ -114,17 +114,41 @@ const Dashboard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch stats only if allowed
-        let memberCount = 0;
-        let balance = 0;
+        // Parallel Data Fetching
+        const memberPromise = hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)
+            ? getDocs(collection(db, 'users'))
+            : Promise.resolve(null);
 
-        if (hasPermission(userRole, PERMISSIONS.VIEW_MEMBERS)) {
-            const usersSnap = await getDocs(collection(db, 'users'));
-            memberCount = usersSnap.size;
+        const financePromise = hasPermission(userRole, PERMISSIONS.VIEW_FINANCE)
+            ? getDocs(collection(db, 'finance'))
+            : Promise.resolve(null);
+
+        const activitiesPromise = getDocs(collection(db, 'activities'));
+
+        const recentActQ = query(collection(db, 'activities'), orderBy('date', 'asc'), limit(2));
+        const recentActPromise = getDocs(recentActQ);
+
+        const recentAnnQ = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(1));
+        const recentAnnPromise = getDocs(recentAnnQ);
+
+        // Await all promises
+        const [memberSnap, financeSnap, activitiesSnap, recentActSnap, recentAnnSnap] = await Promise.all([
+            memberPromise,
+            financePromise,
+            activitiesPromise,
+            recentActPromise,
+            recentAnnPromise
+        ]);
+
+        // Process Members
+        let memberCount = 0;
+        if (memberSnap) {
+            memberCount = memberSnap.size;
         }
 
-        if (hasPermission(userRole, PERMISSIONS.VIEW_FINANCE)) {
-            const financeSnap = await getDocs(collection(db, 'finance'));
+        // Process Finance
+        let balance = 0;
+        if (financeSnap) {
             financeSnap.forEach(doc => {
                 const data = doc.data();
                 if (data.type === 'income') balance += Number(data.amount);
@@ -132,19 +156,14 @@ const Dashboard = () => {
             });
         }
 
-        const activitiesSnap = await getDocs(collection(db, 'activities')); // Public read usually
+        // Process Activities Count
         const activityCount = activitiesSnap.size;
 
         setStats({ balance, memberCount, activityCount });
 
-        // Recent Updates
+        // Process Recent Updates
         const updates = [];
-        const recentActQ = query(collection(db, 'activities'), orderBy('date', 'asc'), limit(2));
-        const recentActSnap = await getDocs(recentActQ);
         recentActSnap.forEach(doc => updates.push({ id: doc.id, type: 'activity', ...doc.data() }));
-
-        const recentAnnQ = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(1));
-        const recentAnnSnap = await getDocs(recentAnnQ);
         recentAnnSnap.forEach(doc => updates.push({ id: doc.id, type: 'announcement', ...doc.data() }));
 
         setRecentUpdates(updates);
