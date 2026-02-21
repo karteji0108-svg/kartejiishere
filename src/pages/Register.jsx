@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useRamadan } from '../context/RamadanContext';
 import toast from 'react-hot-toast';
 
 const Register = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
-  const { isRamadan } = useRamadan();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -20,7 +18,8 @@ const Register = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      return toast.error('Password dan Konfirmasi Password tidak sama.');
+      toast.error('Password dan Konfirmasi Password tidak sama.');
+      return;
     }
 
     setLoading(true);
@@ -38,15 +37,10 @@ const Register = () => {
   };
 
   return (
-    <div className={`font-display antialiased h-screen flex flex-col justify-between transition-colors duration-500 overflow-y-auto relative
-      ${isRamadan
-        ? 'bg-gradient-to-b from-ramadan-bg to-emerald-900 text-white selection:bg-ramadan-gold/30 selection:text-ramadan-gold'
-        : 'bg-background-light dark:bg-background-dark text-gray-900 dark:text-white selection:bg-primary/20 selection:text-primary'
-      }`}
-    >
+    <div className="font-display antialiased h-screen flex flex-col justify-between transition-colors duration-500 overflow-y-auto relative bg-background-light dark:bg-background-dark text-gray-900 dark:text-white selection:bg-primary/20 selection:text-primary">
 
       {/* Background Decor */}
-      <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl z-0 ${isRamadan ? 'bg-emerald-500/20' : 'bg-purple-500/10'}`}></div>
+      <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl z-0 bg-purple-500/10"></div>
 
       {/* Header / Branding Section */}
       <header className="flex-1 flex flex-col items-center justify-end py-8 px-6 min-h-[160px] animate-fade-in-down relative z-10">
@@ -55,7 +49,7 @@ const Register = () => {
             <h1 className="text-3xl font-extrabold tracking-tight">
               Daftar Akun
             </h1>
-            <p className={`text-sm font-medium ${isRamadan ? 'text-emerald-100/80' : 'text-gray-500 dark:text-gray-400'}`}>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Bergabung dengan komunitas Karang Taruna.
             </p>
           </div>
@@ -162,11 +156,7 @@ const Register = () => {
 
           {/* Submit Button */}
           <button
-            className={`w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-[0.98] mt-6
-               ${isRamadan
-                ? 'bg-gradient-to-r from-emerald-500 to-emerald-700 hover:to-emerald-800 shadow-emerald-500/30'
-                : 'bg-gradient-to-r from-primary to-blue-600 hover:to-blue-700 shadow-primary/30'
-              } ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
+            className={`w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-[0.98] mt-6 bg-gradient-to-r from-primary to-blue-600 hover:to-blue-700 shadow-primary/30 ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
             type="submit"
             disabled={loading}
           >
@@ -180,9 +170,9 @@ const Register = () => {
         </form>
 
         <div className="mt-8 text-center">
-          <p className={`text-sm ${isRamadan ? 'text-emerald-200/80' : 'text-gray-500 dark:text-gray-400'}`}>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Sudah punya akun?
-            <Link to="/" className={`font-bold transition-colors ml-1 ${isRamadan ? 'text-ramadan-gold hover:text-white' : 'text-primary hover:text-primary-dark'}`}>
+            <Link to="/" className="font-bold transition-colors ml-1 text-primary hover:text-primary-dark">
               Login disini
             </Link>
           </p>

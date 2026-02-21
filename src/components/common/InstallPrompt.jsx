@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useRamadan } from '../../context/RamadanContext';
 
 const InstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showInstruction, setShowInstruction] = useState(false);
-  const { isRamadan } = useRamadan();
 
   useEffect(() => {
     // Detect iOS
@@ -58,15 +56,11 @@ const InstallPrompt = () => {
         {/* Floating Banner */}
         {isVisible && !showInstruction && (
             <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 -translate-y-full z-50 w-full max-w-sm px-4 animate-fade-in-up pb-4">
-            <div className={`p-3 rounded-2xl shadow-xl flex items-center justify-between border backdrop-blur-md
-                ${isRamadan
-                    ? 'bg-emerald-900/90 border-emerald-500/30 text-white'
-                    : 'bg-white/90 dark:bg-slate-800/90 border-white/20 dark:border-white/10 text-slate-900 dark:text-white'
-                }`}>
+            <div className="p-3 rounded-2xl shadow-xl flex items-center justify-between border backdrop-blur-md bg-white/90 dark:bg-slate-800/90 border-white/20 dark:border-white/10 text-slate-900 dark:text-white">
 
                 <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isRamadan ? 'bg-white/10' : 'bg-primary/10'}`}>
-                        <span className={`material-icons-round ${isRamadan ? 'text-ramadan-gold' : 'text-primary'}`}>download</span>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10">
+                        <span className="material-icons-round text-primary">download</span>
                     </div>
                     <div>
                         <h4 className="font-bold text-sm">Install Aplikasi</h4>
@@ -83,11 +77,7 @@ const InstallPrompt = () => {
                     </button>
                     <button
                         onClick={handleInstallClick}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg transition-transform active:scale-95
-                            ${isRamadan
-                                ? 'bg-ramadan-gold text-emerald-900'
-                                : 'bg-primary text-white'
-                            }`}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg transition-transform active:scale-95 bg-primary text-white"
                     >
                         {deferredPrompt ? 'Install' : 'Cara Install'}
                     </button>
@@ -99,8 +89,7 @@ const InstallPrompt = () => {
         {/* Instruction Modal (iOS / Manual Fallback) */}
         {showInstruction && (
             <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in-up">
-                <div className={`w-full max-w-sm rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col
-                    ${isRamadan ? 'bg-gradient-to-br from-emerald-900 to-emerald-800 text-white border border-emerald-500/30' : 'bg-white dark:bg-slate-800 dark:text-white'}`}>
+                <div className="w-full max-w-sm rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col bg-white dark:bg-slate-800 dark:text-white">
 
                     <button onClick={() => setShowInstruction(false)} className="absolute top-4 right-4 p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-full">
                         <span className="material-icons-round">close</span>

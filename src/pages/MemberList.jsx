@@ -1,32 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import BottomNav from '../components/layout/BottomNav';
-import { collection, getDocs } from 'firebase/firestore';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Skeleton from '../components/common/Skeleton';
-import { useRamadan } from '../context/RamadanContext';
+import BottomNav from '../components/layout/BottomNav';
 
 const MemberList = () => {
-  const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('Semua');
   const [search, setSearch] = useState('');
-  const { isRamadan } = useRamadan();
+
+  const canManage = ['admin', 'ketua', 'wakil_ketua', 'sekretaris', 'super_admin'].includes(userRole);
 
   useEffect(() => {
     const fetchMembers = async () => {
-      setLoading(true);
       try {
-        const q = collection(db, 'users');
+        const q = query(collection(db, 'users'), where('status', '==', 'active'));
         const querySnapshot = await getDocs(q);
-        const memberData = querySnapshot.docs.map(doc => ({
+        const fetched = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
-        setMembers(memberData);
+
+        // Client-side sort
+        fetched.sort((a, b) => (a.fullName || a.displayName || '').localeCompare(b.fullName || b.displayName || ''));
+        setMembers(fetched);
       } catch (error) {
-        console.error("Error fetching members: ", error);
+        console.error("Error fetching members:", error);
       } finally {
         setLoading(false);
       }
@@ -35,142 +37,88 @@ const MemberList = () => {
     fetchMembers();
   }, []);
 
-  const filteredMembers = members.filter(member => {
-    const nameMatch = (member.fullName || member.displayName)?.toLowerCase().includes(search.toLowerCase()) || false;
-    const roleMatch = member.role?.toLowerCase().includes(search.toLowerCase()) || false;
-
-    if (!nameMatch && !roleMatch) return false;
-
-    if (filter === 'Semua') return true;
-    if (filter === 'Pengurus Inti') return ['ketua', 'wakil_ketua', 'sekretaris', 'bendahara'].includes(member.role?.toLowerCase());
-    if (filter === 'Anggota Aktif') return true; // Simplified for now
-
-    return true;
-  });
-
-  const getRoleColor = (role) => {
-    switch(role?.toLowerCase()) {
-      case 'ketua': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'wakil_ketua': return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400';
-      case 'sekretaris': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-      case 'bendahara': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
-      case 'super_admin': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      default: return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
-    }
-  };
-
-  const getInitials = (name) => {
-    return name ? name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
-  };
+  const filteredMembers = useMemo(() => {
+    const searchLower = search.toLowerCase();
+    return members.filter(member => {
+       const name = member.fullName || member.displayName || '';
+       const email = member.email || '';
+       return name.toLowerCase().includes(searchLower) || email.toLowerCase().includes(searchLower);
+    });
+  }, [members, search]);
 
   return (
-    <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
-
-      {/* Main Content Area */}
-      <main className="main-content pb-24 px-5 pt-safe">
-        {/* Header Section */}
-        <header className="mb-6 mt-4">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-                <h1 className="text-h1 text-slate-900 dark:text-white">Anggota</h1>
-                <p className="text-caption">Daftar Warga Karang Taruna</p>
-            </div>
-            {/* Filter Toggle could go here */}
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative group mb-4">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="material-icons-round text-gray-500 dark:text-gray-400 text-xl group-focus-within:text-primary transition-colors">search</span>
-            </div>
-            <input
-              className="glass-input w-full pl-10 pr-3 py-3"
-              placeholder="Cari nama atau jabatan..."
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          {/* Quick Filter Chips */}
-          <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
-            {['Semua', 'Pengurus Inti', 'Anggota Aktif'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
-                  filter === f
-                    ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                    : 'bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-white/60'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </header>
-
-        {/* Member List */}
-        <div className="space-y-3">
-          {loading ? (
-             <div className="space-y-3">
-                <Skeleton className="h-20 w-full rounded-2xl" />
-                <Skeleton className="h-20 w-full rounded-2xl" />
-                <Skeleton className="h-20 w-full rounded-2xl" />
-             </div>
-          ) : filteredMembers.length === 0 ? (
-             <div className="text-center py-12 text-gray-500 animate-fade-in-up">
-                <div className="w-20 h-20 bg-white/20 dark:bg-black/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                    <span className="material-icons-round text-4xl text-slate-400">group_off</span>
-                </div>
-                <p className="text-body">Tidak ada anggota ditemukan.</p>
-             </div>
-          ) : (
-            filteredMembers.map((member, index) => (
-              <div
-                key={member.id}
-                onClick={() => navigate('/members/' + member.id)}
-                className="glass-card p-4 flex items-center justify-between hover:scale-[1.02] transition-transform cursor-pointer animate-fade-in-up group"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="relative shrink-0">
-                    {member.photoURL ? (
-                      <img
-                        alt={`Portrait of ${member.fullName || member.displayName || 'Anggota'}`}
-                        className="h-12 w-12 rounded-full object-cover border-2 border-white/50 dark:border-white/10 shadow-sm"
-                        src={member.photoURL}
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg border-2 border-white/50 dark:border-white/10 shadow-sm bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300">
-                          {getInitials(member.fullName || member.displayName)}
-                      </div>
-                    )}
-                    {/* Online indicator mock */}
-                    <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white dark:ring-slate-800 bg-emerald-500"></span>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{member.fullName || member.displayName || 'Anggota'}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getRoleColor(member.role)}`}>
-                        {member.role?.replace('_', ' ') || 'Anggota'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <button className="w-8 h-8 rounded-full bg-white/20 dark:bg-black/20 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
-                  <span className="material-icons-round text-lg">chevron_right</span>
-                </button>
-              </div>
-            ))
+    <div className="min-h-screen bg-glass-light dark:bg-glass-dark pb-24 font-display">
+       {/* Header */}
+      <div className="sticky top-0 z-40 glass-header px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+              Anggota
+          </h1>
+          {canManage && (
+            <Link to="/members/add" className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform active:scale-95">
+                <span className="material-icons text-xl">person_add</span>
+            </Link>
           )}
-        </div>
-      </main>
+      </div>
 
-      {/* Floating Action Button */}
-      <Link to="/members/add" className="fixed right-6 bottom-24 bg-primary hover:bg-primary-dark text-white w-14 h-14 rounded-2xl shadow-xl shadow-primary/40 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 z-40">
-        <span className="material-icons-round text-2xl">person_add</span>
-      </Link>
+       {/* Search */}
+       <div className="px-6 py-4">
+        <div className="relative">
+            <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+            <input
+                type="text"
+                placeholder="Cari anggota..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/50 dark:bg-black/20 border border-white/20 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm backdrop-blur-sm transition-all"
+            />
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="px-6 space-y-3">
+         {loading ? (
+             [1,2,3,4,5].map(i => (
+                 <div key={i} className="glass-card p-3 flex items-center gap-4 animate-pulse">
+                     <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                     <div className="flex-1 space-y-2">
+                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                         <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                     </div>
+                 </div>
+             ))
+         ) : filteredMembers.length > 0 ? (
+             filteredMembers.map(member => (
+                 <Link to={`/members/${member.id}`} key={member.id} className="glass-card p-3 flex items-center gap-4 group active:scale-[0.99] transition-transform hover:bg-white/60 dark:hover:bg-black/40">
+                     <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 overflow-hidden shrink-0 border border-indigo-200 dark:border-indigo-800">
+                         {member.photoURL ? (
+                             <img src={member.photoURL} alt={member.fullName} className="w-full h-full object-cover" />
+                         ) : (
+                             <div className="w-full h-full flex items-center justify-center text-indigo-400">
+                                 <span className="material-icons">person</span>
+                             </div>
+                         )}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                         <h3 className="font-bold text-slate-800 dark:text-slate-100 truncate text-sm">{member.fullName || member.displayName || 'Tanpa Nama'}</h3>
+                         <p className="text-xs text-slate-500 truncate">{member.email}</p>
+                         <div className="flex gap-2 mt-1">
+                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 capitalize border border-slate-200 dark:border-slate-700">
+                                 {member.role?.replace('_', ' ') || 'Anggota'}
+                             </span>
+                         </div>
+                     </div>
+                     <span className="material-icons text-gray-300 group-hover:text-primary transition-colors">chevron_right</span>
+                 </Link>
+             ))
+         ) : (
+             <div className="text-center py-12">
+                 <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">
+                     <span className="material-icons text-3xl">person_off</span>
+                 </div>
+                 <p className="text-gray-500 text-sm">Tidak ada anggota ditemukan.</p>
+             </div>
+         )}
+      </div>
 
       <BottomNav />
     </div>

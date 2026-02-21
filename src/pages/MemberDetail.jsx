@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import { useRamadan } from '../context/RamadanContext';
 import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
 import Skeleton from '../components/common/Skeleton';
 import toast from 'react-hot-toast';
@@ -12,7 +11,6 @@ const MemberDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUser, userRole } = useAuth();
-  const { isRamadan } = useRamadan();
 
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -158,7 +156,7 @@ const MemberDetail = () => {
 
   return (
     <div className={`min-h-screen font-display flex flex-col relative transition-colors duration-500 overflow-hidden
-      ${isRamadan ? 'bg-ramadan text-white' : 'bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100'}`}>
+      bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100`}>
 
       {/* Header */}
       <div className="absolute top-0 left-0 w-full h-72 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-0"></div>

@@ -17,7 +17,6 @@ import { formatCurrency, formatNumber } from '../utils/currency';
 import { formatDate } from '../utils/date';
 import Skeleton from '../components/common/Skeleton';
 import HeroCarousel from '../components/common/HeroCarousel';
-import PrayerTimes from '../components/common/PrayerTimes';
 import BottomNav from '../components/layout/BottomNav';
 
 const Dashboard = () => {
@@ -89,7 +88,6 @@ const Dashboard = () => {
     <div className="p-4 space-y-6 pb-24 max-w-lg mx-auto md:max-w-4xl relative">
       {/* 1. Hero Carousel */}
       <HeroCarousel />
-      <PrayerTimes />
 
       {/* 2. Quick Actions Grid */}
       <section>

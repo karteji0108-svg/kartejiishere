@@ -1,237 +1,168 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useRamadan } from '../context/RamadanContext';
 import { useTheme } from '../context/ThemeContext';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { uploadToCloudinary } from '../utils/cloudinary';
-import toast from 'react-hot-toast';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { formatDate } from '../utils/date';
 import BottomNav from '../components/layout/BottomNav';
-import Skeleton from '../components/common/Skeleton';
 
 const Profile = () => {
   const { currentUser, logout, userRole } = useAuth();
-  const { isRamadan, toggleRamadan } = useRamadan();
   const { theme, toggleTheme } = useTheme();
-
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+
+  // Form State
   const [formData, setFormData] = useState({
-      displayName: '',
       phone: '',
       address: '',
-      bio: ''
+      bio: '',
+      displayName: '' // Allow editing display name if needed
   });
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
-        if (currentUser) {
-            try {
-                const docRef = doc(db, 'users', currentUser.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    setProfile(data);
-                    setFormData({
-                        displayName: data.displayName || currentUser.displayName || '',
-                        phone: data.phone || '',
-                        address: data.address || '',
-                        bio: data.bio || ''
-                    });
-                } else {
-                    // Fallback if document doesn't exist yet
-                    setProfile({
-                        displayName: currentUser.displayName,
-                        email: currentUser.email,
-                        photoURL: currentUser.photoURL
-                    });
-                    setFormData({
-                        displayName: currentUser.displayName || '',
-                        phone: '',
-                        address: '',
-                        bio: ''
-                    });
-                }
-            } catch (error) {
-                console.error("Error fetching profile:", error);
-                toast.error("Gagal memuat profil.");
-            } finally {
-                setLoading(false);
+      if (currentUser) {
+        try {
+            const docRef = doc(db, 'users', currentUser.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                setUserProfile(data);
+                setFormData({
+                    phone: data.phone || '',
+                    address: data.address || '',
+                    bio: data.bio || '',
+                    displayName: data.displayName || currentUser.displayName || ''
+                });
             }
+        } catch (e) {
+            console.error("Error fetching profile", e);
         }
+      }
     };
     fetchProfile();
   }, [currentUser]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Failed to log out', error);
+    }
+  };
 
   const handleInputChange = (e) => {
       const { name, value } = e.target;
       setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePhotoUpload = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      setUploadingPhoto(true);
-      try {
-          const photoURL = await uploadToCloudinary(file);
-          await updateDoc(doc(db, 'users', currentUser.uid), { photoURL });
-          setProfile(prev => ({ ...prev, photoURL }));
-          toast.success("Foto profil diperbarui!");
-          // Reload window to update global auth context if needed, though local state update handles UI
-          // window.location.reload();
-      } catch (error) {
-          console.error("Error uploading photo:", error);
-          toast.error("Gagal upload foto.");
-      } finally {
-          setUploadingPhoto(false);
-      }
-  };
-
   const handleSave = async () => {
       setLoading(true);
       try {
-          // Optimistic update
-          const updatedData = {
-              displayName: formData.displayName,
+          const docRef = doc(db, 'users', currentUser.uid);
+          await updateDoc(docRef, {
               phone: formData.phone,
               address: formData.address,
-              bio: formData.bio
-          };
-
-          await updateDoc(doc(db, 'users', currentUser.uid), updatedData);
-          setProfile(prev => ({ ...prev, ...updatedData }));
+              bio: formData.bio,
+              displayName: formData.displayName
+              // status: 'active' // Don't allow changing status here
+          });
+          setUserProfile(prev => ({ ...prev, ...formData }));
           setIsEditing(false);
-          toast.success("Profil berhasil disimpan.");
-      } catch (error) {
-          console.error("Error updating profile:", error);
-          toast.error("Gagal menyimpan profil.");
+      } catch (e) {
+          console.error("Error updating profile", e);
+          alert("Gagal menyimpan profil");
       } finally {
           setLoading(false);
       }
   };
 
-  const handleLogout = async () => {
-      if (confirm("Apakah Anda yakin ingin keluar?")) {
-        try {
-            await logout();
-            toast.success("Berhasil keluar.");
-        } catch (error) {
-            toast.error("Gagal logout.");
-        }
-      }
+  // Fallback display
+  const displayProfile = userProfile || {
+      displayName: currentUser?.displayName,
+      email: currentUser?.email,
+      photoURL: currentUser?.photoURL,
+      role: 'anggota',
+      createdAt: new Date()
   };
-
-  // Helper for safe date formatting
-  const formatDate = (timestamp) => {
-      if (!timestamp) return '-';
-      try {
-          // If it's a Firestore Timestamp
-          if (timestamp.toDate && typeof timestamp.toDate === 'function') {
-              return timestamp.toDate().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-          }
-          // If it's a Date object or string
-          const date = new Date(timestamp);
-          if (!isNaN(date.getTime())) {
-              return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-          }
-          return '-';
-      } catch (e) {
-          console.error("Date formatting error", e);
-          return '-';
-      }
-  };
-
-  if (loading && !profile) {
-      return (
-        <div className={`min-h-screen font-display flex flex-col ${isRamadan ? 'bg-ramadan' : 'bg-glass-light dark:bg-glass-dark'}`}>
-            <div className="p-5 space-y-4">
-                <Skeleton className="h-40 w-full rounded-2xl" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-                <Skeleton className="h-60 w-full rounded-xl" />
-            </div>
-            <BottomNav />
-        </div>
-      );
-  }
-
-  // Fallback profile if null (shouldn't happen with loading check but safe to have)
-  const displayProfile = profile || {};
 
   return (
-    <div className={`min-h-screen font-display flex flex-col relative transition-colors duration-500 overflow-hidden
-      ${isRamadan ? 'bg-ramadan text-white' : 'bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100'}`}>
+    <div className="min-h-screen font-display flex flex-col bg-glass-light dark:bg-glass-dark">
+      {/* Header Profile Section */}
+      <div className="relative pb-10 rounded-b-[2.5rem] overflow-hidden bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100 shadow-xl z-10 transition-colors duration-500">
 
-      {/* Decorative BG */}
-      <div className="absolute top-0 left-0 w-full h-72 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-blue-500/10 opacity-50"></div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto no-scrollbar pb-24 relative z-10">
+        {/* Top Bar */}
+        <div className="relative z-10 flex justify-between items-center px-6 py-4">
+             <h1 className="text-lg font-bold">Profil Saya</h1>
+             <div className="p-2 bg-white/20 backdrop-blur-md rounded-full">
+                <span className="material-icons text-primary dark:text-white">person</span>
+             </div>
+        </div>
 
-        {/* Header Profile */}
-        <div className="pt-safe px-5 pb-6 text-center relative">
-            <div className="relative inline-block mb-4 group">
-                <div className="w-28 h-28 rounded-full p-1 glass-card flex items-center justify-center relative overflow-hidden">
-                    <img
-                        src={displayProfile.photoURL || currentUser?.photoURL || `https://ui-avatars.com/api/?name=${currentUser?.displayName || 'User'}&background=random`}
-                        alt="Profile"
-                        className="w-full h-full rounded-full object-cover"
-                    />
-                    {(isEditing || true) && ( // Allow changing photo always or only in edit mode? Usually always is better UX
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                            <label className="cursor-pointer flex flex-col items-center text-white text-xs w-full h-full justify-center">
-                                <span className="material-icons text-xl mb-1">camera_alt</span>
-                                Ubah
-                                <input type="file" className="hidden" onChange={handlePhotoUpload} accept="image/*" />
-                            </label>
-                        </div>
-                    )}
-                    {uploadingPhoto && (
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                            <span className="material-icons animate-spin text-white">refresh</span>
-                        </div>
-                    )}
-                </div>
-                {/* Floating Edit Icon for visibility */}
-                {!uploadingPhoto && (
-                    <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800 shadow-md pointer-events-none">
-                        <span className="material-icons text-sm">edit</span>
+        {/* Avatar & Name */}
+        <div className="relative z-10 flex flex-col items-center mt-4">
+            <div className="relative group cursor-pointer">
+                <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-primary to-blue-400 shadow-xl overflow-hidden">
+                    <div className="w-full h-full rounded-full border-4 border-white dark:border-slate-800 overflow-hidden bg-white">
+                        {displayProfile.photoURL ? (
+                            <img src={displayProfile.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                                <span className="material-icons text-5xl">person</span>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
+                 {/* Role Badge */}
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-white dark:bg-slate-800 rounded-full shadow-md border border-gray-100 dark:border-gray-700 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                        {userRole?.replace('_', ' ')}
+                    </span>
+                </div>
             </div>
 
-            {isEditing ? (
-                <div className="space-y-3 max-w-xs mx-auto animate-fade-in-up">
+            <div className="mt-4 text-center px-6">
+                {isEditing ? (
                     <input
                         type="text"
                         name="displayName"
                         value={formData.displayName}
                         onChange={handleInputChange}
-                        className="glass-input text-center text-lg font-bold w-full"
+                        className="text-center bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-primary outline-none font-bold text-xl w-full"
                         placeholder="Nama Lengkap"
                     />
-                    <textarea
-                        name="bio"
-                        value={formData.bio}
-                        onChange={handleInputChange}
-                        className="glass-input text-center text-sm w-full h-20 resize-none"
-                        placeholder="Tulis bio singkat..."
-                    />
-                </div>
-            ) : (
-                <div className="animate-fade-in-down">
-                    <h2 className="text-2xl font-bold mb-1">{displayProfile.displayName || currentUser?.displayName || 'Tanpa Nama'}</h2>
-                    <p className="text-sm opacity-80 mb-2">{displayProfile.email || currentUser?.email}</p>
-                    <span className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-wider border border-primary/20 backdrop-blur-md">
-                        {userRole?.replace('_', ' ') || 'ANGGOTA'}
-                    </span>
-                    {displayProfile.bio && <p className="mt-4 text-sm opacity-90 max-w-xs mx-auto leading-relaxed">"{displayProfile.bio}"</p>}
-                </div>
-            )}
-        </div>
+                ) : (
+                    <h2 className="text-2xl font-bold">{displayProfile.displayName || 'Tanpa Nama'}</h2>
+                )}
 
+                <p className="text-sm opacity-70 mt-1 font-medium">{displayProfile.email}</p>
+
+                {/* Bio */}
+                 <div className="mt-4 max-w-xs mx-auto">
+                    {isEditing ? (
+                        <textarea
+                            name="bio"
+                            value={formData.bio}
+                            onChange={handleInputChange}
+                            className="w-full text-center bg-white/50 dark:bg-black/20 rounded-xl p-2 text-sm resize-none focus:ring-2 ring-primary/50 outline-none"
+                            placeholder="Tulis bio singkat..."
+                            rows="2"
+                        />
+                    ) : (
+                         displayProfile.bio && <p className="text-sm italic opacity-80 line-clamp-2 max-w-[250px] mx-auto leading-relaxed">"{displayProfile.bio}"</p>
+                    )}
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto pb-24 -mt-6 pt-10 relative z-0">
         <div className="px-5 space-y-4">
             {/* Action Buttons */}
            <div className="flex gap-3">
@@ -334,28 +265,6 @@ const Profile = () => {
                  </div>
 
                  <div className="space-y-4">
-                     {/* Ramadan Toggle */}
-                     <div className="flex items-center justify-between py-2 border-b border-white/10">
-                        <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isRamadan ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
-                                <span className="material-icons text-lg">{isRamadan ? 'nights_stay' : 'wb_sunny'}</span>
-                            </div>
-                            <div>
-                                <p className="font-medium text-sm">Mode Ramadan</p>
-                                <p className="text-xs opacity-60">Tampilkan jadwal sholat & tema khusus</p>
-                            </div>
-                        </div>
-
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="sr-only peer"
-                                checked={isRamadan}
-                                onChange={toggleRamadan}
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
-                        </label>
-                     </div>
 
                      {/* Dark Mode Toggle */}
                      <div className="flex items-center justify-between py-2">

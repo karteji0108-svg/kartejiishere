@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useRamadan } from '../../context/RamadanContext';
 
 const CURRENT_VERSION = '2.0.0';
 
 const WhatsNewModal = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isRamadan } = useRamadan();
 
   useEffect(() => {
     const lastVersion = localStorage.getItem('app_version');
@@ -23,8 +21,7 @@ const WhatsNewModal = () => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in-up">
-      <div className={`w-full max-w-sm rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh]
-        ${isRamadan ? 'bg-gradient-to-br from-emerald-900 to-emerald-800 text-white border border-emerald-500/30' : 'bg-white dark:bg-slate-800 dark:text-white'}`}>
+      <div className="w-full max-w-sm rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[85vh] bg-white dark:bg-slate-800 dark:text-white">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4 shrink-0">

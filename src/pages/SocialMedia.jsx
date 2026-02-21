@@ -1,11 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/layout/BottomNav';
-import { useRamadan } from '../context/RamadanContext';
 
 const SocialMedia = () => {
-  const { isRamadan } = useRamadan();
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
   const accounts = [
     {
@@ -29,7 +27,7 @@ const SocialMedia = () => {
   ];
 
   return (
-    <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
+    <div className={`app-container `}>
       <header className="glass-header px-6 py-4 flex items-center gap-4 sticky top-0 z-20">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
           <span className="material-icons-round">arrow_back</span>

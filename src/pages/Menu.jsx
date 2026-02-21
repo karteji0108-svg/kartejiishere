@@ -1,10 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/layout/BottomNav';
-import { useRamadan } from '../context/RamadanContext';
 
 const Menu = () => {
-  const { isRamadan } = useRamadan();
 
   const sections = [
     {
@@ -33,7 +31,7 @@ const Menu = () => {
   ];
 
   return (
-    <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
+    <div className={`app-container `}>
       <header className="glass-header px-6 pt-safe pb-4 sticky top-0 z-20">
         <h1 className="text-h2 text-slate-900 dark:text-white">Menu</h1>
         <p className="text-caption">Pusat Navigasi</p>

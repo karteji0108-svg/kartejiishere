@@ -6,14 +6,12 @@ import { useAuth } from '../context/AuthContext';
 import { hasPermission, PERMISSIONS } from '../constants/roles';
 import Skeleton from '../components/common/Skeleton';
 import toast from 'react-hot-toast';
-import { useRamadan } from '../context/RamadanContext';
 import { getDownloadUrl } from '../utils/cloudinary';
 
 const TransactionDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { userRole } = useAuth();
-  const { isRamadan } = useRamadan();
 
   const [transaction, setTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -81,7 +79,7 @@ const TransactionDetail = () => {
 
   return (
     <div className={`min-h-screen font-display flex flex-col relative transition-colors duration-500 overflow-hidden
-      ${isRamadan ? 'bg-ramadan text-white' : 'bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100'}`}>
+      bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100`}>
 
       {/* Decorative BG */}
       <div className="absolute top-0 left-0 w-full h-72 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none z-0"></div>
