@@ -10,73 +10,82 @@ const PrayerTimes = () => {
     const [error, setError] = useState(null);
 
     // Hardcoded date for simulation: 20 Feb 2026 (2 Ramadhan 1447H)
-    const SIMULATED_DATE = '20-02-2026';
-    const SIMULATED_DATE_OBJ = new Date('2026-02-20T00:00:00');
+    // We use this date for fetching the schedule and calculating relative times
+    const TARGET_DATE_STR = '20-02-2026'; // DD-MM-YYYY for API
+    const TARGET_YEAR = 2026;
+    const TARGET_MONTH = 1; // Month is 0-indexed in JS Date (0 = Jan, 1 = Feb)
+    const TARGET_DAY = 20;
 
     // Fetch Prayer Times for the specific date
     useEffect(() => {
+        let isMounted = true;
+
         const fetchPrayerTimes = async () => {
             try {
-                setLoading(true);
-                // Use geolocation if available, else default
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        async (position) => {
-                            const { latitude, longitude } = position.coords;
-                            setLocation(prev => ({ ...prev, lat: latitude, lng: longitude, name: 'Lokasi Anda' }));
-                            await fetchData(latitude, longitude);
-                        },
-                        async () => {
-                            // Fallback to Jakarta if permission denied
-                            await fetchData(location.lat, location.lng);
-                        }
-                    );
-                } else {
-                    await fetchData(location.lat, location.lng);
-                }
-            } catch (err) {
-                console.error("Error fetching prayer times:", err);
-                setError("Gagal memuat jadwal sholat.");
-                setLoading(false);
-            }
-        };
+                if (isMounted) setLoading(true);
 
-        const fetchData = async (lat, lng) => {
-            try {
+                let lat = location.lat;
+                let lng = location.lng;
+
+                // Try to get real location first
+                if (navigator.geolocation) {
+                    try {
+                        const position = await new Promise((resolve, reject) => {
+                            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+                        });
+                        lat = position.coords.latitude;
+                        lng = position.coords.longitude;
+                        if (isMounted) setLocation(prev => ({ ...prev, lat, lng, name: 'Lokasi Anda' }));
+                    } catch (e) {
+                        // Permission denied or timeout, stick to default
+                        console.log("Geolocation fallback to default");
+                    }
+                }
+
                 // API call for specific date: 20-02-2026
-                const response = await fetch(`https://api.aladhan.com/v1/timings/${SIMULATED_DATE}?latitude=${lat}&longitude=${lng}&method=20`); // method 20 = Kemenag RI (usually) or similar
+                const response = await fetch(`https://api.aladhan.com/v1/timings/${TARGET_DATE_STR}?latitude=${lat}&longitude=${lng}&method=20`);
                 const data = await response.json();
 
-                if (data.code === 200) {
-                    setPrayerTimes(data.data.timings);
-                } else {
-                    setError("Data tidak tersedia");
+                if (isMounted) {
+                    if (data.code === 200 && data.data && data.data.timings) {
+                        setPrayerTimes(data.data.timings);
+                        setError(null);
+                    } else {
+                        console.error("API Error or Invalid Data", data);
+                        setError("Data tidak tersedia");
+                    }
                 }
             } catch (err) {
-                setError("Koneksi error");
+                console.error("Fetch Error:", err);
+                if (isMounted) setError("Koneksi error");
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
         fetchPrayerTimes();
-    }, []);
 
-    // Timer Logic: Simulate current time but on the target date
+        return () => { isMounted = false; };
+    }, []); // Run once on mount
+
+    // Timer Logic: Sync with Real Time but set Date to Target
     useEffect(() => {
-        const timer = setInterval(() => {
+        const updateTime = () => {
             const now = new Date();
-            // Construct simulated time: Target Date + Current Hours/Minutes/Seconds
+            // Construct simulated time: Target Date + Current Real Hours/Minutes/Seconds
             const simulatedNow = new Date(
-                SIMULATED_DATE_OBJ.getFullYear(),
-                SIMULATED_DATE_OBJ.getMonth(),
-                SIMULATED_DATE_OBJ.getDate(),
+                TARGET_YEAR,
+                TARGET_MONTH,
+                TARGET_DAY,
                 now.getHours(),
                 now.getMinutes(),
                 now.getSeconds()
             );
             setCurrentTime(simulatedNow);
-        }, 1000);
+        };
+
+        updateTime(); // Initial call
+        const timer = setInterval(updateTime, 1000);
 
         return () => clearInterval(timer);
     }, []);
@@ -91,17 +100,18 @@ const PrayerTimes = () => {
         let upcoming = null;
         let minDiff = Infinity;
 
-        // We compare against simulated currentTime
         const nowMs = currentTime.getTime();
 
         for (const prayer of prayers) {
             const timeStr = prayerTimes[prayer];
+            if (!timeStr) continue; // Safety check
+
             const [hours, minutes] = timeStr.split(':').map(Number);
 
             const prayerDate = new Date(
-                SIMULATED_DATE_OBJ.getFullYear(),
-                SIMULATED_DATE_OBJ.getMonth(),
-                SIMULATED_DATE_OBJ.getDate(),
+                TARGET_YEAR,
+                TARGET_MONTH,
+                TARGET_DAY,
                 hours,
                 minutes,
                 0
@@ -111,9 +121,6 @@ const PrayerTimes = () => {
 
             // If diff is negative, it means this prayer has passed for today
             if (diff < 0) {
-                // Check if it's Isha and we are past it, next is Fajr tomorrow?
-                // For simplicity, let's just show "Besok" or handle the wrap around logic if needed.
-                // But request says "sesuaikan hari ini 2 ramadhan", so maybe just loop within the day?
                 continue;
             }
 
@@ -128,16 +135,30 @@ const PrayerTimes = () => {
             }
         }
 
-        // If no upcoming prayer today (after Isha), show Fajr for tomorrow (approx)
+        // Handle Case: All prayers for today passed (Next is Fajr tomorrow)
         if (!upcoming && prayerTimes['Fajr']) {
-             // For simulation simplicity, we just say "Subuh (Besok)"
-             // Or we could fetch next day data.
-             upcoming = {
-                 key: 'Fajr',
-                 name: 'Subuh',
-                 time: prayerTimes['Fajr'],
-                 diff: (24 * 60 * 60 * 1000) - (nowMs - new Date(SIMULATED_DATE_OBJ).setHours(0,0,0,0)) // Rough approx
-             };
+             const timeStr = prayerTimes['Fajr'];
+             if (timeStr) {
+                 const [hours, minutes] = timeStr.split(':').map(Number);
+                 // Tomorrow: Target Day + 1
+                 const nextFajrDate = new Date(
+                    TARGET_YEAR,
+                    TARGET_MONTH,
+                    TARGET_DAY + 1,
+                    hours,
+                    minutes,
+                    0
+                 );
+
+                 const diff = nextFajrDate.getTime() - nowMs;
+
+                 upcoming = {
+                     key: 'Fajr',
+                     name: 'Subuh (Besok)',
+                     time: timeStr,
+                     diff: diff
+                 };
+             }
         }
 
         setNextPrayer(upcoming);
@@ -147,12 +168,23 @@ const PrayerTimes = () => {
             const minutes = Math.floor((upcoming.diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((upcoming.diff % (1000 * 60)) / 1000);
             setTimeRemaining(`-${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        } else {
+            setTimeRemaining('');
         }
 
     }, [currentTime, prayerTimes]);
 
-    if (loading) return <div className="p-4 bg-white/50 animate-pulse rounded-xl h-32"></div>;
-    if (error) return null; // Hide on error
+    if (loading) return (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 mb-6 animate-pulse h-40">
+             <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3 mb-4"></div>
+             <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/2 mb-4"></div>
+             <div className="flex gap-2 mt-4">
+                {[1,2,3,4,5].map(i => <div key={i} className="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+             </div>
+        </div>
+    );
+
+    if (error) return null; // Fail silently or show minimal error UI if preferred
 
     const prayersList = [
         { key: 'Imsak', label: 'Imsak', time: prayerTimes?.Imsak },
@@ -171,11 +203,11 @@ const PrayerTimes = () => {
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                 {/* Left: Next Prayer Countdown */}
                 <div className="text-center md:text-left">
-                    <p className="text-indigo-100 text-sm mb-1">
+                    <p className="text-indigo-100 text-sm mb-1 font-medium">
                         {nextPrayer ? `Menuju ${nextPrayer.name}` : 'Jadwal Sholat'}
                     </p>
                     <h2 className="text-4xl font-bold tracking-tight mb-1 font-mono">
-                        {timeRemaining || currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        {timeRemaining || currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </h2>
                     <p className="text-xs text-indigo-200 flex items-center justify-center md:justify-start gap-1">
                         <span className="material-icons text-[14px]">location_on</span>
@@ -184,8 +216,9 @@ const PrayerTimes = () => {
                 </div>
 
                 {/* Right: Schedule Grid */}
-                <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar">
+                <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar justify-center md:justify-end">
                     {prayersList.map((p) => {
+                        if (!p.time) return null;
                         const isNext = nextPrayer?.key === p.key;
                         return (
                             <div
