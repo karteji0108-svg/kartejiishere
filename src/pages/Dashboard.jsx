@@ -194,7 +194,7 @@ const Dashboard = () => {
                         <div>
                             <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm line-clamp-1">{ann.title}</h4>
                             <p className="text-xs text-slate-500 mt-1 line-clamp-2">{ann.content}</p>
-                            <p className="text-[10px] text-slate-400 mt-2 font-medium">{formatDate(ann.createdAt?.toDate())}</p>
+                            <p className="text-[10px] text-slate-400 mt-2 font-medium">{formatDate(ann.createdAt)}</p>
                         </div>
                     </div>
                 ))
@@ -226,7 +226,7 @@ const Dashboard = () => {
                                 <span className="material-icons text-4xl">image</span>
                              </div>
                              <div className="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-300 shadow-sm">
-                                {formatDate(new Date(act.date))}
+                                {formatDate(act.date)}
                              </div>
                         </div>
                         <div className="p-3">

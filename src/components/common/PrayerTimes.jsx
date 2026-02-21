@@ -10,7 +10,6 @@ const PrayerTimes = () => {
     const [error, setError] = useState(null);
 
     // Hardcoded date for simulation: 20 Feb 2026 (2 Ramadhan 1447H)
-    // We use this date for fetching the schedule and calculating relative times
     const TARGET_DATE_STR = '20-02-2026'; // DD-MM-YYYY for API
     const TARGET_YEAR = 2026;
     const TARGET_MONTH = 1; // Month is 0-indexed in JS Date (0 = Jan, 1 = Feb)
@@ -33,9 +32,11 @@ const PrayerTimes = () => {
                         const position = await new Promise((resolve, reject) => {
                             navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
                         });
-                        lat = position.coords.latitude;
-                        lng = position.coords.longitude;
-                        if (isMounted) setLocation(prev => ({ ...prev, lat, lng, name: 'Lokasi Anda' }));
+                        if (position && position.coords) {
+                            lat = position.coords.latitude;
+                            lng = position.coords.longitude;
+                            if (isMounted) setLocation(prev => ({ ...prev, lat, lng, name: 'Lokasi Anda' }));
+                        }
                     } catch (e) {
                         // Permission denied or timeout, stick to default
                         console.log("Geolocation fallback to default");
@@ -44,6 +45,11 @@ const PrayerTimes = () => {
 
                 // API call for specific date: 20-02-2026
                 const response = await fetch(`https://api.aladhan.com/v1/timings/${TARGET_DATE_STR}?latitude=${lat}&longitude=${lng}&method=20`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
 
                 if (isMounted) {
@@ -71,17 +77,21 @@ const PrayerTimes = () => {
     // Timer Logic: Sync with Real Time but set Date to Target
     useEffect(() => {
         const updateTime = () => {
-            const now = new Date();
-            // Construct simulated time: Target Date + Current Real Hours/Minutes/Seconds
-            const simulatedNow = new Date(
-                TARGET_YEAR,
-                TARGET_MONTH,
-                TARGET_DAY,
-                now.getHours(),
-                now.getMinutes(),
-                now.getSeconds()
-            );
-            setCurrentTime(simulatedNow);
+            try {
+                const now = new Date();
+                // Construct simulated time: Target Date + Current Real Hours/Minutes/Seconds
+                const simulatedNow = new Date(
+                    TARGET_YEAR,
+                    TARGET_MONTH,
+                    TARGET_DAY,
+                    now.getHours(),
+                    now.getMinutes(),
+                    now.getSeconds()
+                );
+                setCurrentTime(simulatedNow);
+            } catch (e) {
+                console.error("Timer Error", e);
+            }
         };
 
         updateTime(); // Initial call
@@ -94,82 +104,105 @@ const PrayerTimes = () => {
     useEffect(() => {
         if (!prayerTimes) return;
 
-        const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-        const prayerNames = { 'Fajr': 'Subuh', 'Dhuhr': 'Dzuhur', 'Asr': 'Ashar', 'Maghrib': 'Maghrib', 'Isha': 'Isya' };
+        try {
+            const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+            const prayerNames = { 'Fajr': 'Subuh', 'Dhuhr': 'Dzuhur', 'Asr': 'Ashar', 'Maghrib': 'Maghrib', 'Isha': 'Isya' };
 
-        let upcoming = null;
-        let minDiff = Infinity;
+            let upcoming = null;
+            let minDiff = Infinity;
 
-        const nowMs = currentTime.getTime();
+            const nowMs = currentTime.getTime();
 
-        for (const prayer of prayers) {
-            const timeStr = prayerTimes[prayer];
-            if (!timeStr) continue; // Safety check
+            for (const prayer of prayers) {
+                const timeStr = prayerTimes[prayer];
+                if (!timeStr) continue;
 
-            const [hours, minutes] = timeStr.split(':').map(Number);
+                const parts = timeStr.split(':');
+                if (parts.length < 2) continue;
 
-            const prayerDate = new Date(
-                TARGET_YEAR,
-                TARGET_MONTH,
-                TARGET_DAY,
-                hours,
-                minutes,
-                0
-            );
+                const hours = parseInt(parts[0], 10);
+                const minutes = parseInt(parts[1], 10);
 
-            let diff = prayerDate.getTime() - nowMs;
+                if (isNaN(hours) || isNaN(minutes)) continue;
 
-            // If diff is negative, it means this prayer has passed for today
-            if (diff < 0) {
-                continue;
-            }
-
-            if (diff < minDiff) {
-                minDiff = diff;
-                upcoming = {
-                    key: prayer,
-                    name: prayerNames[prayer],
-                    time: timeStr,
-                    diff: diff
-                };
-            }
-        }
-
-        // Handle Case: All prayers for today passed (Next is Fajr tomorrow)
-        if (!upcoming && prayerTimes['Fajr']) {
-             const timeStr = prayerTimes['Fajr'];
-             if (timeStr) {
-                 const [hours, minutes] = timeStr.split(':').map(Number);
-                 // Tomorrow: Target Day + 1
-                 const nextFajrDate = new Date(
+                const prayerDate = new Date(
                     TARGET_YEAR,
                     TARGET_MONTH,
-                    TARGET_DAY + 1,
+                    TARGET_DAY,
                     hours,
                     minutes,
                     0
-                 );
+                );
 
-                 const diff = nextFajrDate.getTime() - nowMs;
+                let diff = prayerDate.getTime() - nowMs;
 
-                 upcoming = {
-                     key: 'Fajr',
-                     name: 'Subuh (Besok)',
-                     time: timeStr,
-                     diff: diff
-                 };
-             }
-        }
+                // If diff is negative, it means this prayer has passed for today
+                if (diff < 0) {
+                    continue;
+                }
 
-        setNextPrayer(upcoming);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    upcoming = {
+                        key: prayer,
+                        name: prayerNames[prayer],
+                        time: timeStr,
+                        diff: diff
+                    };
+                }
+            }
 
-        if (upcoming) {
-            const hours = Math.floor(upcoming.diff / (1000 * 60 * 60));
-            const minutes = Math.floor((upcoming.diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((upcoming.diff % (1000 * 60)) / 1000);
-            setTimeRemaining(`-${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-        } else {
-            setTimeRemaining('');
+            // Handle Case: All prayers for today passed (Next is Fajr tomorrow)
+            if (!upcoming && prayerTimes['Fajr']) {
+                 const timeStr = prayerTimes['Fajr'];
+                 if (timeStr) {
+                     const parts = timeStr.split(':');
+                     if (parts.length >= 2) {
+                         const hours = parseInt(parts[0], 10);
+                         const minutes = parseInt(parts[1], 10);
+
+                         if (!isNaN(hours) && !isNaN(minutes)) {
+                             // Tomorrow: Target Day + 1
+                             const nextFajrDate = new Date(
+                                TARGET_YEAR,
+                                TARGET_MONTH,
+                                TARGET_DAY + 1,
+                                hours,
+                                minutes,
+                                0
+                             );
+
+                             const diff = nextFajrDate.getTime() - nowMs;
+
+                             upcoming = {
+                                 key: 'Fajr',
+                                 name: 'Subuh (Besok)',
+                                 time: timeStr,
+                                 diff: diff
+                             };
+                         }
+                     }
+                 }
+            }
+
+            setNextPrayer(upcoming);
+
+            if (upcoming) {
+                const hours = Math.floor(upcoming.diff / (1000 * 60 * 60));
+                const minutes = Math.floor((upcoming.diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((upcoming.diff % (1000 * 60)) / 1000);
+
+                // Safety check for negative/NaN
+                const h = isNaN(hours) ? 0 : hours;
+                const m = isNaN(minutes) ? 0 : minutes;
+                const s = isNaN(seconds) ? 0 : seconds;
+
+                setTimeRemaining(`-${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+            } else {
+                setTimeRemaining('');
+            }
+        } catch (e) {
+            console.error("Calculation Error", e);
         }
 
     }, [currentTime, prayerTimes]);
@@ -184,7 +217,7 @@ const PrayerTimes = () => {
         </div>
     );
 
-    if (error) return null; // Fail silently or show minimal error UI if preferred
+    if (error) return null;
 
     const prayersList = [
         { key: 'Imsak', label: 'Imsak', time: prayerTimes?.Imsak },
