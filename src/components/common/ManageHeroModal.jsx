@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { collection, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import React, { useState, useRef, useEffect } from 'react';
+import { collection, addDoc, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { uploadToCloudinary } from '../../utils/cloudinary';
 import { useAuth } from '../../context/AuthContext';
@@ -18,6 +18,20 @@ const ManageHeroModal = ({ slides, onClose }) => {
   const [preview, setPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Local state for reordering
+  const [localSlides, setLocalSlides] = useState([]);
+
+  useEffect(() => {
+    // Sort slides by order if available, otherwise by createdAt
+    const sortedSlides = [...slides].sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+            return a.order - b.order;
+        }
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
+    setLocalSlides(sortedSlides);
+  }, [slides]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -43,6 +57,30 @@ const ManageHeroModal = ({ slides, onClose }) => {
     }
   };
 
+  const moveSlide = async (index, direction) => {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= localSlides.length) return;
+
+      const updatedSlides = [...localSlides];
+      const [movedSlide] = updatedSlides.splice(index, 1);
+      updatedSlides.splice(newIndex, 0, movedSlide);
+
+      setLocalSlides(updatedSlides);
+
+      // Update order in Firestore
+      try {
+          const batch = writeBatch(db);
+          updatedSlides.forEach((slide, idx) => {
+              const slideRef = doc(db, 'hero_slides', slide.id);
+              batch.update(slideRef, { order: idx });
+          });
+          await batch.commit();
+      } catch (error) {
+          console.error("Error updating order:", error);
+          toast.error("Gagal menyimpan urutan");
+      }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newSlide.image) {
@@ -56,12 +94,18 @@ const ManageHeroModal = ({ slides, onClose }) => {
       const imageURL = await uploadToCloudinary(newSlide.image);
       console.log("Image uploaded to Cloudinary:", imageURL);
 
+      // Determine new order (last + 1)
+      const maxOrder = localSlides.length > 0
+        ? Math.max(...localSlides.map(s => s.order || 0))
+        : -1;
+
       await addDoc(collection(db, 'hero_slides'), {
         image: imageURL,
         title: newSlide.title,
         subtitle: newSlide.subtitle,
         ctaText: newSlide.ctaText,
         ctaLink: newSlide.ctaLink,
+        order: maxOrder + 1,
         createdAt: new Date().toISOString(),
         createdBy: currentUser?.uid || 'unknown',
         createdByName: currentUser?.displayName || currentUser?.email || 'Admin'
@@ -94,13 +138,13 @@ const ManageHeroModal = ({ slides, onClose }) => {
         {/* Tabs */}
         <div className="flex border-b border-gray-200 dark:border-gray-700">
           <button
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'list' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'list' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
             onClick={() => setActiveTab('list')}
           >
             Daftar Slide ({slides.length})
           </button>
           <button
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'add' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'add' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
             onClick={() => setActiveTab('add')}
           >
             Tambah Baru
@@ -111,11 +155,30 @@ const ManageHeroModal = ({ slides, onClose }) => {
         <div className="flex-1 overflow-y-auto p-6">
           {activeTab === 'list' ? (
             <div className="space-y-4">
-              {slides.length === 0 ? (
+              {localSlides.length === 0 ? (
                 <p className="text-center text-gray-500 py-10">Belum ada slide. Tambahkan sekarang!</p>
               ) : (
-                slides.map((slide) => (
-                  <div key={slide.id} className="flex gap-4 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow bg-gray-50 dark:bg-gray-700/30">
+                localSlides.map((slide, index) => (
+                  <div key={slide.id} className="flex gap-4 p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow bg-gray-50 dark:bg-gray-700/30 items-center">
+
+                    {/* Reorder Controls */}
+                    <div className="flex flex-col gap-1">
+                        <button
+                            onClick={() => moveSlide(index, -1)}
+                            disabled={index === 0}
+                            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-30 transition-colors"
+                        >
+                            <span className="material-icons-round text-lg">keyboard_arrow_up</span>
+                        </button>
+                        <button
+                            onClick={() => moveSlide(index, 1)}
+                            disabled={index === localSlides.length - 1}
+                            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-30 transition-colors"
+                        >
+                            <span className="material-icons-round text-lg">keyboard_arrow_down</span>
+                        </button>
+                    </div>
+
                     <img src={slide.image} alt={slide.title} className="w-24 h-16 object-cover rounded-lg bg-gray-200" />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-gray-900 dark:text-white truncate">{slide.title}</h4>
@@ -154,7 +217,7 @@ const ManageHeroModal = ({ slides, onClose }) => {
                 <input
                   type="text"
                   placeholder="Judul Utama"
-                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent"
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-gray-900 dark:text-white placeholder-gray-400"
                   value={newSlide.title}
                   onChange={e => setNewSlide({...newSlide, title: e.target.value})}
                   required
@@ -162,7 +225,7 @@ const ManageHeroModal = ({ slides, onClose }) => {
                 <input
                   type="text"
                   placeholder="Sub Judul (Opsional)"
-                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent"
+                  className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-gray-900 dark:text-white placeholder-gray-400"
                   value={newSlide.subtitle}
                   onChange={e => setNewSlide({...newSlide, subtitle: e.target.value})}
                 />
@@ -170,14 +233,14 @@ const ManageHeroModal = ({ slides, onClose }) => {
                   <input
                     type="text"
                     placeholder="Teks Tombol (CTA)"
-                    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent"
+                    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-gray-900 dark:text-white placeholder-gray-400"
                     value={newSlide.ctaText}
                     onChange={e => setNewSlide({...newSlide, ctaText: e.target.value})}
                   />
                   <input
                     type="text"
                     placeholder="Link Tujuan (ex: /members)"
-                    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent"
+                    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-gray-900 dark:text-white placeholder-gray-400"
                     value={newSlide.ctaLink}
                     onChange={e => setNewSlide({...newSlide, ctaLink: e.target.value})}
                   />
@@ -187,7 +250,7 @@ const ManageHeroModal = ({ slides, onClose }) => {
               <button
                 type="submit"
                 disabled={uploading}
-                className="w-full btn-primary py-3 flex justify-center items-center gap-2"
+                className="w-full py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
               >
                 {uploading ? (
                   <>
