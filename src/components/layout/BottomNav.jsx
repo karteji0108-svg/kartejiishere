@@ -15,30 +15,37 @@ const BottomNav = () => {
   ];
 
   return (
-    <nav className="glass-nav transition-all duration-300">
-      <div className="flex justify-around items-center h-16 max-w-lg mx-auto md:max-w-4xl px-2">
+    <nav className="glass-nav transition-all duration-300 animate-fade-in-up">
+      <div className="flex justify-around items-center w-full px-2">
         {navItems.map((item) => (
             <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                    `flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200 ${
+                    `flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 relative group ${
                         isActive
-                        ? 'text-blue-600 dark:text-blue-400 transform scale-105'
+                        ? 'text-cyan-500 dark:text-cyan-400 -translate-y-2 scale-110'
                         : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
                     }`
                 }
             >
                 {({ isActive }) => (
                     <>
-                        <div className={`relative p-1.5 rounded-xl transition-colors ${isActive ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
-                            <span className={`material-icons-round text-2xl transition-transform ${isActive ? '-translate-y-0.5' : ''}`}>
+                         {/* Glowing Backdrop for Active Item */}
+                        {isActive && (
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-cyan-400/20 dark:bg-cyan-500/10 rounded-full blur-md animate-pulse"></div>
+                        )}
+
+                        <div className="relative z-10 p-1.5 transition-colors">
+                            <span className={`material-icons-round text-2xl transition-transform duration-300 ${isActive ? 'drop-shadow-glow' : ''}`}>
                                 {item.icon}
                             </span>
                         </div>
-                        <span className="text-[10px] font-medium tracking-wide">
-                            {item.label}
-                        </span>
+
+                        {/* Active Dot Indicator */}
+                        {isActive && (
+                            <span className="absolute -bottom-2 w-1 h-1 bg-cyan-500 rounded-full shadow-glow"></span>
+                        )}
                     </>
                 )}
             </NavLink>

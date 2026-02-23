@@ -69,27 +69,34 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-[#0F172A] flex flex-col justify-center relative overflow-hidden font-display py-12 sm:px-6 lg:px-8">
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-            <div className="w-24 h-24 flex items-center justify-center">
-                <img src="/assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
+      {/* Aurora Background */}
+      <div className="fluid-bg"></div>
+
+      {/* Floating Blobs */}
+      <div className="absolute top-[10%] left-[10%] w-64 h-64 bg-cyan-500/20 rounded-full blur-[80px] animate-float"></div>
+      <div className="absolute bottom-[20%] right-[10%] w-80 h-80 bg-purple-500/20 rounded-full blur-[80px] animate-float animation-delay-2000"></div>
+
+      <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center mb-6">
+            <div className="w-28 h-28 glass-card flex items-center justify-center p-4 animate-fade-in-down shadow-glow">
+                <img src="/assets/logo.png" alt="Logo" className="w-full h-full object-contain drop-shadow-lg" />
             </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+        <h2 className="text-center text-4xl font-bold text-white tracking-tight drop-shadow-md animate-fade-in-up">
           Selamat Datang
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-center text-sm text-gray-300 animate-fade-in-up animation-delay-200">
           Masuk ke akun Karang Taruna Anda
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-xl shadow-gray-200/50 dark:shadow-none sm:rounded-2xl sm:px-10 border border-gray-100 dark:border-gray-700">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-fade-in-up animation-delay-400">
+        <div className="glass-card py-8 px-4 sm:rounded-2xl sm:px-10 border-white/10 dark:border-white/5 shadow-glass-lg backdrop-blur-xl">
 
           {error && (
-            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl relative text-sm font-medium flex items-center gap-2" role="alert">
+            <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-200 px-4 py-3 rounded-xl relative text-sm font-medium flex items-center gap-2 backdrop-blur-md animate-pulse" role="alert">
               <span className="material-icons-round text-lg">error</span>
               <span className="block sm:inline">{error}</span>
             </div>
@@ -97,12 +104,12 @@ const Login = () => {
 
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">
                 Email Address
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="material-icons-round text-gray-400 text-xl">email</span>
+                  <span className="material-icons-round text-gray-400 text-xl group-focus-within:text-cyan-400 transition-colors">email</span>
                 </div>
                 <input
                   id="email"
@@ -112,19 +119,19 @@ const Login = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white transition-colors"
+                  className="glass-input block w-full pl-10 pr-3 py-3 sm:text-sm focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   placeholder="nama@email.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">
                 Password
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="material-icons-round text-gray-400 text-xl">lock</span>
+                  <span className="material-icons-round text-gray-400 text-xl group-focus-within:text-cyan-400 transition-colors">lock</span>
                 </div>
                 <input
                   id="password"
@@ -134,7 +141,7 @@ const Login = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white transition-colors"
+                  className="glass-input block w-full pl-10 pr-3 py-3 sm:text-sm focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   placeholder="••••••••"
                 />
               </div>
@@ -146,15 +153,15 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-cyan-500 focus:ring-cyan-400 border-gray-600 rounded bg-white/10"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
                   Ingat saya
                 </label>
               </div>
 
               <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
+                <Link to="/forgot-password" className="font-medium text-cyan-400 hover:text-cyan-300 transition-colors">
                   Lupa password?
                 </Link>
               </div>
@@ -164,20 +171,24 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-blue-600/20 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg shadow-cyan-500/20 text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
               >
-                {loading ? 'Memuat...' : 'Masuk'}
+                {loading ? (
+                    <span className="flex items-center gap-2">
+                        <span className="material-icons-round animate-spin text-sm">refresh</span> Memuat...
+                    </span>
+                ) : 'Masuk'}
               </button>
             </div>
           </form>
 
-          <div className="mt-6">
+          <div className="mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                <div className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                <span className="px-4 bg-[#0F172A]/50 backdrop-blur-md text-gray-400 rounded-full border border-white/5">
                   Atau masuk dengan
                 </span>
               </div>
@@ -188,7 +199,7 @@ const Login = () => {
                   type="button"
                   onClick={handleGoogleLogin}
                   disabled={loading}
-                  className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  className="w-full inline-flex justify-center items-center py-3 px-4 border border-white/10 rounded-xl shadow-sm bg-white/5 text-sm font-medium text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors backdrop-blur-sm"
                 >
                   <img className="h-5 w-5 mr-2" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" />
                   <span>Google</span>
@@ -197,9 +208,9 @@ const Login = () => {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-8 text-center text-sm text-gray-400">
             Belum punya akun?{' '}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 hover:underline">
+            <Link to="/register" className="font-bold text-cyan-400 hover:text-cyan-300 transition-colors hover:underline">
                 Daftar sekarang
             </Link>
         </p>
