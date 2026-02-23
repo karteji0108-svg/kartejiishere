@@ -9,8 +9,6 @@ import {
   limit,
   getDocs,
   getCountFromServer,
-  getAggregateFromServer,
-  sum,
   doc,
   getDoc
 } from 'firebase/firestore';
@@ -66,10 +64,32 @@ const Dashboard = () => {
 
         let balance = 0;
         if (canViewFinance) {
-             const financeSnapshot = await getAggregateFromServer(financeColl, {
-                totalBalance: sum('amount')
-             });
-             balance = financeSnapshot.data().totalBalance || 0;
+             // Fetch all finance docs to calculate sum safely (handling string/number types)
+             const financeSnapshot = await getDocs(financeColl);
+             balance = financeSnapshot.docs.reduce((acc, doc) => {
+                const data = doc.data();
+                // Handle potential string amounts with formatting (e.g. "1.000.000") or pure numbers
+                let amount = data.amount;
+                if (typeof amount === 'string') {
+                    // Remove dots/commas if they are thousands separators, but be careful with decimals.
+                    // Assuming IDR locale where dots are thousands separators.
+                    amount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
+                }
+
+                // Ensure it's a valid number
+                const val = Number(amount);
+
+                // Add for 'income', subtract for 'expense' (if type field exists)
+                // Assuming 'amount' is already signed or we just sum it.
+                // Checking previous implementation or standard practice: usually finance logs have 'type'
+
+                // Check if there is a 'type' field
+                if (data.type === 'expense' || data.type === 'pengeluaran') {
+                    return acc - (isNaN(val) ? 0 : val);
+                } else {
+                    return acc + (isNaN(val) ? 0 : val);
+                }
+             }, 0);
         }
 
         setStats({
