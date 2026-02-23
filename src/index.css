@@ -90,3 +90,9 @@
       @apply relative overflow-hidden;
   }
 }
+
+/* Glass Navigation Bar */
+.glass-nav {
+    @apply fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)];
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+}

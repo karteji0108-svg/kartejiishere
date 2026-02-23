@@ -1,40 +1,44 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { isIOS } from '../../utils/platform';
+import { useAuth } from '../../context/AuthContext';
 
 const BottomNav = () => {
-  const isIosDevice = isIOS();
+  const { hasRole } = useAuth();
+  const canViewFinance = hasRole('bendahara') || hasRole('ketua') || hasRole('wakil_ketua') || hasRole('super_admin');
+
+  const navItems = [
+    { to: "/dashboard", icon: "home", label: "Home" },
+    { to: "/activities", icon: "event", label: "Kegiatan" },
+    { to: "/gallery", icon: "collections", label: "Galeri" },
+    ...(canViewFinance ? [{ to: "/finance", icon: "account_balance_wallet", label: "Keuangan" }] : []),
+    { to: "/profile", icon: "person", label: "Profil" }
+  ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 glass-nav px-6 z-50 transition-all duration-300">
-      <div className={`flex justify-around items-center h-20 safe-bottom-spacer ${isIosDevice ? 'pb-2' : ''}`}>
-        {[
-            { to: "/dashboard", icon: "home_app_logo", iconName: "home" },
-            { to: "/activities", icon: "event", iconName: "event" },
-            { to: "/menu", icon: "grid_view", iconName: "grid_view", isFab: true },
-            { to: "/finance", icon: "wallet", iconName: "account_balance_wallet" },
-            { to: "/profile", icon: "person", iconName: "person" }
-        ].map((item) => (
+    <nav className="glass-nav transition-all duration-300">
+      <div className="flex justify-around items-center h-16 max-w-lg mx-auto md:max-w-4xl px-2">
+        {navItems.map((item) => (
             <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                    item.isFab
-                    ? `flex items-center justify-center w-16 h-16 -mt-8 transition-transform duration-300 active:scale-90 ${isActive ? 'scale-110' : ''}`
-                    : `flex flex-col items-center justify-center w-16 h-full gap-1 transition-all duration-300 ${isActive ? 'text-primary' : 'text-slate-400 dark:text-slate-600'}`
+                    `flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200 ${
+                        isActive
+                        ? 'text-blue-600 dark:text-blue-400 transform scale-105'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                    }`
                 }
             >
                 {({ isActive }) => (
                     <>
-                    {item.isFab ? (
-                        <div className="w-16 h-16 bg-primary rounded-[24px] flex items-center justify-center shadow-xl shadow-primary/40 border-[6px] border-[#F7F9FC] dark:border-[#000000]">
-                            <span className="material-icons-round text-white text-3xl">{item.iconName}</span>
+                        <div className={`relative p-1.5 rounded-xl transition-colors ${isActive ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                            <span className={`material-icons-round text-2xl transition-transform ${isActive ? '-translate-y-0.5' : ''}`}>
+                                {item.icon}
+                            </span>
                         </div>
-                    ) : (
-                        <span className={`material-icons-round text-3xl transition-all duration-300 ${isActive ? 'scale-110 drop-shadow-md' : 'scale-100'}`}>
-                            {item.iconName}
+                        <span className="text-[10px] font-medium tracking-wide">
+                            {item.label}
                         </span>
-                    )}
                     </>
                 )}
             </NavLink>
