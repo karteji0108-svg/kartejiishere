@@ -10,7 +10,9 @@ import {
   getDocs,
   getCountFromServer,
   getAggregateFromServer,
-  sum
+  sum,
+  doc,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { formatCurrency, formatNumber } from '../utils/currency';
@@ -30,16 +32,28 @@ const Dashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
 
   // Permission Checks
   const canViewFinance = hasRole('bendahara') || hasRole('ketua') || hasRole('wakil_ketua') || hasRole('super_admin');
 
-  // Get first name for greeting
-  const firstName = currentUser?.displayName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'Anggota';
-
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 0. Fetch User Data from Firestore for consistency
+        if (currentUser) {
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                setUserData(userDoc.data());
+            } else {
+                 setUserData({
+                    displayName: currentUser.displayName,
+                    photoURL: currentUser.photoURL
+                 });
+            }
+        }
+
         // 1. Fetch Stats (Parallel)
         const membersColl = collection(db, 'users');
         const activitiesColl = collection(db, 'activities');
@@ -82,7 +96,12 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [canViewFinance]);
+  }, [canViewFinance, currentUser]);
+
+  // Get first name for greeting
+  const displayName = userData?.displayName || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Anggota';
+  const firstName = displayName.split(' ')[0];
+  const photoURL = userData?.photoURL || currentUser?.photoURL;
 
   if (loading) return <DashboardSkeleton />;
 
@@ -101,8 +120,8 @@ const Dashboard = () => {
           </div>
           <Link to="/profile" className="relative">
              <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden border-2 border-white dark:border-gray-600 shadow-md">
-                {currentUser?.photoURL ? (
-                    <img src={currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                {photoURL ? (
+                    <img src={photoURL} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
                         <span className="material-icons-round">person</span>

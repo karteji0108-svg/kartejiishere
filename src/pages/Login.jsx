@@ -73,8 +73,8 @@ const Login = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30">
-                <span className="material-icons-round text-3xl text-white">groups</span>
+            <div className="w-24 h-24 flex items-center justify-center">
+                <img src="/assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
