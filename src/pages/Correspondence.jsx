@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import BottomNav from '../components/layout/BottomNav';
-import { useRamadan } from '../context/RamadanContext';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -9,8 +8,7 @@ import { hasPermission, PERMISSIONS } from '../constants/roles';
 import Skeleton from '../components/common/Skeleton';
 
 const Correspondence = () => {
-  const { isRamadan } = useRamadan();
-  const { userRole } = useAuth();
+    const { userRole } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('surat_masuk');
   const [data, setData] = useState([]);
@@ -97,7 +95,7 @@ const Correspondence = () => {
   };
 
   return (
-    <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
+    <div className={`app-container `}>
       <header className="glass-header px-6 pt-safe pb-4 sticky top-0 z-20">
         <div className="flex items-center gap-4 mb-4">
             <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10">

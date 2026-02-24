@@ -7,12 +7,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import BottomNav from '../components/layout/BottomNav';
 import Skeleton from '../components/common/Skeleton';
 import toast from 'react-hot-toast';
-import { useRamadan } from '../context/RamadanContext';
 
 const Gallery = () => {
   const { userRole } = useAuth();
-  const { isRamadan } = useRamadan();
-  const navigate = useNavigate();
+    const navigate = useNavigate();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -61,7 +59,7 @@ const Gallery = () => {
   const canDelete = hasPermission(userRole, PERMISSIONS.MANAGE_GALLERY) || userRole === 'super_admin';
 
   return (
-    <div className={`app-container ${isRamadan ? 'bg-ramadan' : ''}`}>
+    <div className={`app-container `}>
 
       {/* Header */}
       <header className="glass-header px-5 pb-4 flex items-center justify-between">

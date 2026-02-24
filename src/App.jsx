@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import RamadanDecorations from './components/common/RamadanDecorations';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import InstallPrompt from './components/common/InstallPrompt';
@@ -86,7 +85,6 @@ function App() {
             },
           }}
         />
-        <RamadanDecorations />
         <InstallPrompt />
         <WhatsNewModal />
         <Suspense fallback={<LoadingFallback />}>

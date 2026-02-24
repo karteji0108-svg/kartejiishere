@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { useRamadan } from '../context/RamadanContext';
 import Skeleton from '../components/common/Skeleton';
 
 const ActivityDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isRamadan } = useRamadan();
-  const [activity, setActivity] = useState(null);
+    const [activity, setActivity] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,7 +67,7 @@ const ActivityDetail = () => {
 
   return (
     <div className={`min-h-screen font-display text-slate-800 dark:text-slate-100 pb-safe transition-colors duration-500
-       ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/20' : 'bg-background-light dark:bg-background-dark'}`}>
+       bg-background-light dark:bg-background-dark`}>
 
       {/* Hero Image Section */}
       <div className="relative h-[450px] w-full overflow-hidden group">
@@ -80,7 +78,7 @@ const ActivityDetail = () => {
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             />
         ) : (
-            <div className={`w-full h-full flex flex-col items-center justify-center ${isRamadan ? 'bg-gradient-to-br from-emerald-600 to-teal-800' : 'bg-gradient-to-br from-primary to-blue-700'}`}>
+            <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary to-blue-700`}>
                 <span className="material-icons-round text-9xl text-white/20 mb-4">event</span>
                 <span className="text-white/40 text-lg font-medium tracking-widest uppercase">No Image Available</span>
             </div>
