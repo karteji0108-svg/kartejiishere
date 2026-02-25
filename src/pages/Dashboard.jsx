@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, orderBy, limit, getCountFromServer, doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import Skeleton from '../components/Skeleton';
+import Skeleton from '../components/common/Skeleton';
 import HeroCarousel from '../components/common/HeroCarousel';
 import BottomNav from '../components/layout/BottomNav';
 import { formatCurrency, formatNumber } from '../utils/currency';
