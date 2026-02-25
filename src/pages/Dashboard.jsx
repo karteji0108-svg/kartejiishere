@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, orderBy, limit, getCountFromServer, doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import { useRamadan } from '../context/RamadanContext';
 import Skeleton from '../components/Skeleton';
 import HeroCarousel from '../components/common/HeroCarousel';
 import BottomNav from '../components/layout/BottomNav';
@@ -12,7 +11,6 @@ import { formatDate } from '../utils/date';
 
 const Dashboard = () => {
   const { currentUser, hasRole } = useAuth();
-  const { isRamadanMode } = useRamadan();
   const navigate = useNavigate();
 
   const [stats, setStats] = useState({ members: 0, activities: 0, balance: 0 });
