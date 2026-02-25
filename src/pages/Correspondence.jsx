@@ -45,7 +45,7 @@ const Correspondence = () => {
         return (
           <div className="space-y-3">
             {filtered.map(l => (
-              <div key={l.id} className="glass-card p-4 flex gap-4 items-start group hover:bg-white/40 dark:hover:bg-black/30 transition-colors">
+              <div key={l.id} className="card p-4 flex gap-4 items-start group hover:bg-white/40 dark:hover:bg-black/30 transition-colors">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${type === 'surat_masuk' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
                   <span className="material-icons-round">{type === 'surat_masuk' ? 'move_to_inbox' : 'outbox'}</span>
                 </div>
@@ -72,7 +72,7 @@ const Correspondence = () => {
         return (
           <div className="grid grid-cols-2 gap-3">
             {archives.map(a => (
-              <div key={a.id} className="glass-card p-4 flex flex-col gap-2 hover:bg-white/40 dark:hover:bg-black/30">
+              <div key={a.id} className="card p-4 flex flex-col gap-2 hover:bg-white/40 dark:hover:bg-black/30">
                 <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
                   <span className="material-icons-round">description</span>
                 </div>
@@ -96,7 +96,7 @@ const Correspondence = () => {
 
   return (
     <div className={`app-container `}>
-      <header className="glass-header px-6 pt-safe pb-4 sticky top-0 z-20">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 pt-safe pb-4 sticky top-0 z-20">
         <div className="flex items-center gap-4 mb-4">
             <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
             <span className="material-icons-round">arrow_back</span>
@@ -107,7 +107,7 @@ const Correspondence = () => {
             href={DRIVE_LINK}
             target="_blank"
             rel="noopener noreferrer"
-            className="glass-card p-4 mb-4 flex items-center justify-between group hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border-l-4 border-blue-500"
+            className="card p-4 mb-4 flex items-center justify-between group hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border-l-4 border-blue-500"
         >
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">

@@ -15,39 +15,29 @@ const BottomNav = () => {
   ];
 
   return (
-    <nav className="glass-nav transition-all duration-300 z-50">
-      <div className="flex justify-around items-center w-full h-full px-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-800 shadow-nav pb-safe z-50">
+      <div className="flex justify-around items-center h-16 w-full">
         {navItems.map((item) => (
             <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                    `relative flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200 group ${
+                    `flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
                         isActive
-                        ? 'text-cyan-500 dark:text-cyan-400'
-                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                        ? 'text-accent dark:text-blue-400'
+                        : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                     }`
                 }
             >
                 {({ isActive }) => (
                     <>
-                        {/* Active Pill Indicator (Background) */}
-                        {isActive && (
-                            <div className="absolute inset-x-2 top-2 bottom-2 bg-cyan-500/10 dark:bg-cyan-400/10 rounded-xl -z-10 animate-fade-in-up"></div>
-                        )}
-
-                        <span className={`material-icons-round text-2xl transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
+                        <span className={`material-icons-round text-2xl transition-transform ${isActive ? '-translate-y-0.5' : ''}`}>
                             {item.icon}
                         </span>
 
-                        <span className="text-[10px] font-medium tracking-wide">
+                        <span className={`text-[10px] font-medium tracking-wide ${isActive ? 'font-bold' : ''}`}>
                             {item.label}
                         </span>
-
-                        {/* Active Indicator (Top Line) */}
-                        {isActive && (
-                            <span className="absolute -top-[1px] w-8 h-1 bg-cyan-500 rounded-b-full shadow-glow"></span>
-                        )}
                     </>
                 )}
             </NavLink>

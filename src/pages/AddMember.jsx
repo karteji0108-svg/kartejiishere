@@ -78,7 +78,7 @@ const AddMember = () => {
       <div className="absolute top-0 right-0 w-full h-64 bg-gradient-to-bl from-blue-500/10 to-transparent z-0"></div>
       <div className="absolute -top-20 -left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl z-0"></div>
 
-      <header className="glass-header px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
@@ -86,7 +86,7 @@ const AddMember = () => {
       </header>
 
       <main className="flex-1 p-5 max-w-md mx-auto w-full relative z-10 animate-fade-in-up">
-        <div className="glass-card rounded-2xl p-6">
+        <div className="card rounded-2xl p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
             {/* Photo Upload - Centered */}
             <div className="flex flex-col items-center mb-6">

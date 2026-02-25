@@ -65,7 +65,7 @@ const CreateAnnouncement = () => {
       <div className="absolute -top-10 -right-10 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl z-0"></div>
 
       {/* Header */}
-      <header className="glass-header px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
@@ -73,7 +73,7 @@ const CreateAnnouncement = () => {
       </header>
 
       <main className="flex-1 p-5 max-w-md mx-auto w-full relative z-10 pb-24 animate-fade-in-up">
-        <div className="glass-card rounded-2xl p-6">
+        <div className="card rounded-2xl p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>

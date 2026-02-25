@@ -81,7 +81,7 @@ const ActivityGallery = () => {
        {/* Background */}
        <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-purple-500/5 to-transparent z-0"></div>
 
-       <header className="glass-header px-5 py-4 sticky top-0 z-40 flex items-center justify-between safe-area-top animate-fade-in-down">
+       <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-5 py-4 sticky top-0 z-40 flex items-center justify-between safe-area-top animate-fade-in-down">
           <div>
               <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Galeri Kegiatan</h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Dokumentasi Karang Taruna</p>

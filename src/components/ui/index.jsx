@@ -26,7 +26,7 @@ export const Input = ({ label, icon, error, ...props }) => (
         </div>
       )}
       <input
-        className={`glass-input w-full px-4 py-3 ${icon ? 'pl-10' : ''} ${error ? 'ring-2 ring-red-500 bg-red-50/50 dark:bg-red-900/20' : ''}`}
+        className={`input-field w-full px-4 py-3 ${icon ? 'pl-10' : ''} ${error ? 'ring-2 ring-red-500 bg-red-50/50 dark:bg-red-900/20' : ''}`}
         {...props}
       />
     </div>
@@ -35,7 +35,7 @@ export const Input = ({ label, icon, error, ...props }) => (
 );
 
 export const Card = ({ children, className = '' }) => (
-  <div className={`glass-card p-6 ${className}`}>
+  <div className={`card p-6 ${className}`}>
     {children}
   </div>
 );

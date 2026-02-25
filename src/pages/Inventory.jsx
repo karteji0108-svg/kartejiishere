@@ -44,7 +44,7 @@ const Inventory = () => {
 
   return (
     <div className={`app-container `}>
-      <header className="glass-header px-6 pt-safe pb-4 sticky top-0 z-20">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 pt-safe pb-4 sticky top-0 z-20">
         <div className="flex items-center gap-4 mb-4">
             <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
             <span className="material-icons-round">arrow_back</span>
@@ -73,7 +73,7 @@ const Inventory = () => {
          activeTab === 'daftar' ? (
             <div className="space-y-4">
                 {items.map(item => (
-                    <div key={item.id} className="glass-card p-4 flex justify-between items-center group hover:scale-[1.01] transition-transform">
+                    <div key={item.id} className="card p-4 flex justify-between items-center group hover:scale-[1.01] transition-transform">
                         <div>
                             <h4 className="font-bold text-slate-900 dark:text-white">{item.name}</h4>
                             <p className="text-xs opacity-70 mb-2">Lokasi: {item.location}</p>

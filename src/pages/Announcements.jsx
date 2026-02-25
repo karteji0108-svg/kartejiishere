@@ -35,9 +35,9 @@ const Announcements = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-glass-light dark:bg-glass-dark pb-24 font-display">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark pb-24 font-display">
        {/* Header */}
-      <div className="sticky top-0 z-40 glass-header px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
+      <div className="sticky top-0 z-40 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
           <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 dark:from-orange-400 dark:to-red-400 bg-clip-text text-transparent">
               Pengumuman
           </h1>
@@ -52,7 +52,7 @@ const Announcements = () => {
       <div className="px-6 py-6 space-y-4">
         {loading ? (
              [1,2,3].map(i => (
-                <div key={i} className="glass-card p-5 animate-pulse space-y-3">
+                <div key={i} className="card p-5 animate-pulse space-y-3">
                     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
                     <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
                     <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
@@ -60,7 +60,7 @@ const Announcements = () => {
              ))
         ) : announcements.length > 0 ? (
             announcements.map(ann => (
-                <div key={ann.id} className="glass-card p-5 relative overflow-hidden group hover:shadow-md transition-all duration-200">
+                <div key={ann.id} className="card p-5 relative overflow-hidden group hover:shadow-md transition-all duration-200">
                      <div className="flex items-start gap-4 z-10 relative">
                         <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
                              <span className="material-icons text-2xl">campaign</span>

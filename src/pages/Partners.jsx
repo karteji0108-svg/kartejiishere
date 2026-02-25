@@ -35,7 +35,7 @@ const Partners = () => {
 
   return (
     <div className={`app-container `}>
-      <header className="glass-header px-6 pt-safe pb-4 sticky top-0 z-20">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 pt-safe pb-4 sticky top-0 z-20">
         <div className="flex items-center gap-4 mb-4">
             <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
             <span className="material-icons-round">arrow_back</span>
@@ -64,7 +64,7 @@ const Partners = () => {
          activeTab === 'daftar_mitra' ? (
             <div className="space-y-4">
                 {partners.map(p => (
-                    <div key={p.id} className="glass-card p-5 flex items-center gap-4 hover:scale-[1.01] transition-transform">
+                    <div key={p.id} className="card p-5 flex items-center gap-4 hover:scale-[1.01] transition-transform">
                         <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 font-bold text-xl">
                             {p.name[0]}
                         </div>

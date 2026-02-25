@@ -35,7 +35,7 @@ const ActivityDetail = () => {
     <div className="min-h-screen bg-background-light dark:bg-background-dark pb-20">
         <Skeleton className="h-96 w-full rounded-none" />
         <div className="max-w-3xl mx-auto px-5 -mt-24 relative z-10">
-            <div className="glass-card rounded-3xl p-8 h-96">
+            <div className="card rounded-3xl p-8 h-96">
                 <Skeleton className="h-10 w-3/4 mb-6" />
                 <Skeleton className="h-4 w-1/2 mb-8" />
                 <div className="grid grid-cols-2 gap-4">
@@ -133,7 +133,7 @@ const ActivityDetail = () => {
 
       {/* Main Content Card - Overlapping Hero */}
       <div className="max-w-3xl mx-auto px-4 -mt-16 relative z-10 pb-24 animate-fade-in-up" style={{animationDelay: '300ms'}}>
-        <div className="glass-card rounded-3xl p-6 md:p-8">
+        <div className="card rounded-3xl p-6 md:p-8">
             {/* Info Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-2xl flex items-start gap-3">
