@@ -15,35 +15,37 @@ const BottomNav = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-800 shadow-nav pb-safe z-50">
-      <div className="flex justify-around items-center h-16 w-full">
-        {navItems.map((item) => (
-            <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                    `flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
-                        isActive
-                        ? 'text-accent dark:text-blue-400'
-                        : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                    }`
-                }
-            >
-                {({ isActive }) => (
-                    <>
-                        <span className={`material-icons-round text-2xl transition-transform ${isActive ? '-translate-y-0.5' : ''}`}>
-                            {item.icon}
-                        </span>
+    <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe z-50 pointer-events-none">
+      <nav className="mx-auto max-w-md bg-white/90 dark:bg-surface-dark/90 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg rounded-2xl pointer-events-auto">
+        <div className="flex justify-around items-center h-16 w-full px-2">
+          {navItems.map((item) => (
+              <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                      `relative flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all duration-300 ${
+                          isActive
+                          ? 'text-accent dark:text-blue-400 -translate-y-1'
+                          : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                      }`
+                  }
+              >
+                  {({ isActive }) => (
+                      <>
+                          <span className={`material-icons-round text-2xl transition-transform duration-300 ${isActive ? 'scale-110' : 'scale-100'}`}>
+                              {item.icon}
+                          </span>
 
-                        <span className={`text-[10px] font-medium tracking-wide ${isActive ? 'font-bold' : ''}`}>
-                            {item.label}
-                        </span>
-                    </>
-                )}
-            </NavLink>
-        ))}
-      </div>
-    </nav>
+                          {isActive && (
+                              <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-current transition-all duration-300 animate-fade-in" />
+                          )}
+                      </>
+                  )}
+              </NavLink>
+          ))}
+        </div>
+      </nav>
+    </div>
   );
 };
 
