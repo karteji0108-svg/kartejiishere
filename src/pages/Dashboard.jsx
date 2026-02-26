@@ -43,10 +43,40 @@ const Dashboard = () => {
         }
 
         // 1. Stats Counters
-        // Members count
-        const membersColl = collection(db, 'users');
-        const membersSnapshot = await getCountFromServer(membersColl);
-        const membersCount = membersSnapshot.data().count;
+        const usersColl = collection(db, 'users');
+
+        // Total Registered Users
+        const totalUsersSnapshot = await getCountFromServer(usersColl);
+        const totalUsers = totalUsersSnapshot.data().count;
+
+        // Pending Count (For Widget & Calculation)
+        let pending = 0;
+        try {
+            const pendingQ = query(usersColl, where('status', '==', 'pending'));
+            const pendingSnap = await getCountFromServer(pendingQ);
+            pending = pendingSnap.data().count;
+        } catch (e) {
+             // Fallback if index missing
+             const pendingQ = query(usersColl, where('status', '==', 'pending'));
+             const snap = await getDocs(pendingQ);
+             pending = snap.size;
+        }
+        setPendingCount(pending);
+
+        // Rejected Count (For Calculation)
+        let rejected = 0;
+        try {
+             const rejectedQ = query(usersColl, where('status', '==', 'rejected'));
+             const rejectedSnap = await getCountFromServer(rejectedQ);
+             rejected = rejectedSnap.data().count;
+        } catch (e) {
+             const rejectedQ = query(usersColl, where('status', '==', 'rejected'));
+             const snap = await getDocs(rejectedQ);
+             rejected = snap.size;
+        }
+
+        // Active Members = Total - Pending - Rejected (Includes legacy/missing status)
+        const activeMembers = Math.max(0, totalUsers - pending - rejected);
 
         // Activities count
         const activitiesColl = collection(db, 'activities');
@@ -66,23 +96,7 @@ const Dashboard = () => {
              });
         }
 
-        setStats({ members: membersCount, activities: activitiesCount, balance });
-
-        // Pending Approvals Count
-        if (canApprove) {
-            try {
-                // Try fetching count with index
-                const pendingQ = query(collection(db, 'users'), where('status', '==', 'pending'));
-                const pendingSnapshot = await getCountFromServer(pendingQ);
-                setPendingCount(pendingSnapshot.data().count);
-            } catch (err) {
-                 console.warn("Index missing for pending status count, falling back", err);
-                 // Fallback if index missing (or creating one takes time) - just query normally
-                 const pendingQ = query(collection(db, 'users'), where('status', '==', 'pending'));
-                 const snap = await getDocs(pendingQ);
-                 setPendingCount(snap.size);
-            }
-        }
+        setStats({ members: activeMembers, activities: activitiesCount, balance });
 
         // 2. Recent Activities
         const activitiesQ = query(
