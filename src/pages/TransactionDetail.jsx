@@ -7,6 +7,7 @@ import { hasPermission, PERMISSIONS } from '../constants/roles';
 import Skeleton from '../components/common/Skeleton';
 import toast from 'react-hot-toast';
 import { useRamadan } from '../context/RamadanContext';
+import { getDownloadUrl } from '../utils/cloudinary';
 
 const TransactionDetail = () => {
   const { id } = useParams();
@@ -204,15 +205,26 @@ const TransactionDetail = () => {
             className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 animate-fade-in"
             onClick={() => setShowReceiptModal(false)}
         >
-            <button className="absolute top-4 right-4 text-white p-2">
+            <button className="absolute top-4 right-4 text-white p-2 z-50">
                 <span className="material-icons-round text-3xl">close</span>
             </button>
-            <img
-                src={transaction.receiptUrl}
-                alt="Full Receipt"
-                className="max-w-full max-h-[90vh] object-contain rounded-lg"
-                onClick={e => e.stopPropagation()}
-            />
+            <div className="relative inline-block" onClick={e => e.stopPropagation()}>
+                <img
+                    src={transaction.receiptUrl}
+                    alt="Full Receipt"
+                    className="max-w-full max-h-[90vh] object-contain rounded-lg"
+                />
+                <a
+                    href={getDownloadUrl(transaction.receiptUrl)}
+                    download="bukti_struk"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute bottom-4 right-4 bg-white/90 text-slate-900 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg hover:bg-white transition-colors"
+                >
+                    <span className="material-icons-round text-base">download</span>
+                    Download
+                </a>
+            </div>
         </div>
       )}
     </div>
