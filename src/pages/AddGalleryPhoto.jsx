@@ -102,9 +102,9 @@ const AddGalleryPhoto = () => {
   };
 
   return (
-    <div className="bg-glass-light dark:bg-glass-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden transition-colors duration-500">
+    <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden transition-colors duration-500">
 
-      <header className="glass-header px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-4 py-4 flex items-center gap-4 sticky top-0 z-20 animate-fade-in-down safe-area-top">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-white/30 dark:hover:bg-black/50 transition-colors">
           <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
@@ -112,7 +112,7 @@ const AddGalleryPhoto = () => {
       </header>
 
       <main className="flex-1 p-5 max-w-md mx-auto w-full relative z-10 animate-fade-in-up">
-        <div className="glass-card rounded-2xl p-6">
+        <div className="card rounded-2xl p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
             {/* Upload Area */}
             <div>
@@ -164,7 +164,7 @@ const AddGalleryPhoto = () => {
                 <label className="label-primary">Keterangan Foto</label>
                 <div className="relative">
                     <textarea
-                        className="glass-input p-3 h-24 resize-none w-full"
+                        className="input-field p-3 h-24 resize-none w-full"
                         placeholder="Tambahkan cerita di balik foto ini..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}

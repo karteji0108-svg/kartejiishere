@@ -79,7 +79,7 @@ const TransactionDetail = () => {
 
   return (
     <div className={`min-h-screen font-display flex flex-col relative transition-colors duration-500 overflow-hidden
-      bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100`}>
+      bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100`}>
 
       {/* Decorative BG */}
       <div className="absolute top-0 left-0 w-full h-72 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none z-0"></div>
@@ -94,7 +94,7 @@ const TransactionDetail = () => {
       <main className="flex-1 overflow-y-auto no-scrollbar pb-10 px-5 relative z-10 animate-fade-in-up">
 
           {/* Main Card */}
-          <div className="glass-card p-6 mb-6 relative overflow-hidden">
+          <div className="card p-6 mb-6 relative overflow-hidden">
               <div className={`absolute top-0 right-0 p-3 px-4 rounded-bl-2xl text-xs font-bold uppercase tracking-wider
                   ${transaction.type === 'income' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
                   {transaction.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}
@@ -134,7 +134,7 @@ const TransactionDetail = () => {
 
           {/* Details & Receipt */}
           <div className="space-y-4">
-              <div className="glass-card p-5">
+              <div className="card p-5">
                   <h3 className="font-bold text-sm uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">Informasi Tambahan</h3>
 
                   <div className="space-y-3">
@@ -161,7 +161,7 @@ const TransactionDetail = () => {
               </div>
 
               {transaction.receiptUrl && (
-                  <div className="glass-card p-5">
+                  <div className="card p-5">
                       <h3 className="font-bold text-sm uppercase tracking-wider mb-4">Bukti Struk</h3>
                       <div
                         className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer group relative"

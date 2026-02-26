@@ -47,9 +47,9 @@ const MemberList = () => {
   }, [members, search]);
 
   return (
-    <div className="min-h-screen bg-glass-light dark:bg-glass-dark pb-24 font-display">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark pb-24 font-display">
        {/* Header */}
-      <div className="sticky top-0 z-40 glass-header px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
+      <div className="sticky top-0 z-40 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
           <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
               Anggota
           </h1>
@@ -78,7 +78,7 @@ const MemberList = () => {
       <div className="px-6 space-y-3">
          {loading ? (
              [1,2,3,4,5].map(i => (
-                 <div key={i} className="glass-card p-3 flex items-center gap-4 animate-pulse">
+                 <div key={i} className="card p-3 flex items-center gap-4 animate-pulse">
                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
                      <div className="flex-1 space-y-2">
                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
@@ -88,7 +88,7 @@ const MemberList = () => {
              ))
          ) : filteredMembers.length > 0 ? (
              filteredMembers.map(member => (
-                 <Link to={`/members/${member.id}`} key={member.id} className="glass-card p-3 flex items-center gap-4 group active:scale-[0.99] transition-transform hover:bg-white/60 dark:hover:bg-black/40">
+                 <Link to={`/members/${member.id}`} key={member.id} className="card p-3 flex items-center gap-4 group active:scale-[0.99] transition-transform hover:bg-white/60 dark:hover:bg-black/40">
                      <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 overflow-hidden shrink-0 border border-indigo-200 dark:border-indigo-800">
                          {member.photoURL ? (
                              <img src={member.photoURL} alt={member.fullName} className="w-full h-full object-cover" />

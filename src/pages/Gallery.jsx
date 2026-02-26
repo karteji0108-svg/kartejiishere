@@ -62,13 +62,13 @@ const Gallery = () => {
     <div className={`app-container `}>
 
       {/* Header */}
-      <header className="glass-header px-5 pb-4 flex items-center justify-between">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-5 pb-4 flex items-center justify-between">
         <div>
             <h1 className="text-h2 text-slate-900 dark:text-white">Galeri</h1>
             <p className="text-caption">Dokumentasi Kegiatan</p>
         </div>
         {canUpload && (
-            <Link to="/gallery/add" className="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:scale-105 transition-transform text-primary">
+            <Link to="/gallery/add" className="w-10 h-10 rounded-full card flex items-center justify-center hover:scale-105 transition-transform text-primary">
                 <span className="material-icons-round">add_a_photo</span>
             </Link>
         )}

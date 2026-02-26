@@ -34,7 +34,7 @@ const HeroCarousel = () => {
 
   useEffect(() => {
     setLoading(true);
-    // Remove orderBy temporarily to rule out index issues
+    // Sort by order ascending, fallback to createdAt descending if order is missing
     const q = collection(db, 'hero_slides');
 
     const unsubscribe = onSnapshot(q,
@@ -43,8 +43,15 @@ const HeroCarousel = () => {
           id: doc.id,
           ...doc.data()
         }));
-        // Sort client-side if needed
-        fetchedSlides.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+        // Sort client-side
+        fetchedSlides.sort((a, b) => {
+           if (a.order !== undefined && b.order !== undefined) {
+               return a.order - b.order;
+           }
+           // Fallback to createdAt desc
+           return (b.createdAt || '').localeCompare(a.createdAt || '');
+        });
 
         setSlides(fetchedSlides);
         setLoading(false);

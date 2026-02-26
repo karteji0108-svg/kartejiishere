@@ -28,7 +28,7 @@ const Login = () => {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError('Email atau password salah.');
+      setError('Email atau password salah. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -56,136 +56,154 @@ const Login = () => {
                 role: 'anggota',
                 status: 'active',
                 createdAt: serverTimestamp(),
-
             });
         }
 
         navigate('/dashboard');
     } catch (err) {
         console.error(err);
-        setError('Gagal login dengan Google.');
+        setError('Gagal login dengan Google. Silakan coba lagi.');
     } finally {
         setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-slate-50 dark:bg-slate-900 font-display">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-body">
 
-      {/* Background Blurs */}
-      <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full blur-3xl z-0 bg-white/20 dark:bg-purple-500/10"></div>
-      <div className="absolute top-40 -right-20 w-96 h-96 rounded-full blur-3xl z-0 bg-blue-500/10"></div>
-
-      <div className="w-full max-w-md relative z-10">
-
-        <div className="glass-card p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
-            {/* Hover Effect */}
-            <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-tr from-primary/20 to-purple-500/20 pointer-events-none"></div>
-
-            <div className="text-center mb-8 relative">
-                <div className="w-20 h-20 bg-gradient-to-tr from-primary to-blue-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-primary/30 mb-4 transform group-hover:scale-110 transition-transform duration-500">
-                    <span className="material-icons text-4xl text-white">groups</span>
-                </div>
-                <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">
-                    Karang Taruna
-                </h1>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                    Sistem Informasi & Manajemen Kegiatan
-                </p>
-            </div>
-
-            {error && (
-                <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 animate-pulse">
-                    <span className="material-icons text-red-500">error_outline</span>
-                    <p className="text-sm text-red-600 dark:text-red-300 font-medium">{error}</p>
-                </div>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-5 relative">
-                <div className="relative group/input">
-                    <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within/input:text-primary transition-colors">email</span>
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="glass-input pl-12"
-                        required
-                    />
-                </div>
-
-                <div className="relative group/input">
-                    <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within/input:text-primary transition-colors">lock</span>
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="glass-input pl-12"
-                        required
-                    />
-                </div>
-
-                <div className="text-right">
-                    <Link to="/forgot-password" className="text-xs font-semibold text-primary hover:underline">
-                        Lupa Password?
-                    </Link>
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                >
-                    {loading ? (
-                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    ) : (
-                        <>
-                            <span>Masuk</span>
-                            <span className="material-icons text-sm">arrow_forward</span>
-                        </>
-                    )}
-                </button>
-
-                <div className="relative py-2">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                        <span className="px-2 bg-transparent text-gray-500 dark:text-gray-400 text-xs bg-slate-50 dark:bg-slate-900/50 backdrop-blur-sm">
-                            Atau masuk dengan
-                        </span>
-                    </div>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    disabled={loading}
-                    className="w-full py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-                >
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-                    <span>Google</span>
-                </button>
-            </form>
-
-            <div className="mt-8 text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Belum punya akun?
-                    <Link to="/register" className="font-bold transition-colors ml-1 text-primary hover:text-blue-600">
-                        Daftar Sekarang
-                    </Link>
-                </p>
-            </div>
-
-            <div className="mt-8 text-center text-[10px] text-gray-400">
-                <p>&copy; {new Date().getFullYear()} Karang Taruna App. v2.0</p>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+            <div className="w-24 h-24 flex items-center justify-center mb-4">
+                <img src="/assets/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
         </div>
+        <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+          Selamat Datang
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          Masuk ke akun Karang Taruna Anda
+        </p>
       </div>
 
-       {/* Decorative Bottom Bar */}
-       <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-current to-transparent opacity-30 text-primary"></div>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white dark:bg-surface-dark py-8 px-4 shadow-card sm:rounded-xl sm:px-10 border border-gray-100 dark:border-gray-700">
+
+          {error && (
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative text-sm font-medium flex items-center gap-2" role="alert">
+              <span className="material-icons-round text-lg">error</span>
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+
+          <form className="space-y-6" onSubmit={handleLogin}>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email Address
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="material-icons-round text-gray-400 text-xl">email</span>
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent sm:text-sm dark:bg-gray-800 dark:text-white transition-colors"
+                  placeholder="nama@email.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Password
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="material-icons-round text-gray-400 text-xl">lock</span>
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent sm:text-sm dark:bg-gray-800 dark:text-white transition-colors"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-accent focus:ring-accent border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                  Ingat saya
+                </label>
+              </div>
+
+              <div className="text-sm">
+                <Link to="/forgot-password" className="font-medium text-accent hover:text-blue-500 dark:text-blue-400">
+                  Lupa password?
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-accent hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? 'Memuat...' : 'Masuk'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-surface-dark text-gray-500 dark:text-gray-400">
+                  Atau masuk dengan
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+               <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-colors"
+                >
+                  <img className="h-5 w-5 mr-2" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" />
+                  <span>Google</span>
+                </button>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
+            Belum punya akun?{' '}
+            <Link to="/register" className="font-medium text-accent hover:text-blue-500 dark:text-blue-400 hover:underline">
+                Daftar sekarang
+            </Link>
+        </p>
+      </div>
     </div>
   );
 };

@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { useAuth } from '../context/AuthContext';
 import Skeleton from '../components/common/Skeleton';
+import toast from 'react-hot-toast';
 
 const ActivityDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-    const [activity, setActivity] = useState(null);
+  const { userRole } = useAuth();
+  const [activity, setActivity] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const canManage = ['super_admin', 'admin', 'ketua', 'wakil_ketua', 'sekretaris', 'content_creator'].includes(userRole);
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -31,11 +37,27 @@ const ActivityDetail = () => {
     fetchActivity();
   }, [id]);
 
+  const handleDelete = async () => {
+      if (window.confirm("Apakah Anda yakin ingin menghapus kegiatan ini?")) {
+          setDeleteLoading(true);
+          try {
+              await deleteDoc(doc(db, 'activities', id));
+              toast.success("Kegiatan berhasil dihapus");
+              navigate('/activities');
+          } catch (error) {
+              console.error("Error deleting activity:", error);
+              toast.error("Gagal menghapus kegiatan");
+          } finally {
+              setDeleteLoading(false);
+          }
+      }
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark pb-20">
         <Skeleton className="h-96 w-full rounded-none" />
         <div className="max-w-3xl mx-auto px-5 -mt-24 relative z-10">
-            <div className="glass-card rounded-3xl p-8 h-96">
+            <div className="card rounded-3xl p-8 h-96">
                 <Skeleton className="h-10 w-3/4 mb-6" />
                 <Skeleton className="h-4 w-1/2 mb-8" />
                 <div className="grid grid-cols-2 gap-4">
@@ -96,11 +118,31 @@ const ActivityDetail = () => {
                 <span className="material-icons-round">arrow_back</span>
             </button>
             <div className="flex gap-3">
+                {canManage && (
+                    <>
+                        <Link
+                            to={`/activities/edit/${activity.id}`}
+                            className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-blue-600/80 transition-colors border border-white/10"
+                            title="Edit Kegiatan"
+                        >
+                            <span className="material-icons-round text-lg">edit</span>
+                        </Link>
+                        <button
+                            onClick={handleDelete}
+                            disabled={deleteLoading}
+                            className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-600/80 transition-colors border border-white/10"
+                            title="Hapus Kegiatan"
+                        >
+                            {deleteLoading ? (
+                                <span className="material-icons-round animate-spin text-lg">refresh</span>
+                            ) : (
+                                <span className="material-icons-round text-lg">delete</span>
+                            )}
+                        </button>
+                    </>
+                )}
                 <button className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-colors border border-white/10">
                     <span className="material-icons-round">share</span>
-                </button>
-                <button className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-colors border border-white/10">
-                    <span className="material-icons-round">favorite_border</span>
                 </button>
             </div>
         </div>
@@ -133,7 +175,7 @@ const ActivityDetail = () => {
 
       {/* Main Content Card - Overlapping Hero */}
       <div className="max-w-3xl mx-auto px-4 -mt-16 relative z-10 pb-24 animate-fade-in-up" style={{animationDelay: '300ms'}}>
-        <div className="glass-card rounded-3xl p-6 md:p-8">
+        <div className="card rounded-3xl p-6 md:p-8">
             {/* Info Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-2xl flex items-start gap-3">

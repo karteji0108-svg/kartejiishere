@@ -47,7 +47,7 @@ const AddCorrespondence = () => {
 
   return (
     <div className="app-container">
-      <header className="glass-header px-6 py-4 flex items-center gap-4 sticky top-0 z-20">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center gap-4 sticky top-0 z-20">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
           <span className="material-icons-round">arrow_back</span>
         </button>
@@ -56,7 +56,7 @@ const AddCorrespondence = () => {
 
       <main className="main-content px-6 pt-6 pb-24">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="glass-card p-6 space-y-4">
+          <div className="card p-6 space-y-4">
             <div>
               <label className="label-primary">Jenis Dokumen</label>
               <select

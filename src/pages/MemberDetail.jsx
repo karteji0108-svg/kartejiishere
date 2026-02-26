@@ -156,7 +156,7 @@ const MemberDetail = () => {
 
   return (
     <div className={`min-h-screen font-display flex flex-col relative transition-colors duration-500 overflow-hidden
-      bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100`}>
+      bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100`}>
 
       {/* Header */}
       <div className="absolute top-0 left-0 w-full h-72 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-0"></div>
@@ -170,7 +170,7 @@ const MemberDetail = () => {
 
       <main className="flex-1 overflow-y-auto no-scrollbar pb-10 px-5 relative z-10 -mt-4 pt-10">
           <div className="flex flex-col items-center mb-6">
-             <div className="w-28 h-28 rounded-full p-1 glass-card flex items-center justify-center relative overflow-hidden mb-4 shadow-xl">
+             <div className="w-28 h-28 rounded-full p-1 card flex items-center justify-center relative overflow-hidden mb-4 shadow-xl">
                 <img
                     src={member.photoURL || `https://ui-avatars.com/api/?name=${member.displayName || 'User'}&background=random`}
                     alt="Profile"
@@ -190,7 +190,7 @@ const MemberDetail = () => {
           <div className="space-y-4">
               {/* Role Management Card */}
               {canManageRoles && canChangeRoleForTarget(member.role) && (
-                  <div className="glass-card p-5 border-l-4 border-yellow-500">
+                  <div className="card p-5 border-l-4 border-yellow-500">
                       <h3 className="font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
                           <span className="material-icons-round text-yellow-500">admin_panel_settings</span>
                           Manajemen Role
@@ -201,7 +201,7 @@ const MemberDetail = () => {
                         value={member.role || ROLES.ANGGOTA}
                         onChange={handleRoleChange}
                         disabled={updatingRole}
-                        className="glass-input w-full p-3 font-semibold uppercase text-sm"
+                        className="input-field w-full p-3 font-semibold uppercase text-sm"
                       >
                           {/* Render options based on permissions */}
                           <option value={ROLES.ANGGOTA}>ANGGOTA</option>
@@ -227,7 +227,7 @@ const MemberDetail = () => {
               )}
 
               {/* Info Card */}
-              <div className="glass-card p-5 space-y-4">
+              <div className="card p-5 space-y-4">
                   <div>
                       <p className="text-xs opacity-60 uppercase font-bold mb-1">Bio</p>
                       <p className="text-sm italic opacity-90">"{member.bio || 'Belum ada bio'}"</p>

@@ -32,7 +32,7 @@ const Menu = () => {
 
   return (
     <div className={`app-container `}>
-      <header className="glass-header px-6 pt-safe pb-4 sticky top-0 z-20">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 pt-safe pb-4 sticky top-0 z-20">
         <h1 className="text-h2 text-slate-900 dark:text-white">Menu</h1>
         <p className="text-caption">Pusat Navigasi</p>
       </header>
@@ -46,7 +46,7 @@ const Menu = () => {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`glass-card p-5 flex flex-col justify-center items-start gap-3 hover:scale-[1.02] active:scale-95 transition-all group ${section.items.length === 1 && section.title !== 'Lainnya' ? 'col-span-2 flex-row items-center !justify-start' : ''}`}
+                  className={`card p-5 flex flex-col justify-center items-start gap-3 hover:scale-[1.02] active:scale-95 transition-all group ${section.items.length === 1 && section.title !== 'Lainnya' ? 'col-span-2 flex-row items-center !justify-start' : ''}`}
                 >
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg} ${item.color} group-hover:shadow-lg transition-shadow`}>
                     <span className="material-icons-round text-2xl">{item.icon}</span>

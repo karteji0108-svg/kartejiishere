@@ -13,7 +13,7 @@ const Activities = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const canCreate = ['admin', 'ketua', 'wakil_ketua', 'sekretaris', 'content_creator'].includes(userRole);
+  const canCreate = ['super_admin', 'admin', 'ketua', 'wakil_ketua', 'sekretaris', 'content_creator'].includes(userRole);
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -45,9 +45,9 @@ const Activities = () => {
   }, [activities, search]);
 
   return (
-    <div className="min-h-screen bg-glass-light dark:bg-glass-dark pb-24 font-display">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark pb-24 font-display">
        {/* Header */}
-      <div className="sticky top-0 z-40 glass-header px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
+      <div className="sticky top-0 z-40 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
           <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
               Kegiatan
           </h1>
@@ -76,7 +76,7 @@ const Activities = () => {
       <div className="px-6 space-y-4">
         {loading ? (
              [1,2,3].map(i => (
-                <div key={i} className="glass-card p-4 flex gap-4 animate-pulse">
+                <div key={i} className="card p-4 flex gap-4 animate-pulse">
                     <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
                     <div className="flex-1 space-y-2">
                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
@@ -87,7 +87,7 @@ const Activities = () => {
              ))
         ) : filteredActivities.length > 0 ? (
             filteredActivities.map(activity => (
-                <Link to={`/activities/${activity.id}`} key={activity.id} className="glass-card p-3 flex gap-4 group active:scale-[0.99] transition-all duration-200 hover:shadow-md">
+                <Link to={`/activities/${activity.id}`} key={activity.id} className="card p-3 flex gap-4 group active:scale-[0.99] transition-all duration-200 hover:shadow-md">
                     <div className="w-24 h-24 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 relative">
                         {activity.image ? (
                             <img src={activity.image} alt={activity.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />

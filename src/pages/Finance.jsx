@@ -61,9 +61,9 @@ const Finance = () => {
   if (!canView) return null;
 
   return (
-    <div className="min-h-screen bg-glass-light dark:bg-glass-dark pb-24 font-display">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark pb-24 font-display">
       {/* Header */}
-      <div className="sticky top-0 z-40 glass-header px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
+      <div className="sticky top-0 z-40 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
           <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
               Keuangan
           </h1>
@@ -113,14 +113,14 @@ const Finance = () => {
             <div className="space-y-3">
                 {loading ? (
                     [1,2,3].map(i => (
-                        <div key={i} className="glass-card p-4 animate-pulse flex justify-between items-center">
+                        <div key={i} className="card p-4 animate-pulse flex justify-between items-center">
                             <div className="h-4 bg-gray-200 dark:bg-gray-700 w-1/3 rounded"></div>
                             <div className="h-4 bg-gray-200 dark:bg-gray-700 w-1/4 rounded"></div>
                         </div>
                     ))
                 ) : transactions.length > 0 ? (
                     transactions.map(trx => (
-                        <Link to={`/finance/${trx.id}`} key={trx.id} className="glass-card p-4 flex justify-between items-center group active:scale-[0.99] transition-transform">
+                        <Link to={`/finance/${trx.id}`} key={trx.id} className="card p-4 flex justify-between items-center group active:scale-[0.99] transition-transform">
                              <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${trx.type === 'income' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
                                     <span className="material-icons">{trx.type === 'income' ? 'arrow_downward' : 'arrow_upward'}</span>

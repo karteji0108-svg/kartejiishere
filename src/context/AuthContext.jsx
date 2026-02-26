@@ -101,6 +101,7 @@ export function AuthProvider({ children }) {
     }, []);
 
     const value = {
+        hasRole: (role) => userRole === role,
         currentUser,
         userRole,
         signup,

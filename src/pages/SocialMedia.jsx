@@ -28,7 +28,7 @@ const SocialMedia = () => {
 
   return (
     <div className={`app-container `}>
-      <header className="glass-header px-6 py-4 flex items-center gap-4 sticky top-0 z-20">
+      <header className="bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center gap-4 sticky top-0 z-20">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10">
           <span className="material-icons-round">arrow_back</span>
         </button>
@@ -43,7 +43,7 @@ const SocialMedia = () => {
               href={acc.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="glass-card p-5 flex items-center gap-4 hover:scale-[1.02] transition-transform group"
+              className="card p-5 flex items-center gap-4 hover:scale-[1.02] transition-transform group"
             >
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg ${acc.color}`}>
                 <span className="material-icons-round text-2xl">{acc.icon}</span>
