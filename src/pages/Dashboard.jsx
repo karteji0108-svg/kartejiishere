@@ -132,8 +132,8 @@ const Dashboard = () => {
 
       <div className="px-6 space-y-8">
 
-        {/* 2. Hero Section */}
-        <section className="rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 dark:shadow-black/30 transform transition-all active:scale-[0.99]">
+        {/* 2. Hero Section - Removed active scaling to fix modal interaction */}
+        <section className="rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 dark:shadow-black/30">
             <HeroCarousel />
         </section>
 
@@ -223,9 +223,20 @@ const Dashboard = () => {
          <section>
              <div className="flex justify-between items-end mb-5">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">Kegiatan Terbaru</h2>
-                <Link to="/activities" className="text-sm font-medium text-accent hover:text-accent-dark transition-colors">
-                    Lihat Semua
-                </Link>
+                <div className="flex items-center gap-3">
+                    {canManage && (
+                        <Link
+                            to="/activities/create"
+                            className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                            title="Tambah Kegiatan"
+                        >
+                            <span className="material-icons-round text-lg">add</span>
+                        </Link>
+                    )}
+                    <Link to="/activities" className="text-sm font-medium text-accent hover:text-accent-dark transition-colors">
+                        Lihat Semua
+                    </Link>
+                </div>
             </div>
 
             <div className="flex overflow-x-auto gap-4 pb-6 -mx-6 px-6 no-scrollbar snap-x">
@@ -264,9 +275,20 @@ const Dashboard = () => {
         <section className="pb-8">
              <div className="flex justify-between items-end mb-4">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">Info Terkini</h2>
-                <Link to="/announcements" className="text-sm font-medium text-accent hover:text-accent-dark transition-colors">
-                    Lihat Semua
-                </Link>
+                <div className="flex items-center gap-3">
+                    {canManage && (
+                        <Link
+                            to="/announcements/create"
+                            className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors"
+                            title="Buat Pengumuman"
+                        >
+                            <span className="material-icons-round text-lg">add</span>
+                        </Link>
+                    )}
+                    <Link to="/announcements" className="text-sm font-medium text-accent hover:text-accent-dark transition-colors">
+                        Lihat Semua
+                    </Link>
+                </div>
             </div>
             <div className="space-y-3">
                 {announcements.length > 0 ? (
