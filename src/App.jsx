@@ -130,6 +130,7 @@ function App() {
               <Route path="/members/add" element={<AddMember />} />
               <Route path="/announcements/create" element={<CreateAnnouncement />} />
               <Route path="/activities/create" element={<CreateActivity />} />
+              <Route path="/activities/edit/:id" element={<CreateActivity />} />
               <Route path="/finance/add" element={<AddTransaction />} />
               <Route path="/finance/edit/:id" element={<AddTransaction />} />
               <Route path="/gallery/add" element={<AddGalleryPhoto />} />

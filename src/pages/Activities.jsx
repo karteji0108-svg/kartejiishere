@@ -13,7 +13,7 @@ const Activities = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const canCreate = ['admin', 'ketua', 'wakil_ketua', 'sekretaris', 'content_creator'].includes(userRole);
+  const canCreate = ['super_admin', 'admin', 'ketua', 'wakil_ketua', 'sekretaris', 'content_creator'].includes(userRole);
 
   useEffect(() => {
     const fetchActivities = async () => {

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { collection, addDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 
 const CreateActivity = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { currentUser } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -15,8 +16,39 @@ const CreateActivity = () => {
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [image, setImage] = useState(null);
+  const [currentImageURL, setCurrentImageURL] = useState(null);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(!!id);
+
+  useEffect(() => {
+    if (id) {
+        const fetchActivity = async () => {
+            try {
+                const docRef = doc(db, 'activities', id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    setTitle(data.title);
+                    setDescription(data.description);
+                    setDate(data.date);
+                    setTime(data.time);
+                    setLocation(data.location);
+                    setCurrentImageURL(data.imageURL);
+                } else {
+                    toast.error("Kegiatan tidak ditemukan");
+                    navigate('/activities');
+                }
+            } catch (error) {
+                console.error("Error fetching activity:", error);
+                toast.error("Gagal memuat data kegiatan");
+            } finally {
+                setInitialLoading(false);
+            }
+        };
+        fetchActivity();
+    }
+  }, [id, navigate]);
 
   const handleGetLocation = () => {
     setLocationLoading(true);
@@ -62,33 +94,56 @@ const CreateActivity = () => {
           throw new Error("Anda harus login untuk membuat kegiatan.");
       }
 
-      let imageURL = null;
+      let imageURL = currentImageURL;
       if (image) {
         imageURL = await uploadToCloudinary(image);
       }
 
-      await addDoc(collection(db, 'activities'), {
+      const activityData = {
         title,
         description,
         date,
         time,
         location,
         imageURL,
-        status: 'open',
-        createdAt: new Date().toISOString(),
-        createdBy: currentUser.uid,
-        createdByName: currentUser.displayName || currentUser.email
-      });
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser.uid,
+      };
 
-      toast.success('Kegiatan berhasil dibuat!');
-      navigate('/activities');
+      if (id) {
+          // Update existing activity
+          const docRef = doc(db, 'activities', id);
+          await updateDoc(docRef, activityData);
+          toast.success('Kegiatan berhasil diperbarui!');
+          navigate(`/activities/${id}`);
+      } else {
+          // Create new activity
+          await addDoc(collection(db, 'activities'), {
+            ...activityData,
+            status: 'open',
+            createdAt: new Date().toISOString(),
+            createdBy: currentUser.uid,
+            createdByName: currentUser.displayName || currentUser.email
+          });
+          toast.success('Kegiatan berhasil dibuat!');
+          navigate('/activities');
+      }
+
     } catch (error) {
-      console.error("Error adding activity: ", error);
-      toast.error(`Gagal membuat kegiatan: ${error.message}`);
+      console.error("Error saving activity: ", error);
+      toast.error(`Gagal menyimpan kegiatan: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+      return (
+          <div className="flex justify-center items-center h-screen bg-background-light dark:bg-background-dark">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+      );
+  }
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden">
@@ -100,7 +155,7 @@ const CreateActivity = () => {
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Buat Kegiatan</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">{id ? 'Edit Kegiatan' : 'Buat Kegiatan'}</h1>
       </header>
 
       <main className="flex-1 p-5 max-w-md mx-auto w-full relative z-10 pb-24 animate-fade-in-up">
@@ -203,10 +258,16 @@ const CreateActivity = () => {
                     <div className="flex flex-col items-center">
                         <span className="material-icons-round text-gray-400 text-3xl mb-2 group-hover:text-primary transition-colors">cloud_upload</span>
                         <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                            {image ? image.name : "Klik untuk upload gambar"}
+                            {image ? image.name : (currentImageURL ? "Ganti Gambar (Opsional)" : "Klik untuk upload gambar")}
                         </p>
                     </div>
                 </div>
+                {currentImageURL && !image && (
+                    <div className="mt-2 relative rounded-xl overflow-hidden h-32 w-full">
+                        <img src={currentImageURL} alt="Current" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-xs">Gambar Saat Ini</div>
+                    </div>
+                )}
             </div>
 
             <button
@@ -221,8 +282,8 @@ const CreateActivity = () => {
                     </>
                 ) : (
                     <>
-                        <span className="material-icons-round text-lg">add_circle</span>
-                        Buat Kegiatan
+                        <span className="material-icons-round text-lg">{id ? 'save' : 'add_circle'}</span>
+                        {id ? 'Simpan Perubahan' : 'Buat Kegiatan'}
                     </>
                 )}
             </button>
