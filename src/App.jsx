@@ -1,11 +1,12 @@
 import React, { Suspense, lazy, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import InstallPrompt from './components/common/InstallPrompt';
 import WhatsNewModal from './components/common/WhatsNewModal';
 import { getPlatform } from './utils/platform';
+import { useAuth } from './context/AuthContext';
 
 // Lazy load pages for better performance
 const Login = lazy(() => import('./pages/Login'));
@@ -26,6 +27,9 @@ const AddGalleryPhoto = lazy(() => import('./pages/AddGalleryPhoto'));
 const Announcements = lazy(() => import('./pages/Announcements'));
 const CreateAnnouncement = lazy(() => import('./pages/CreateAnnouncement'));
 const Profile = lazy(() => import('./pages/Profile'));
+const UserApprovals = lazy(() => import('./pages/UserApprovals')); // New Page
+const PendingApproval = lazy(() => import('./pages/PendingApproval')); // New Page
+const AccountRejected = lazy(() => import('./pages/AccountRejected')); // New Page
 
 // New Features
 const Menu = lazy(() => import('./pages/Menu'));
@@ -35,7 +39,7 @@ const Inventory = lazy(() => import('./pages/Inventory'));
 const AddInventory = lazy(() => import('./pages/AddInventory'));
 const Partners = lazy(() => import('./pages/Partners'));
 const AddPartner = lazy(() => import('./pages/AddPartner'));
-const SocialMedia = lazy(() => import('./pages/SocialMedia')); // New
+const SocialMedia = lazy(() => import('./pages/SocialMedia'));
 
 // Simple loading spinner for Suspense fallback
 const LoadingFallback = () => (
@@ -43,6 +47,14 @@ const LoadingFallback = () => (
     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
   </div>
 );
+
+// Simple Auth Wrapper for Status Pages (no status check to avoid loops)
+const AuthOnly = ({ children }) => {
+    const { currentUser, loading } = useAuth();
+    if (loading) return <LoadingFallback />;
+    if (!currentUser) return <Navigate to="/" replace />;
+    return children;
+};
 
 function App() {
   useEffect(() => {
@@ -93,7 +105,11 @@ function App() {
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Protected Routes (Authenticated Users) */}
+            {/* Status Routes (Authenticated but not fully authorized) */}
+            <Route path="/pending" element={<AuthOnly><PendingApproval /></AuthOnly>} />
+            <Route path="/rejected" element={<AuthOnly><AccountRejected /></AuthOnly>} />
+
+            {/* Protected Routes (Authenticated & Approved Users) */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profil" element={<Profile />} />
@@ -112,7 +128,7 @@ function App() {
               <Route path="/correspondence" element={<Correspondence />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/partners" element={<Partners />} />
-              <Route path="/social-media" element={<SocialMedia />} /> {/* New Route */}
+              <Route path="/social-media" element={<SocialMedia />} />
             </Route>
 
             {/* Role Protected Routes */}
@@ -141,6 +157,12 @@ function App() {
               <Route path="/inventory/add" element={<AddInventory />} />
               <Route path="/partners/add" element={<AddPartner />} />
             </Route>
+
+            {/* User Approval Route (Super Admin, Ketua, Wakil Ketua) */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'wakil_ketua']} />}>
+                 <Route path="/user-approvals" element={<UserApprovals />} />
+            </Route>
+
           </Routes>
         </Suspense>
       </ErrorBoundary>

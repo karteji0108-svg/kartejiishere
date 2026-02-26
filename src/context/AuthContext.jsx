@@ -20,6 +20,7 @@ export function useAuth() {
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
+    const [userStatus, setUserStatus] = useState(null);
     const [loading, setLoading] = useState(true);
 
     async function signup(email, password, fullName) {
@@ -27,12 +28,12 @@ export function AuthProvider({ children }) {
         const user = userCredential.user;
 
         // Default role is ANGGOTA.
-        // Admin promotion must be done manually in DB or via a seed script for the first user.
+        // Status is PENDING.
         await setDoc(doc(db, "users", user.uid), {
             fullName: fullName,
             email: email,
             role: ROLES.ANGGOTA,
-            status: "active",
+            status: "pending",
             createdAt: new Date().toISOString()
         });
 
@@ -57,7 +58,7 @@ export function AuthProvider({ children }) {
                     fullName: user.displayName,
                     email: user.email,
                     role: ROLES.ANGGOTA, // Default role
-                    status: "active",
+                    status: "pending", // Default status for new Google users
                     photoURL: user.photoURL,
                     createdAt: new Date().toISOString()
                 });
@@ -77,22 +78,28 @@ export function AuthProvider({ children }) {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
             if (user) {
-                // Fetch user role from Firestore
+                // Fetch user role and status from Firestore
                 try {
                     const docRef = doc(db, "users", user.uid);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
-                        setUserRole(docSnap.data().role || ROLES.ANGGOTA);
+                        const data = docSnap.data();
+                        setUserRole(data.role || ROLES.ANGGOTA);
+                        // Default to active if status is missing (legacy users)
+                        setUserStatus(data.status || "active");
                     } else {
                         // Fallback if doc doesn't exist yet (race condition in signup?)
                         setUserRole(ROLES.ANGGOTA);
+                        setUserStatus("pending");
                     }
                 } catch (error) {
                     console.error("Error fetching role:", error);
                     setUserRole(ROLES.ANGGOTA);
+                    setUserStatus("pending");
                 }
             } else {
                 setUserRole(null);
+                setUserStatus(null);
             }
             setLoading(false);
         });
@@ -104,6 +111,7 @@ export function AuthProvider({ children }) {
         hasRole: (role) => userRole === role,
         currentUser,
         userRole,
+        userStatus,
         signup,
         login,
         loginWithGoogle,

@@ -18,9 +18,11 @@ const Dashboard = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const canManage = hasRole('super_admin') || hasRole('ketua') || hasRole('wakil_ketua');
   const canViewFinance = hasRole('bendahara') || hasRole('ketua') || hasRole('wakil_ketua') || hasRole('super_admin');
+  const canApprove = hasRole('super_admin') || hasRole('ketua') || hasRole('wakil_ketua');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -66,6 +68,22 @@ const Dashboard = () => {
 
         setStats({ members: membersCount, activities: activitiesCount, balance });
 
+        // Pending Approvals Count
+        if (canApprove) {
+            try {
+                // Try fetching count with index
+                const pendingQ = query(collection(db, 'users'), where('status', '==', 'pending'));
+                const pendingSnapshot = await getCountFromServer(pendingQ);
+                setPendingCount(pendingSnapshot.data().count);
+            } catch (err) {
+                 console.warn("Index missing for pending status count, falling back", err);
+                 // Fallback if index missing (or creating one takes time) - just query normally
+                 const pendingQ = query(collection(db, 'users'), where('status', '==', 'pending'));
+                 const snap = await getDocs(pendingQ);
+                 setPendingCount(snap.size);
+            }
+        }
+
         // 2. Recent Activities
         const activitiesQ = query(
           collection(db, 'activities'),
@@ -99,7 +117,7 @@ const Dashboard = () => {
     };
 
     fetchDashboardData();
-  }, [currentUser, canViewFinance]);
+  }, [currentUser, canViewFinance, canApprove]);
 
   if (loading) return <DashboardSkeleton />;
 
@@ -136,6 +154,29 @@ const Dashboard = () => {
         <section className="rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 dark:shadow-black/30">
             <HeroCarousel />
         </section>
+
+        {/* Pending Approval Widget */}
+        {canApprove && pendingCount > 0 && (
+             <section>
+                <div
+                    onClick={() => navigate('/user-approvals')}
+                    className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-2xl p-4 flex items-center justify-between cursor-pointer active:scale-98 transition-transform"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                            <span className="material-icons-round">person_add</span>
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900 dark:text-white text-sm">Persetujuan Menunggu</h3>
+                            <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                                {pendingCount} user baru perlu disetujui
+                            </p>
+                        </div>
+                    </div>
+                    <span className="material-icons-round text-gray-400">chevron_right</span>
+                </div>
+            </section>
+        )}
 
         {/* 3. Quick Actions */}
         <section>
