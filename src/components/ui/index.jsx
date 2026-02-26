@@ -4,7 +4,7 @@ export const Button = ({ children, variant = 'primary', className = '', ...props
   const baseStyles = "w-full py-3.5 px-4 font-semibold rounded-xl shadow-lg transition-transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2";
   const variants = {
     primary: "bg-primary text-white shadow-primary/30 hover:bg-primary-dark",
-    secondary: "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600",
+    secondary: "bg-white/20 dark:bg-white/10 text-slate-700 dark:text-slate-200 hover:bg-white/30 dark:hover:bg-white/20 backdrop-blur-md border border-white/10",
     danger: "bg-red-500 text-white shadow-red-500/30 hover:bg-red-600",
     outline: "border-2 border-primary text-primary hover:bg-primary/5",
   };
@@ -21,12 +21,12 @@ export const Input = ({ label, icon, error, ...props }) => (
     {label && <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">{label}</label>}
     <div className="relative group">
       {icon && (
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary transition-colors">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 dark:text-gray-400 group-focus-within:text-primary transition-colors">
           <span className="material-icons-round text-xl">{icon}</span>
         </div>
       )}
       <input
-        className={`w-full px-4 py-3 bg-gray-50 dark:bg-slate-700 border border-transparent dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all outline-none text-sm font-medium text-slate-800 dark:text-white placeholder-gray-400 ${icon ? 'pl-10' : ''} ${error ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-900/10' : ''}`}
+        className={`glass-input w-full px-4 py-3 ${icon ? 'pl-10' : ''} ${error ? 'ring-2 ring-red-500 bg-red-50/50 dark:bg-red-900/20' : ''}`}
         {...props}
       />
     </div>
@@ -35,7 +35,7 @@ export const Input = ({ label, icon, error, ...props }) => (
 );
 
 export const Card = ({ children, className = '' }) => (
-  <div className={`bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 ${className}`}>
+  <div className={`glass-card p-6 ${className}`}>
     {children}
   </div>
 );

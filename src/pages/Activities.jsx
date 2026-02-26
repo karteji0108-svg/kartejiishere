@@ -1,50 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import BottomNav from '../components/BottomNav';
-import { useRamadan } from '../context/RamadanContext';
-import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
+import BottomNav from '../components/layout/BottomNav';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import Skeleton from '../components/Skeleton';
+import { Link } from 'react-router-dom';
+import Skeleton from '../components/common/Skeleton';
+import { useRamadan } from '../context/RamadanContext';
 
 const Activities = () => {
-  const { isRamadan } = useRamadan();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const { isRamadan } = useRamadan();
 
   useEffect(() => {
+    const fetchActivities = async () => {
+      setLoading(true);
+      try {
+        const q = query(collection(db, 'activities'), orderBy('date', 'desc')); // Most recent first
+        const querySnapshot = await getDocs(q);
+        const activityData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setActivities(activityData);
+      } catch (error) {
+        console.error("Error fetching activities: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchActivities();
   }, []);
-
-  const fetchActivities = async () => {
-    setLoading(true);
-    try {
-      const q = query(collection(db, 'activities'), orderBy('date', 'asc'));
-      const querySnapshot = await getDocs(q);
-      const activityData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setActivities(activityData);
-    } catch (error) {
-      console.error("Error fetching activities: ", error);
-      setActivities([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus kegiatan ini?")) {
-      try {
-        await deleteDoc(doc(db, 'activities', id));
-        fetchActivities(); // Refresh list
-      } catch (error) {
-        console.error("Error deleting activity: ", error);
-        alert("Gagal menghapus kegiatan.");
-      }
-    }
-  };
 
   const filteredActivities = activities.filter(activity =>
     activity.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -52,192 +39,158 @@ const Activities = () => {
   );
 
   const getMonthName = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+    const options = { month: 'long', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
   const getDay = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.getDate();
+    return new Date(dateString).getDate();
   };
 
   const getMonthShort = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('id-ID', { month: 'short' });
+    return new Date(dateString).toLocaleDateString('id-ID', { month: 'short' });
   };
 
   return (
-    <div className={`font-display min-h-screen flex flex-col items-center justify-center transition-colors duration-500 relative
-      ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/20 text-slate-800 dark:text-slate-100' : 'bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100'}`}>
-      {/* Mobile Container */}
-      <div className="w-full max-w-md h-screen bg-white dark:bg-slate-900 shadow-2xl overflow-hidden flex flex-col relative">
-        {/* Header */}
-        <header className={`px-5 pt-12 pb-4 sticky top-0 z-20 border-b flex justify-between items-center transition-colors animate-fade-in-down
-          ${isRamadan ? 'bg-emerald-50/90 dark:bg-emerald-900/90 border-ramadan-gold/20 backdrop-blur-md' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}>
-          <div>
-            <h1 className={`text-2xl font-bold tracking-tight ${isRamadan ? 'text-ramadan-primary dark:text-white' : 'text-slate-900 dark:text-white'}`}>
-              Kegiatan {isRamadan && 'Ramadhan'}
-            </h1>
-            <p className={`text-sm ${isRamadan ? 'text-ramadan-accent' : 'text-slate-500 dark:text-slate-400'}`}>
-              Agenda Karang Taruna
-            </p>
-          </div>
-          <button className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
-            <span className="material-icons">filter_list</span>
-          </button>
-        </header>
+    <div className={`font-display h-screen flex flex-col overflow-hidden relative transition-colors duration-500
+      ${isRamadan ? 'bg-ramadan text-white' : 'bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100'}`}>
 
-        {/* Main Content: Activity List */}
-        <main className="flex-1 overflow-y-auto no-scrollbar px-4 pt-4 pb-24 space-y-5">
+      {/* Top Status Bar Simulation */}
+      <div className="h-12 w-full shrink-0"></div>
+
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto no-scrollbar pb-24 relative">
+        {/* Header */}
+        <header className="glass-header px-5 pt-4 pb-4 sticky top-0 z-40 animate-fade-in-down safe-area-top">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  Kegiatan {isRamadan && 'Ramadhan'}
+                </h1>
+                <p className="text-sm opacity-70">Agenda Karang Taruna</p>
+            </div>
+            <button className="p-2 rounded-full hover:bg-white/30 dark:hover:bg-black/30 transition-colors text-primary">
+              <span className="material-icons-round">filter_list</span>
+            </button>
+          </div>
           {/* Search Bar */}
-          <div className="relative mb-6">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-              <span className="material-icons text-xl">search</span>
-            </span>
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="material-icons-round text-gray-500 dark:text-gray-400 text-xl group-focus-within:text-primary transition-colors">search</span>
+            </div>
             <input
-              className="w-full py-2.5 pl-10 pr-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              className="glass-input w-full pl-10 pr-3 py-3"
               placeholder="Cari kegiatan..."
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+        </header>
 
+        {/* Activity List */}
+        <div className="px-5 py-4 space-y-6">
           {loading ? (
-             <>
-               <Skeleton className="h-32 w-full rounded-xl" />
-               <Skeleton className="h-32 w-full rounded-xl" />
-             </>
+             <div className="space-y-4">
+               <Skeleton className="h-40 w-full rounded-2xl" />
+               <Skeleton className="h-40 w-full rounded-2xl" />
+             </div>
           ) : filteredActivities.length === 0 ? (
              <div className="text-center py-10 text-gray-500 animate-fade-in-up">
+                <div className="w-20 h-20 bg-white/20 dark:bg-black/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                    <span className="material-icons-round text-4xl text-slate-400">event_busy</span>
+                </div>
                 Tidak ada kegiatan ditemukan.
              </div>
           ) : (
-            filteredActivities.map((activity, index) => (
+            filteredActivities.map((activity, index) => {
+              const showMonthHeader = index === 0 || getMonthName(activity.date) !== getMonthName(filteredActivities[index-1].date);
+
+              return (
               <div key={activity.id}>
-                 {/* Show Month Header */}
-                 {(index === 0 || getMonthName(activity.date) !== getMonthName(filteredActivities[index-1].date)) && (
-                    <div className="flex items-center space-x-2 pb-1 pt-2 animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
-                      <span className="material-icons text-primary text-sm">event</span>
-                      <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                 {/* Month Header */}
+                 {showMonthHeader && (
+                    <div className="flex items-center space-x-2 pb-2 pt-2 animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
+                      <span className="material-icons-round text-primary text-sm">event</span>
+                      <h2 className="text-xs font-bold uppercase tracking-wider opacity-70">
                         {getMonthName(activity.date)}
                       </h2>
                     </div>
                  )}
 
                  {/* Activity Card */}
-                 <div className={`group rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-300 mt-3 relative animate-fade-in-up
-                    ${isRamadan ? 'bg-white dark:bg-slate-800 border-ramadan-gold/30 ring-1 ring-ramadan-gold/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'}`}
-                    style={{ animationDelay: `${index * 50 + 50}ms` }}
-                 >
-
-                    {/* Delete Button (Absolute) */}
-                    <button
-                         onClick={(e) => { e.preventDefault(); handleDelete(activity.id); }}
-                         className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-red-50 text-red-500 dark:bg-black/20 dark:hover:bg-red-900/30 z-20 transition-colors shadow-sm"
-                         title="Hapus Kegiatan"
+                 <Link to={`/activities/${activity.id}`}>
+                    <div className="glass-card overflow-hidden hover:scale-[1.02] transition-transform duration-300 relative animate-fade-in-up group p-0"
+                        style={{ animationDelay: `${index * 50 + 50}ms` }}
                     >
-                         <span className="material-icons text-sm">delete</span>
-                    </button>
+                        {activity.imageURL ? (
+                        <div className="relative h-48 overflow-hidden">
+                            <img
+                                alt={activity.title}
+                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                                src={activity.imageURL}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
 
-                    {/* Image Section */}
-                    {activity.imageURL ? (
-                      <div className="relative h-40 overflow-hidden">
-                        <img
-                          alt={activity.title}
-                          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                          src={activity.imageURL}
-                        />
-                        <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 rounded-lg flex flex-col items-center shadow-sm">
-                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{getMonthShort(activity.date)}</span>
-                          <span className={`text-xl font-bold leading-none ${isRamadan ? 'text-ramadan-primary' : 'text-primary'}`}>{getDay(activity.date)}</span>
-                        </div>
-                        <div className="absolute top-3 right-3 flex gap-2">
-                          {isRamadan && activity.isRamadanEvent && (
-                            <span className="bg-ramadan-gold text-white text-xs px-2.5 py-1 rounded-full font-medium shadow-sm">
-                              Special
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex">
-                         <div className="w-24 bg-primary/10 dark:bg-primary/20 flex flex-col items-center justify-center p-2 border-r border-slate-100 dark:border-slate-700 shrink-0">
-                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{getMonthShort(activity.date)}</span>
-                            <span className="text-2xl font-bold text-primary">{getDay(activity.date)}</span>
-                         </div>
-                         <div className="p-3 flex-1 flex flex-col justify-between">
-                             <div className="pr-8">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
+                            {/* Date Badge */}
+                            <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg flex flex-col items-center shadow-lg">
+                                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{getMonthShort(activity.date)}</span>
+                                <span className="text-xl font-bold leading-none text-primary">{getDay(activity.date)}</span>
+                            </div>
+
+                            {/* Text Content Overlay */}
+                            <div className="absolute bottom-0 left-0 w-full p-4">
+                                <h3 className="text-lg font-bold text-white leading-tight mb-1 drop-shadow-md">
                                     {activity.title}
-                                  </h3>
+                                </h3>
+                                <div className="flex items-center text-xs text-white/80 space-x-3">
+                                    {activity.time && (
+                                        <div className="flex items-center bg-black/30 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                            <span className="material-icons-round text-sm mr-1">schedule</span>
+                                            {activity.time}
+                                        </div>
+                                    )}
+                                    {activity.location && (
+                                        <div className="flex items-center bg-black/30 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                            <span className="material-icons-round text-sm mr-1">place</span>
+                                            <span className="truncate max-w-[150px]">{activity.location}</span>
+                                        </div>
+                                    )}
                                 </div>
-                                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
-                                  {activity.description}
+                            </div>
+                        </div>
+                        ) : (
+                        <div className="flex p-4">
+                            <div className="w-16 bg-primary/10 rounded-xl flex flex-col items-center justify-center p-2 border border-primary/20 shrink-0 mr-4">
+                                <span className="text-[10px] font-bold opacity-70 uppercase">{getMonthShort(activity.date)}</span>
+                                <span className="text-2xl font-bold text-primary">{getDay(activity.date)}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 truncate">
+                                    {activity.title}
+                                </h3>
+                                <p className="text-sm opacity-70 line-clamp-2">
+                                    {activity.description}
                                 </p>
-                             </div>
-                             <Link to={`/activities/${activity.id}`} className={`text-primary text-xs font-semibold hover:text-blue-600 transition-colors flex items-center`}>
-                                Detail
-                                <span className="material-icons text-sm ml-0.5">chevron_right</span>
-                             </Link>
-                         </div>
-                      </div>
-                    )}
-
-                    {/* Content Section for Image Card */}
-                    {activity.imageURL && (
-                      <div className="p-4">
-                        <div className="flex items-start justify-between mb-2 pr-8">
-                           <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight">
-                             {activity.title}
-                           </h3>
+                            </div>
                         </div>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
-                          {activity.description}
-                        </p>
-                        <div className="flex items-center text-xs text-slate-400 dark:text-slate-500 mb-4 space-x-3">
-                           {activity.time && (
-                             <div className="flex items-center">
-                               <span className="material-icons text-sm mr-1">schedule</span>
-                               {activity.time}
-                             </div>
-                           )}
-                           {activity.location && (
-                             <div className="flex items-center">
-                               <span className="material-icons text-sm mr-1">place</span>
-                               {activity.location}
-                             </div>
-                           )}
-                        </div>
-                        <Link to={`/activities/${activity.id}`} className={`w-full py-2.5 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm
-                           ${isRamadan ? 'bg-ramadan-primary hover:bg-emerald-600' : 'bg-primary hover:bg-blue-600'}`}>
-                           <span>Lihat Detail</span>
-                           <span className="material-icons text-sm">arrow_forward</span>
-                        </Link>
-                      </div>
-                    )}
-                 </div>
+                        )}
+                    </div>
+                 </Link>
               </div>
-            ))
+            )})
           )}
 
-          {/* End of list placeholder */}
-          <div className="text-center py-6">
-            <p className="text-xs text-slate-400">Anda telah mencapai akhir daftar.</p>
-          </div>
-        </main>
+          <div className="h-24"></div>
+        </div>
+      </main>
 
-        {/* FAB for Adding Activity */}
-        <Link to="/activities/create" className="fixed right-5 bottom-24 bg-primary hover:bg-blue-600 text-white p-4 rounded-full shadow-lg shadow-primary/40 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-40">
-            <span className="material-icons">add</span>
-        </Link>
+      {/* FAB for Adding Activity */}
+      <Link to="/activities/create" className="fixed right-5 bottom-24 bg-primary hover:bg-primary-dark text-white w-14 h-14 rounded-full shadow-lg shadow-primary/40 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 z-40">
+        <span className="material-icons-round text-2xl">add</span>
+      </Link>
 
-        <BottomNav />
-      </div>
+      <BottomNav />
     </div>
   );
 };

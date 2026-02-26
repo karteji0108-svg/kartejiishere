@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import BottomNav from '../components/BottomNav';
+import BottomNav from '../components/layout/BottomNav';
 import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
-import Skeleton from '../components/Skeleton';
+import Skeleton from '../components/common/Skeleton';
 import toast from 'react-hot-toast';
 
 const ActivityGallery = () => {

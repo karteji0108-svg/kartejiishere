@@ -10,12 +10,33 @@ const AddTransaction = () => {
   const { currentUser } = useAuth();
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
+  const [displayAmount, setDisplayAmount] = useState('');
   const [type, setType] = useState('expense');
   const [category, setCategory] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
-  // Helper to ensure user has permissions (Self-healing)
+  // Format currency for display (1.000.000)
+  const formatNumber = (num) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  const handleAmountChange = (e) => {
+    // Remove non-numeric chars
+    const rawValue = e.target.value.replace(/\D/g, '');
+
+    if (rawValue === '') {
+        setAmount('');
+        setDisplayAmount('');
+        return;
+    }
+
+    const numericValue = parseInt(rawValue, 10);
+    setAmount(numericValue);
+    setDisplayAmount(formatNumber(numericValue));
+  };
+
+  // Helper to ensure user has permissions (Self-healing - kept for safety)
   const ensureUserPermissions = async (user) => {
       try {
           const userRef = doc(db, 'users', user.uid);
@@ -23,13 +44,8 @@ const AddTransaction = () => {
 
           if (!userSnap.exists() || userSnap.data().role !== 'super_admin') {
               console.log("Attempting to fix user permissions...");
-              await setDoc(userRef, {
-                  role: 'super_admin',
-                  email: user.email,
-                  fullName: user.displayName || 'User',
-                  status: 'active',
-                  uid: user.uid
-              }, { merge: true });
+              // Only do this if we are sure it's safe - removed auto-promote logic as per security audit request.
+              // Just log or ensure fields exist.
           }
       } catch (error) {
           console.error("Failed to self-heal permissions:", error);
@@ -45,11 +61,14 @@ const AddTransaction = () => {
           throw new Error("Anda harus login untuk menambah transaksi.");
       }
 
-      await ensureUserPermissions(currentUser);
+      // Ensure amount is a valid number
+      if (!amount || isNaN(amount)) {
+          throw new Error("Jumlah tidak valid.");
+      }
 
       const transactionData = {
         title,
-        amount: Number(amount),
+        amount: Number(amount), // Ensure it's stored as Number
         type,
         category,
         date,
@@ -67,7 +86,7 @@ const AddTransaction = () => {
     } catch (error) {
       console.error("Error adding transaction: ", error);
       if (error.code === 'permission-denied') {
-          toast.error("Izin ditolak. Pastikan Anda memiliki akses 'super_admin'. Coba refresh halaman.");
+          toast.error("Izin ditolak. Pastikan Anda memiliki akses yang sesuai.");
       } else {
           toast.error(`Gagal menambahkan transaksi: ${error.message}`);
       }
@@ -133,10 +152,11 @@ const AddTransaction = () => {
                     <div className="relative">
                         <span className="absolute left-3 top-3 text-gray-400 material-icons-round text-lg">attach_money</span>
                         <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             className="input-primary pl-10 text-lg font-semibold tracking-wide"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
+                            value={displayAmount}
+                            onChange={handleAmountChange}
                             placeholder="0"
                             required
                         />

@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import BottomNav from '../components/BottomNav';
+import BottomNav from '../components/layout/BottomNav';
+import ThemeToggle from '../components/common/ThemeToggle';
+import RamadanBanner from '../components/common/RamadanBanner';
+import PrayerTimes from '../components/common/PrayerTimes';
 import { useRamadan } from '../context/RamadanContext';
 import { useAuth } from '../context/AuthContext';
 import { collection, getDocs, query, orderBy, limit, where, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import Skeleton from '../components/Skeleton';
+import Skeleton from '../components/common/Skeleton';
 import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
 
 // --- Widget Components ---
 
 const AdminStats = ({ stats, loading }) => (
   <div className="grid grid-cols-2 gap-4 mb-6">
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-          <p className="text-xs text-gray-500">Total Anggota</p>
+      <div className="glass-card p-4">
+          <p className="text-xs text-gray-600 dark:text-gray-300">Total Anggota</p>
           <h3 className="text-xl font-bold">{loading ? "..." : stats.memberCount}</h3>
       </div>
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-          <p className="text-xs text-gray-500">Saldo Kas</p>
-          <h3 className="text-xl font-bold text-green-600">{loading ? "..." : `Rp ${stats.balance.toLocaleString()}`}</h3>
+      <div className="glass-card p-4">
+          <p className="text-xs text-gray-600 dark:text-gray-300">Saldo Kas</p>
+          <h3 className="text-xl font-bold text-green-600">{loading ? "..." : `Rp ${stats.balance.toLocaleString('id-ID')}`}</h3>
       </div>
   </div>
 );
@@ -26,7 +29,7 @@ const AdminStats = ({ stats, loading }) => (
 const ApprovalQueue = () => (
     <div className="mb-6">
         <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase">Perlu Persetujuan</h3>
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-4 text-center text-sm text-gray-500 border border-dashed border-gray-300 dark:border-gray-700">
+        <div className="glass-card p-4 text-center text-sm text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600">
             Tidak ada pengajuan pending.
         </div>
     </div>
@@ -71,9 +74,9 @@ const QuickActions = ({ userRole }) => {
             </Link>
           )}
 
-          <Link to="/gallery/add" className="flex flex-col items-center gap-2 group">
+          <Link to="/gallery" className="flex flex-col items-center gap-2 group">
              <div className="w-12 h-12 rounded-xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-pink-600 dark:text-pink-400 group-hover:scale-105 transition-transform">
-                 <span className="material-icons-round">add_a_photo</span>
+                 <span className="material-icons-round">photo_library</span>
              </div>
              <span className="text-[10px] font-medium text-center">Galeri</span>
           </Link>
@@ -93,9 +96,11 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ balance: 0, memberCount: 0, activityCount: 0 });
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null); // Local state for detailed user data
 
-  // Self-Healing removed in favor of correct RBAC.
-  // Note: If you are locked out, manually set your role to 'super_admin' in Firestore console.
+  const canUpload = hasPermission(userRole, PERMISSIONS.MANAGE_GALLERY) ||
+                    hasPermission(userRole, PERMISSIONS.MANAGE_ACTIVITIES) ||
+                    userRole === 'anggota';
 
   useEffect(() => {
     // Basic Geo
@@ -114,6 +119,14 @@ const Dashboard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Fetch detailed user profile
+        if (currentUser) {
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            if (userDoc.exists()) {
+                setUserProfile(userDoc.data());
+            }
+        }
+
         // Fetch stats only if allowed
         let memberCount = 0;
         let balance = 0;
@@ -127,8 +140,15 @@ const Dashboard = () => {
             const financeSnap = await getDocs(collection(db, 'finance'));
             financeSnap.forEach(doc => {
                 const data = doc.data();
-                if (data.type === 'income') balance += Number(data.amount);
-                if (data.type === 'expense') balance -= Number(data.amount);
+                // Robust parsing for dashboard summary
+                let amount = data.amount;
+                if (typeof amount === 'string') {
+                    amount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
+                }
+                const numAmount = Number(amount) || 0;
+
+                if (data.type === 'income') balance += numAmount;
+                if (data.type === 'expense') balance -= numAmount;
             });
         }
 
@@ -157,11 +177,14 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [userRole]);
+  }, [userRole, currentUser]);
+
+  const displayName = userProfile?.fullName || userProfile?.displayName || currentUser?.displayName || 'Pengguna';
+  const photoURL = userProfile?.photoURL || currentUser?.photoURL;
 
   return (
     <div className={`font-display text-slate-800 dark:text-slate-100 h-screen overflow-hidden flex flex-col relative transition-colors duration-500
-      ${isRamadan ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-background-light dark:bg-background-dark'}`}>
+      ${isRamadan ? 'bg-ramadan' : 'bg-glass-light dark:bg-glass-dark'}`}>
 
       {/* Top Status Bar Area */}
       <div className="h-12 w-full shrink-0"></div>
@@ -171,29 +194,35 @@ const Dashboard = () => {
         <header className="flex items-center justify-between mb-8 pt-2">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className={`w-12 h-12 rounded-full overflow-hidden border-2 shadow-sm flex items-center justify-center bg-gray-200 ${isRamadan ? 'border-ramadan-gold ring-2 ring-ramadan-gold/30' : 'border-white dark:border-slate-700'}`}>
-                 {currentUser?.photoURL ? (
-                    <img src={currentUser.photoURL} alt="Avatar" className="w-full h-full object-cover" />
-                 ) : (
-                    <span className="material-icons text-gray-400">person</span>
-                 )}
+              <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center glass-card p-1 shadow-lg">
+                 <div className="w-full h-full rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
+                     {photoURL ? (
+                        <img src={photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                     ) : (
+                        <span className="material-icons text-gray-400 dark:text-gray-500 text-3xl flex items-center justify-center h-full w-full">person</span>
+                     )}
+                 </div>
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Selamat Datang,</p>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white capitalize">
-                  {currentUser?.displayName || 'Pengguna'}
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-300 ml-1">Selamat Datang,</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white capitalize ml-1">
+                  {displayName}
               </h1>
-              <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+              <span className="ml-1 mt-1 inline-block text-[10px] bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 text-primary dark:text-primary-content px-2 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm">
                   {userRole?.replace('_', ' ')}
               </span>
             </div>
           </div>
-          <button className="relative p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            <span className="material-icons-round text-[24px]">notifications_none</span>
-            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
-          </button>
+          <div className="flex gap-3 items-center">
+              <ThemeToggle className="glass-card !rounded-full !p-2 !shadow-none !border-white/20 hover:bg-white/30 dark:hover:bg-black/50 transition-colors" />
+              <button className="relative p-2 rounded-full glass-card !shadow-none !border-white/20 text-slate-600 dark:text-slate-300 hover:bg-white/30 dark:hover:bg-black/50 transition-colors">
+                <span className="material-icons-round text-[24px]">notifications_none</span>
+                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
+              </button>
+          </div>
         </header>
+        {isRamadan && <PrayerTimes />}
 
         {/* Role-Specific Dashboard Views */}
 
@@ -223,7 +252,7 @@ const Dashboard = () => {
                <p className="text-center text-gray-500 text-sm py-4">Belum ada update terbaru.</p>
             ) : (
                recentUpdates.map((item, index) => (
-                  <div key={item.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-start gap-4">
+                  <div key={item.id} className="glass-card p-4 flex items-start gap-4">
                     <div className={`shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${item.type === 'activity' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'bg-green-50 dark:bg-green-900/30 text-green-600'}`}>
                       <span className="material-icons-round">{item.type === 'activity' ? 'event' : 'campaign'}</span>
                     </div>
@@ -240,6 +269,17 @@ const Dashboard = () => {
         <div className="h-8"></div>
       </main>
 
+      {/* FAB for Upload (Context-Aware) */}
+      {canUpload && (
+        <Link
+            to="/gallery/add"
+            className="fixed bottom-24 right-5 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all"
+        >
+            <span className="material-icons-round text-2xl">add</span>
+        </Link>
+      )}
+
+      <RamadanBanner />
       <BottomNav />
     </div>
   );

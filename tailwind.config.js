@@ -18,11 +18,19 @@ export default {
         "neutral-surface": "#ffffff",
         "neutral-surface-dark": "#1a2632",
 
-        // Ramadan Theme Colors
-        "ramadan-primary": "#10B981", // Emerald 500
-        "ramadan-gold": "#F59E0B",    // Amber 500
-        "ramadan-accent": "#D97706",  // Amber 600
-        "ramadan-bg": "#064E3B",      // Emerald 900 (for deep backgrounds)
+        // Ramadan Theme Colors (Specified by user)
+        "ramadan-primary": "#0F5132",
+        "ramadan-bg": "#064E3B", // Added missing color
+        "ramadan-accent": "#2FAF6A",
+        "ramadan-gold": "#D4AF37",
+
+        // Specific Light Mode Gradients Start/End
+        "light-start": "#6DD5FA",
+        "light-end": "#B06AB3",
+
+        // Specific Dark Mode Gradients Start/End
+        "dark-start": "#0B1020",
+        "dark-end": "#3B0F5A",
       },
       fontFamily: {
         "display": ["Inter", "sans-serif"]

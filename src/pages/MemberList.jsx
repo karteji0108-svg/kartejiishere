@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import BottomNav from '../components/BottomNav';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import BottomNav from '../components/layout/BottomNav';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Link } from 'react-router-dom';
-import Skeleton from '../components/Skeleton';
+import Skeleton from '../components/common/Skeleton';
+import { useRamadan } from '../context/RamadanContext';
 
 const MemberList = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('Semua');
   const [search, setSearch] = useState('');
+  const { isRamadan } = useRamadan();
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -33,24 +35,24 @@ const MemberList = () => {
   }, []);
 
   const filteredMembers = members.filter(member => {
-    const nameMatch = member.fullName?.toLowerCase().includes(search.toLowerCase()) || false;
+    const nameMatch = (member.fullName || member.displayName)?.toLowerCase().includes(search.toLowerCase()) || false;
     const roleMatch = member.role?.toLowerCase().includes(search.toLowerCase()) || false;
 
     if (!nameMatch && !roleMatch) return false;
 
     if (filter === 'Semua') return true;
-    if (filter === 'Pengurus Inti') return ['ketua', 'wakil ketua', 'sekretaris', 'bendahara'].includes(member.role?.toLowerCase());
-    if (filter === 'Anggota Aktif') return member.status === 'active';
+    if (filter === 'Pengurus Inti') return ['ketua', 'wakil_ketua', 'sekretaris', 'bendahara'].includes(member.role?.toLowerCase());
+    if (filter === 'Anggota Aktif') return true; // Simplified for now
 
     return true;
   });
 
   const getRoleColor = (role) => {
     switch(role?.toLowerCase()) {
-      case 'ketua': return 'bg-primary/10 text-primary';
+      case 'ketua': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
       case 'sekretaris': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
       case 'bendahara': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
-      default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+      default: return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
     }
   };
 
@@ -59,34 +61,29 @@ const MemberList = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white h-screen flex flex-col overflow-hidden relative">
+    <div className={`font-display h-screen flex flex-col overflow-hidden relative transition-colors duration-500
+      ${isRamadan ? 'bg-ramadan text-white' : 'bg-glass-light dark:bg-glass-dark text-slate-800 dark:text-slate-100'}`}>
+
       {/* Top Status Bar Simulation (iOS) */}
-      <div className="h-12 w-full bg-white dark:bg-gray-900 flex items-center justify-between px-6 text-xs font-medium z-50 sticky top-0 shrink-0 border-b border-gray-100 dark:border-gray-800">
-        <span className="w-12 text-center">9:41</span>
-        <div className="flex space-x-2 items-center">
-          <span className="material-icons text-[16px]">signal_cellular_alt</span>
-          <span className="material-icons text-[16px]">wifi</span>
-          <span className="material-icons text-[16px] rotate-180">battery_full</span>
-        </div>
-      </div>
+      <div className="h-12 w-full shrink-0"></div>
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto no-scrollbar pb-24 relative">
         {/* Header Section */}
-        <header className="bg-white dark:bg-gray-900 px-5 pt-4 pb-4 sticky top-0 z-40 shadow-sm animate-fade-in-down">
+        <header className="glass-header px-5 pt-4 pb-4 sticky top-0 z-40 animate-fade-in-down safe-area-top">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Daftar Anggota</h1>
-            <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-primary">
-              <span className="material-icons">filter_list</span>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Daftar Anggota</h1>
+            <button className="p-2 rounded-full hover:bg-white/30 dark:hover:bg-black/30 transition-colors text-primary">
+              <span className="material-icons-round">filter_list</span>
             </button>
           </div>
           {/* Search Bar */}
-          <div className="relative">
+          <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="material-icons text-gray-400 text-xl">search</span>
+              <span className="material-icons-round text-gray-500 dark:text-gray-400 text-xl group-focus-within:text-primary transition-colors">search</span>
             </div>
             <input
-              className="block w-full pl-10 pr-3 py-3 border-none ring-1 ring-gray-200 dark:ring-gray-700 rounded-xl leading-5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-gray-800 transition duration-150 ease-in-out sm:text-sm"
+              className="glass-input w-full pl-10 pr-3 py-3"
               placeholder="Cari nama atau jabatan..."
               type="text"
               value={search}
@@ -94,15 +91,15 @@ const MemberList = () => {
             />
           </div>
           {/* Quick Filter Chips */}
-          <div className="flex space-x-2 mt-4 overflow-x-auto no-scrollbar">
+          <div className="flex space-x-2 mt-4 overflow-x-auto no-scrollbar pb-1">
             {['Semua', 'Pengurus Inti', 'Anggota Aktif'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
                   filter === f
-                    ? 'bg-primary text-white shadow-sm shadow-primary/30'
-                    : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                    : 'bg-white/20 dark:bg-black/20 border border-white/20 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-white/30'
                 }`}
               >
                 {f}
@@ -114,61 +111,63 @@ const MemberList = () => {
         {/* Member List */}
         <div className="px-5 py-4 space-y-3">
           {loading ? (
-             <>
-                <Skeleton className="h-20 w-full rounded-xl" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-                <Skeleton className="h-20 w-full rounded-xl" />
-             </>
+             <div className="space-y-3">
+                <Skeleton className="h-20 w-full rounded-2xl" />
+                <Skeleton className="h-20 w-full rounded-2xl" />
+                <Skeleton className="h-20 w-full rounded-2xl" />
+             </div>
           ) : filteredMembers.length === 0 ? (
              <div className="text-center py-10 text-gray-500 animate-fade-in-up">
+                <div className="w-20 h-20 bg-white/20 dark:bg-black/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                    <span className="material-icons-round text-4xl text-slate-400">group_off</span>
+                </div>
                 Tidak ada anggota ditemukan.
              </div>
           ) : (
             filteredMembers.map((member, index) => (
               <div
                 key={member.id}
-                className={`group relative bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between hover:border-primary/30 transition-all cursor-pointer animate-fade-in-up ${member.status === 'inactive' ? 'opacity-75' : ''}`}
+                className="glass-card p-4 flex items-center justify-between hover:scale-[1.02] transition-transform cursor-pointer animate-fade-in-up group"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex items-center gap-4">
                   <div className="relative shrink-0">
                     {member.photoURL ? (
                       <img
-                        alt={`Portrait of ${member.fullName}`}
-                        className={`h-12 w-12 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm ${member.status === 'inactive' ? 'grayscale' : ''}`}
+                        alt={`Portrait of ${member.fullName || member.displayName || 'Anggota'}`}
+                        className="h-12 w-12 rounded-full object-cover border-2 border-white/50 dark:border-white/10 shadow-sm"
                         src={member.photoURL}
                       />
                     ) : (
-                      <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg border-2 border-white dark:border-gray-800 shadow-sm bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300`}>
-                          {getInitials(member.fullName)}
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg border-2 border-white/50 dark:border-white/10 shadow-sm bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300">
+                          {getInitials(member.fullName || member.displayName)}
                       </div>
                     )}
-                    <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white dark:ring-gray-900 ${member.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                    <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-white dark:ring-slate-800 bg-emerald-500"></span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{member.fullName}</h3>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{member.fullName || member.displayName || 'Anggota'}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${getRoleColor(member.role)}`}>
-                        {member.role || 'Anggota'}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getRoleColor(member.role)}`}>
+                        {member.role?.replace('_', ' ') || 'Anggota'}
                       </span>
-                      {member.phone && <span className="text-xs text-gray-500 dark:text-gray-400">{member.phone}</span>}
                     </div>
                   </div>
                 </div>
-                <button className="text-gray-400 hover:text-primary transition-colors p-2 -mr-2">
-                  <span className="material-icons">chevron_right</span>
+                <button className="w-8 h-8 rounded-full bg-white/20 dark:bg-black/20 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+                  <span className="material-icons-round text-lg">chevron_right</span>
                 </button>
               </div>
             ))
           )}
-          {/* Spacing for last item if list is long */}
+
           <div className="h-24"></div>
         </div>
       </main>
 
       {/* Floating Action Button */}
-      <Link to="/members/add" className="fixed right-5 bottom-24 bg-primary hover:bg-blue-600 text-white p-4 rounded-full shadow-lg shadow-primary/40 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-40">
-        <span className="material-icons">add</span>
+      <Link to="/members/add" className="fixed right-5 bottom-24 bg-primary hover:bg-primary-dark text-white w-14 h-14 rounded-full shadow-lg shadow-primary/40 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 z-40">
+        <span className="material-icons-round text-2xl">person_add</span>
       </Link>
 
       <BottomNav />
