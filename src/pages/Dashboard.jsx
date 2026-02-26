@@ -348,7 +348,11 @@ const Dashboard = () => {
             <div className="space-y-3">
                 {announcements.length > 0 ? (
                     announcements.map((ann) => (
-                        <div key={ann.id} className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex gap-4 items-start shadow-sm border border-gray-100 dark:border-gray-700">
+                        <div
+                            key={ann.id}
+                            onClick={() => navigate(`/announcements/${ann.id}`)}
+                            className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex gap-4 items-start shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer active:scale-[0.99] transition-transform hover:shadow-md"
+                        >
                              <div className="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center flex-shrink-0">
                                 <span className="material-icons-round text-xl">campaign</span>
                             </div>

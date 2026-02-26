@@ -25,6 +25,7 @@ const ActivityGallery = lazy(() => import('./pages/ActivityGallery'));
 const Gallery = lazy(() => import('./pages/Gallery'));
 const AddGalleryPhoto = lazy(() => import('./pages/AddGalleryPhoto'));
 const Announcements = lazy(() => import('./pages/Announcements'));
+const AnnouncementDetail = lazy(() => import('./pages/AnnouncementDetail')); // New Page
 const CreateAnnouncement = lazy(() => import('./pages/CreateAnnouncement'));
 const Profile = lazy(() => import('./pages/Profile'));
 const UserApprovals = lazy(() => import('./pages/UserApprovals')); // New Page
@@ -123,6 +124,7 @@ function App() {
 
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/pengumuman" element={<Announcements />} />
+              <Route path="/announcements/:id" element={<AnnouncementDetail />} /> {/* New Route */}
 
               <Route path="/menu" element={<Menu />} />
               <Route path="/correspondence" element={<Correspondence />} />
