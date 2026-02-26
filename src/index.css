@@ -17,15 +17,44 @@
 
   /* Standard Card Style */
   .card {
-    @apply bg-white dark:bg-surface-dark rounded-xl shadow-card border border-gray-100 dark:border-gray-700 transition-shadow hover:shadow-md;
+    @apply bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600;
   }
 
   /* Standard Input Style */
   .input-field {
-    @apply w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400;
+    @apply w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400 font-medium;
+  }
+
+  /* Page Header Text */
+  .page-header {
+      @apply text-xl font-bold text-gray-900 dark:text-white tracking-tight;
+  }
+
+  /* Section Title */
+  .section-title {
+      @apply text-lg font-bold text-gray-900 dark:text-white mb-4;
   }
 }
 
 body {
-  @apply bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-body overflow-x-hidden;
+  @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-display overflow-x-hidden antialiased selection:bg-primary/20 selection:text-primary;
+}
+
+/* Animations */
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+}
+
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out forwards;
 }
