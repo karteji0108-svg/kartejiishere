@@ -49,14 +49,34 @@ export default {
         'soft': '0 2px 8px -2px rgba(0, 0, 0, 0.05)',
         'card': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
         'nav': '0 -1px 3px 0 rgba(0, 0, 0, 0.05)',
+        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)', // Glassmorphism shadow
+        'neu': '9px 9px 16px rgb(209, 213, 219, 0.5), -9px -9px 16px rgba(255, 255, 255, 0.8)', // Light Neumorphism
+        'neu-dark': '5px 5px 10px #0b1121, -5px -5px 10px #131d3b', // Dark Neumorphism
+      },
+      backdropBlur: {
+        'xs': '2px',
+      },
+      transitionTimingFunction: {
+        'ios': 'cubic-bezier(0.25, 1, 0.5, 1)', // iOS smooth easing
+        'material': 'cubic-bezier(0.4, 0.0, 0.2, 1)', // Material standard
       },
       animation: {
-        'fade-in': 'fade-in 0.3s ease-out forwards',
+        'fade-in': 'fade-in 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards',
+        'fade-in-up': 'fade-in-up 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards',
+        'scale-in': 'scale-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
       },
       keyframes: {
         'fade-in': {
             '0%': { opacity: '0', transform: 'translateY(5px)' },
             '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in-up': {
+            '0%': { opacity: '0', transform: 'translateY(10px)' },
+            '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'scale-in': {
+            '0%': { opacity: '0', transform: 'scale(0.9)' },
+            '100%': { opacity: '1', transform: 'scale(1)' },
         },
       },
     },
