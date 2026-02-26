@@ -2,9 +2,11 @@ import React, { useState, useRef } from 'react';
 import { collection, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { uploadToCloudinary } from '../../utils/cloudinary';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const ManageHeroModal = ({ slides, onClose }) => {
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('list'); // 'list' or 'add'
   const [newSlide, setNewSlide] = useState({
     title: '',
@@ -36,7 +38,7 @@ const ManageHeroModal = ({ slides, onClose }) => {
         toast.success('Slide dihapus');
       } catch (error) {
         console.error("Error deleting slide:", error);
-        toast.error("Gagal menghapus slide");
+        toast.error("Gagal menghapus slide: " + error.message);
       }
     }
   };
@@ -50,7 +52,9 @@ const ManageHeroModal = ({ slides, onClose }) => {
 
     setUploading(true);
     try {
+      console.log("Starting slide upload...");
       const imageURL = await uploadToCloudinary(newSlide.image);
+      console.log("Image uploaded to Cloudinary:", imageURL);
 
       await addDoc(collection(db, 'hero_slides'), {
         image: imageURL,
@@ -58,8 +62,11 @@ const ManageHeroModal = ({ slides, onClose }) => {
         subtitle: newSlide.subtitle,
         ctaText: newSlide.ctaText,
         ctaLink: newSlide.ctaLink,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        createdBy: currentUser?.uid || 'unknown',
+        createdByName: currentUser?.displayName || currentUser?.email || 'Admin'
       });
+      console.log("Slide saved to Firestore");
 
       toast.success('Slide berhasil ditambahkan');
       setNewSlide({ title: '', subtitle: '', ctaText: '', ctaLink: '', image: null });
@@ -67,7 +74,7 @@ const ManageHeroModal = ({ slides, onClose }) => {
       setActiveTab('list');
     } catch (error) {
       console.error("Error uploading slide:", error);
-      toast.error("Gagal menambahkan slide");
+      toast.error(`Gagal menambahkan slide: ${error.message}`);
     } finally {
       setUploading(false);
     }

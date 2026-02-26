@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { uploadToCloudinary } from '../utils/cloudinary';
@@ -8,12 +8,16 @@ import toast from 'react-hot-toast';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // For edit mode
+  const location = useLocation();
   const { currentUser } = useAuth();
+
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [displayAmount, setDisplayAmount] = useState('');
   const [type, setType] = useState('expense');
   const [category, setCategory] = useState('');
+  const [sourceFund, setSourceFund] = useState(''); // New field for expenses
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [receiptImage, setReceiptImage] = useState(null);
   const [receiptPreview, setReceiptPreview] = useState(null);
@@ -21,10 +25,58 @@ const AddTransaction = () => {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
+  const isEditMode = !!id;
+
   // Format currency for display (1.000.000)
   const formatNumber = (num) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
+
+  useEffect(() => {
+    const fetchTransaction = async () => {
+        if (isEditMode) {
+            setLoading(true);
+            try {
+                // Check if state was passed via navigation (faster)
+                if (location.state && location.state.transaction) {
+                    const t = location.state.transaction;
+                    setTitle(t.title);
+                    setAmount(t.amount);
+                    setDisplayAmount(formatNumber(t.amount));
+                    setType(t.type);
+                    setCategory(t.category);
+                    setSourceFund(t.sourceFund || '');
+                    setDate(t.date);
+                    setReceiptPreview(t.receiptUrl);
+                } else {
+                    // Fetch from Firestore
+                    const docRef = doc(db, 'finance', id);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const t = docSnap.data();
+                        setTitle(t.title);
+                        setAmount(t.amount);
+                        setDisplayAmount(formatNumber(t.amount));
+                        setType(t.type);
+                        setCategory(t.category);
+                        setSourceFund(t.sourceFund || '');
+                        setDate(t.date);
+                        setReceiptPreview(t.receiptUrl);
+                    } else {
+                        toast.error("Transaksi tidak ditemukan");
+                        navigate('/finance');
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching transaction:", error);
+                toast.error("Gagal memuat data transaksi");
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+    fetchTransaction();
+  }, [id, isEditMode, location.state, navigate]);
 
   const handleAmountChange = (e) => {
     // Remove non-numeric chars
@@ -67,15 +119,16 @@ const AddTransaction = () => {
           throw new Error("Jumlah tidak valid.");
       }
 
-      let receiptUrl = null;
+      let receiptUrl = receiptPreview; // Default to existing URL in edit mode
+
+      // If new image selected, upload it
       if (receiptImage) {
         setUploading(true);
         try {
            receiptUrl = await uploadToCloudinary(receiptImage);
         } catch (uploadError) {
            console.error("Image upload failed:", uploadError);
-           toast.error("Gagal mengupload struk, tetapi transaksi akan tetap disimpan.");
-           // Optional: Decide whether to block submit or continue without image
+           toast.error("Gagal mengupload struk, tetapi data akan tetap disimpan.");
         } finally {
            setUploading(false);
         }
@@ -83,29 +136,35 @@ const AddTransaction = () => {
 
       const transactionData = {
         title,
-        amount: Number(amount), // Ensure it's stored as Number
+        amount: Number(amount),
         type,
         category,
+        sourceFund: type === 'expense' ? sourceFund : null, // Store sourceFund only for expenses
         date,
         receiptUrl: receiptUrl || null,
-        createdAt: new Date().toISOString(),
-        createdBy: currentUser.uid,
-        uid: currentUser.uid,
-        user_id: currentUser.uid,
-        createdByName: currentUser.displayName || currentUser.email,
+        updatedAt: new Date().toISOString(),
         status: 'completed'
       };
 
-      await addDoc(collection(db, 'finance'), transactionData);
-      toast.success('Transaksi berhasil disimpan!');
+      if (isEditMode) {
+          await updateDoc(doc(db, 'finance', id), transactionData);
+          toast.success('Transaksi berhasil diperbarui!');
+      } else {
+          // New Transaction specific fields
+          transactionData.createdAt = new Date().toISOString();
+          transactionData.createdBy = currentUser.uid;
+          transactionData.uid = currentUser.uid; // Legacy support
+          transactionData.user_id = currentUser.uid; // Legacy support
+          transactionData.createdByName = currentUser.displayName || currentUser.email;
+
+          await addDoc(collection(db, 'finance'), transactionData);
+          toast.success('Transaksi berhasil disimpan!');
+      }
+
       navigate('/finance');
     } catch (error) {
-      console.error("Error adding transaction: ", error);
-      if (error.code === 'permission-denied') {
-          toast.error("Izin ditolak. Pastikan Anda memiliki akses yang sesuai.");
-      } else {
-          toast.error(`Gagal menambahkan transaksi: ${error.message}`);
-      }
+      console.error("Error saving transaction: ", error);
+      toast.error(`Gagal menyimpan transaksi: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -121,7 +180,7 @@ const AddTransaction = () => {
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Catat Transaksi</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">{isEditMode ? 'Edit Transaksi' : 'Catat Transaksi'}</h1>
       </header>
 
       <main className="flex-1 p-5 max-w-md mx-auto w-full relative z-10 animate-fade-in-up">
@@ -210,6 +269,29 @@ const AddTransaction = () => {
                     </div>
                 </div>
 
+                {/* Source Fund Selection (Only for Expense) */}
+                {type === 'expense' && (
+                    <div>
+                        <label className="label-primary">Ambil dari Sumber Dana?</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-3 text-gray-400 material-icons-round text-lg">account_balance_wallet</span>
+                            <select
+                                className="input-primary pl-10 appearance-none"
+                                value={sourceFund}
+                                onChange={(e) => setSourceFund(e.target.value)}
+                                required
+                            >
+                                <option value="">Pilih Sumber Dana</option>
+                                <option value="Iuran">Kas Iuran</option>
+                                <option value="Donasi">Kas Donasi</option>
+                                <option value="Usaha">Kas Usaha</option>
+                                <option value="Lainnya">Kas Lainnya</option>
+                            </select>
+                            <span className="absolute right-3 top-3 text-gray-400 material-icons-round text-lg pointer-events-none">expand_more</span>
+                        </div>
+                    </div>
+                )}
+
                 <div>
                     <label className="label-primary">Tanggal</label>
                     <div className="relative">
@@ -272,7 +354,7 @@ const AddTransaction = () => {
                 ) : (
                     <>
                         <span className="material-icons-round text-lg">save</span>
-                        Simpan Transaksi
+                        {isEditMode ? 'Simpan Perubahan' : 'Simpan Transaksi'}
                     </>
                 )}
             </button>

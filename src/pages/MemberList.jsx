@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import BottomNav from '../components/layout/BottomNav';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Skeleton from '../components/common/Skeleton';
 import { useRamadan } from '../context/RamadanContext';
 
 const MemberList = () => {
+  const navigate = useNavigate();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('Semua');
@@ -50,8 +51,10 @@ const MemberList = () => {
   const getRoleColor = (role) => {
     switch(role?.toLowerCase()) {
       case 'ketua': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'wakil_ketua': return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400';
       case 'sekretaris': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
       case 'bendahara': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+      case 'super_admin': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       default: return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
     }
   };
@@ -127,6 +130,7 @@ const MemberList = () => {
             filteredMembers.map((member, index) => (
               <div
                 key={member.id}
+                onClick={() => navigate('/members/' + member.id)}
                 className="glass-card p-4 flex items-center justify-between hover:scale-[1.02] transition-transform cursor-pointer animate-fade-in-up group"
                 style={{ animationDelay: `${index * 50}ms` }}
               >

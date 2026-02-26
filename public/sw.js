@@ -1,9 +1,9 @@
-const CACHE_NAME = 'karteji-v1';
+const CACHE_NAME = 'karteji-v2-refresh';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/assets/logo.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './assets/logo.png'
 ];
 
 self.addEventListener('install', (event) => {

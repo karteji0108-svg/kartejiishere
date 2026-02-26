@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import RamadanDecorations from './components/common/RamadanDecorations';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -12,8 +12,10 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const MemberList = lazy(() => import('./pages/MemberList'));
+const MemberDetail = lazy(() => import('./pages/MemberDetail'));
 const AddMember = lazy(() => import('./pages/AddMember'));
 const Finance = lazy(() => import('./pages/Finance'));
+const TransactionDetail = lazy(() => import('./pages/TransactionDetail')); // New
 const AddTransaction = lazy(() => import('./pages/AddTransaction'));
 const Activities = lazy(() => import('./pages/Activities'));
 const CreateActivity = lazy(() => import('./pages/CreateActivity'));
@@ -94,16 +96,19 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/members" element={<MemberList />} />
               <Route path="/anggota" element={<MemberList />} />
+              <Route path="/members/:id" element={<MemberDetail />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/keuangan" element={<Finance />} />
+              <Route path="/finance/:id" element={<TransactionDetail />} /> {/* New Route */}
             </Route>
 
             {/* Admin/Officer Only Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin', 'bendahara', 'anggota']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'ketua', 'sekretaris', 'admin', 'bendahara', 'wakil_ketua', 'anggota']} />}>
               <Route path="/members/add" element={<AddMember />} />
               <Route path="/announcements/create" element={<CreateAnnouncement />} />
               <Route path="/activities/create" element={<CreateActivity />} />
               <Route path="/finance/add" element={<AddTransaction />} />
+              <Route path="/finance/edit/:id" element={<AddTransaction />} />
               <Route path="/gallery/add" element={<AddGalleryPhoto />} />
             </Route>
           </Routes>

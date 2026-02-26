@@ -172,35 +172,8 @@ const HeroCarousel = () => {
                 onError={handleImageError}
               />
 
-              {/* Dark Overlay */}
-              <div className="absolute inset-0 bg-black/40 z-20 pointer-events-none"></div>
+              {/* Text content removed as per request */}
 
-              {/* Text Content - Glassmorphism */}
-              {(slide.title || slide.subtitle) && (
-                <div className="absolute top-1/2 left-4 md:left-12 -translate-y-1/2 z-30 max-w-[80%] md:max-w-[60%] lg:max-w-[50%] pointer-events-auto">
-                  <div className="backdrop-blur-md bg-white/10 dark:bg-black/20 border border-white/20 p-4 md:p-6 rounded-xl shadow-lg">
-                    {slide.title && (
-                      <h1 className="text-white text-xl md:text-3xl lg:text-4xl font-bold mb-2 drop-shadow-md">
-                        {slide.title}
-                      </h1>
-                    )}
-                    {slide.subtitle && (
-                      <p className="text-gray-100 text-sm md:text-lg mb-4 drop-shadow-sm line-clamp-2 md:line-clamp-none">
-                        {slide.subtitle}
-                      </p>
-                    )}
-
-                    {slide.ctaText && slide.ctaLink && (
-                      <Link
-                        to={slide.ctaLink}
-                        className="inline-block px-4 py-2 md:px-6 md:py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm md:text-base font-medium rounded-lg transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
-                      >
-                        {slide.ctaText}
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              )}
             </SwiperSlide>
           );
         })}
