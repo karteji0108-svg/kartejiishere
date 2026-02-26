@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { collection, addDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { useAuth } from '../context/AuthContext';
@@ -8,13 +8,44 @@ import toast from 'react-hot-toast';
 
 const CreateAnnouncement = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { currentUser } = useAuth();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [type, setType] = useState('Penting');
   const [image, setImage] = useState(null);
+  const [currentImageURL, setCurrentImageURL] = useState(null);
   const [preview, setPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(!!id);
+
+  useEffect(() => {
+    if (id) {
+        const fetchAnnouncement = async () => {
+            try {
+                const docRef = doc(db, 'announcements', id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    setTitle(data.title);
+                    setContent(data.content);
+                    setType(data.type);
+                    setCurrentImageURL(data.imageURL);
+                    setPreview(data.imageURL);
+                } else {
+                    toast.error("Pengumuman tidak ditemukan");
+                    navigate('/announcements');
+                }
+            } catch (error) {
+                console.error("Error fetching announcement:", error);
+                toast.error("Gagal memuat data pengumuman");
+            } finally {
+                setInitialLoading(false);
+            }
+        };
+        fetchAnnouncement();
+    }
+  }, [id, navigate]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -33,30 +64,52 @@ const CreateAnnouncement = () => {
           throw new Error("Anda harus login untuk membuat pengumuman.");
       }
 
-      let imageURL = null;
+      let imageURL = currentImageURL;
       if (image) {
         imageURL = await uploadToCloudinary(image);
       }
 
-      await addDoc(collection(db, 'announcements'), {
+      const announcementData = {
         title,
         content,
         type,
         imageURL,
-        createdAt: new Date().toISOString(),
-        createdBy: currentUser.uid,
-        createdByName: currentUser.displayName || currentUser.email
-      });
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser.uid,
+      };
 
-      toast.success('Pengumuman berhasil dibuat!');
-      navigate('/announcements');
+      if (id) {
+          // Update existing announcement
+          const docRef = doc(db, 'announcements', id);
+          await updateDoc(docRef, announcementData);
+          toast.success('Pengumuman berhasil diperbarui!');
+          navigate('/announcements');
+      } else {
+          // Create new announcement
+          await addDoc(collection(db, 'announcements'), {
+            ...announcementData,
+            createdAt: new Date().toISOString(),
+            createdBy: currentUser.uid,
+            createdByName: currentUser.displayName || currentUser.email
+          });
+          toast.success('Pengumuman berhasil dibuat!');
+          navigate('/announcements');
+      }
     } catch (error) {
-      console.error("Error adding document: ", error);
-      toast.error(`Gagal membuat pengumuman: ${error.message}`);
+      console.error("Error saving announcement: ", error);
+      toast.error(`Gagal menyimpan pengumuman: ${error.message}`);
     } finally {
       setUploading(false);
     }
   };
+
+  if (initialLoading) {
+      return (
+          <div className="flex justify-center items-center h-screen bg-background-light dark:bg-background-dark">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+      );
+  }
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 flex flex-col relative overflow-hidden">
@@ -69,7 +122,7 @@ const CreateAnnouncement = () => {
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <span className="material-icons-round text-primary">arrow_back_ios_new</span>
         </button>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white">Buat Pengumuman</h1>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white">{id ? 'Edit Pengumuman' : 'Buat Pengumuman'}</h1>
       </header>
 
       <main className="flex-1 p-5 max-w-md mx-auto w-full relative z-10 pb-24 animate-fade-in-up">
@@ -105,6 +158,7 @@ const CreateAnnouncement = () => {
                         <option value="Kegiatan">Kegiatan</option>
                         <option value="Rapat">Rapat</option>
                         <option value="Umum">Umum</option>
+                        <option value="Berita">Berita</option>
                     </select>
                     <span className="absolute right-3 top-3 text-gray-400 material-icons-round text-lg pointer-events-none">expand_more</span>
                 </div>
@@ -155,7 +209,7 @@ const CreateAnnouncement = () => {
                 {preview && (
                     <button
                         type="button"
-                        onClick={() => { setImage(null); setPreview(null); }}
+                        onClick={() => { setImage(null); setPreview(null); setCurrentImageURL(null); }}
                         className="mt-2 text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"
                     >
                         <span className="material-icons-round text-sm">delete</span> Hapus Gambar
@@ -171,12 +225,12 @@ const CreateAnnouncement = () => {
                 {uploading ? (
                     <>
                         <span className="material-icons-round animate-spin text-lg">refresh</span>
-                        Mengirim...
+                        Memproses...
                     </>
                 ) : (
                     <>
-                        <span className="material-icons-round text-lg">send</span>
-                        Kirim Pengumuman
+                        <span className="material-icons-round text-lg">{id ? 'save' : 'send'}</span>
+                        {id ? 'Simpan Perubahan' : 'Kirim Pengumuman'}
                     </>
                 )}
             </button>
