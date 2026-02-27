@@ -83,9 +83,13 @@ export default {
         'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         'card': '0 0 0 1px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04)', // Subtle, crisp border-like shadow
         'glass': '0 8px 32px 0 rgba(15, 23, 42, 0.05)',
+        'neu': '9px 9px 16px rgb(209, 213, 219, 0.5), -9px -9px 16px rgba(255, 255, 255, 0.8)', // Light Neumorphism
+        'neu-dark': '5px 5px 10px #0b1121, -5px -5px 10px #131d3b', // Dark Neumorphism
       },
       transitionTimingFunction: {
         'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'ios': 'cubic-bezier(0.25, 1, 0.5, 1)', // iOS smooth easing
+        'material': 'cubic-bezier(0.4, 0.0, 0.2, 1)', // Material standard
       },
       animation: {
         'fade-in': 'fade-in 0.3s ease-out forwards',
