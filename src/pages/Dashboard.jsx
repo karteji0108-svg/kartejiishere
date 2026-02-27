@@ -44,26 +44,21 @@ const Dashboard = () => {
 
         // 1. Stats Counters
         const usersColl = collection(db, 'users');
-
-        // Total Registered Users
         const totalUsersSnapshot = await getCountFromServer(usersColl);
         const totalUsers = totalUsersSnapshot.data().count;
 
-        // Pending Count (For Widget & Calculation)
         let pending = 0;
         try {
             const pendingQ = query(usersColl, where('status', '==', 'pending'));
             const pendingSnap = await getCountFromServer(pendingQ);
             pending = pendingSnap.data().count;
         } catch (e) {
-             // Fallback if index missing
              const pendingQ = query(usersColl, where('status', '==', 'pending'));
              const snap = await getDocs(pendingQ);
              pending = snap.size;
         }
         setPendingCount(pending);
 
-        // Rejected Count (For Calculation)
         let rejected = 0;
         try {
              const rejectedQ = query(usersColl, where('status', '==', 'rejected'));
@@ -75,15 +70,12 @@ const Dashboard = () => {
              rejected = snap.size;
         }
 
-        // Active Members = Total - Pending - Rejected (Includes legacy/missing status)
         const activeMembers = Math.max(0, totalUsers - pending - rejected);
 
-        // Activities count
         const activitiesColl = collection(db, 'activities');
         const activitiesSnapshot = await getCountFromServer(activitiesColl);
         const activitiesCount = activitiesSnapshot.data().count;
 
-        // Finance Balance (Client-side aggregation for safety)
         let balance = 0;
         if (canViewFinance) {
              const financeQ = query(collection(db, 'finance'));
@@ -98,7 +90,6 @@ const Dashboard = () => {
 
         setStats({ members: activeMembers, activities: activitiesCount, balance });
 
-        // 2. Recent Activities
         const activitiesQ = query(
           collection(db, 'activities'),
           orderBy('date', 'desc'),
@@ -107,7 +98,6 @@ const Dashboard = () => {
         const actSnapshot = await getDocs(activitiesQ);
         setRecentActivities(actSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-        // 3. Recent Announcements
         const announcementsQ = query(
             collection(db, 'announcements'),
             orderBy('createdAt', 'desc'),
@@ -135,27 +125,26 @@ const Dashboard = () => {
 
   if (loading) return <DashboardSkeleton />;
 
-  // User Display Name Logic
   const displayName = userProfile?.fullName || currentUser?.displayName || 'Pengguna';
   const photoURL = userProfile?.photoURL || currentUser?.photoURL;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-display pb-24">
-      {/* 1. Modern Header */}
-      <header className="px-6 pt-8 pb-4 flex justify-between items-center bg-white dark:bg-gray-900 sticky top-0 z-30 transition-all">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark font-display pb-32">
+      {/* 1. Header (Clean & Minimal) */}
+      <header className="px-6 pt-10 pb-6 flex justify-between items-end bg-background-light dark:bg-background-dark sticky top-0 z-30">
         <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-0.5">Selamat Datang,</p>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+            <p className="text-sm text-primary-500 dark:text-primary-400 font-medium mb-1">Selamat Datang,</p>
+            <h1 className="text-2xl font-bold text-primary-900 dark:text-white tracking-tight">
                 {displayName.split(' ')[0]}
             </h1>
         </div>
         <Link to="/profile" className="relative group">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden ring-2 ring-gray-100 dark:ring-gray-800 transition-shadow shadow-sm group-active:scale-95">
+            <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white dark:ring-gray-800 shadow-md transition-transform group-hover:scale-105">
                 {photoURL ? (
                     <img src={photoURL} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                    <div className="w-full h-full bg-accent/10 flex items-center justify-center text-accent">
-                        <span className="material-icons-round text-2xl">person</span>
+                    <div className="w-full h-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center text-primary-600 dark:text-primary-300">
+                        <span className="material-icons-round text-xl">person</span>
                     </div>
                 )}
             </div>
@@ -164,186 +153,114 @@ const Dashboard = () => {
 
       <div className="px-6 space-y-8">
 
-        {/* 2. Hero Section - Removed active scaling to fix modal interaction */}
-        <section className="rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 dark:shadow-black/30">
+        {/* 2. Hero Section */}
+        <section className="rounded-2xl overflow-hidden shadow-md shadow-slate-200 dark:shadow-none">
             <HeroCarousel />
         </section>
 
-        {/* Pending Approval Widget */}
+        {/* Pending Approval Alert */}
         {canApprove && pendingCount > 0 && (
-             <section>
-                <div
-                    onClick={() => navigate('/user-approvals')}
-                    className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/30 rounded-2xl p-4 flex items-center justify-between cursor-pointer active:scale-98 transition-transform"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-orange-600 dark:text-orange-400">
-                            <span className="material-icons-round">person_add</span>
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-900 dark:text-white text-sm">Persetujuan Menunggu</h3>
-                            <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">
-                                {pendingCount} user baru perlu disetujui
-                            </p>
-                        </div>
+             <div
+                onClick={() => navigate('/user-approvals')}
+                className="bg-warning-bg border border-warning-200 dark:border-warning-900/50 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:shadow-sm transition-all"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-warning-100 text-warning-700 flex items-center justify-center">
+                        <span className="material-icons-round text-lg">person_add</span>
                     </div>
-                    <span className="material-icons-round text-gray-400">chevron_right</span>
+                    <div>
+                        <h3 className="font-semibold text-warning-900 text-sm">Persetujuan Menunggu</h3>
+                        <p className="text-xs text-warning-700 font-medium">
+                            {pendingCount} user baru perlu disetujui
+                        </p>
+                    </div>
                 </div>
-            </section>
+                <span className="material-icons-round text-warning-400">chevron_right</span>
+            </div>
         )}
 
-        {/* 3. Quick Actions */}
-        <section>
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Menu Utama</h2>
-            </div>
-            <div className="grid grid-cols-4 gap-4">
-                <MenuButton
-                    to="/members"
-                    icon="groups"
-                    label="Anggota"
-                    color="text-indigo-600"
-                    bg="bg-indigo-50 dark:bg-indigo-900/20"
-                />
-                <MenuButton
-                    to="/gallery"
-                    icon="collections"
-                    label="Galeri"
-                    color="text-purple-600"
-                    bg="bg-purple-50 dark:bg-purple-900/20"
-                />
-                {canViewFinance ? (
-                    <MenuButton
-                        to="/finance"
-                        icon="account_balance_wallet"
-                        label="Keuangan"
-                        color="text-emerald-600"
-                        bg="bg-emerald-50 dark:bg-emerald-900/20"
-                    />
-                ) : (
-                     <MenuButton
-                        to="/announcements"
-                        icon="campaign"
-                        label="Info"
-                        color="text-orange-600"
-                        bg="bg-orange-50 dark:bg-orange-900/20"
-                    />
-                )}
-                 <MenuButton
-                    to="/activities"
-                    icon="event"
-                    label="Kegiatan"
-                    color="text-blue-600"
-                    bg="bg-blue-50 dark:bg-blue-900/20"
-                />
-            </div>
-        </section>
-
-        {/* 4. Stats & Finance Overview */}
+        {/* 3. Key Metrics (Grid Layout) */}
         <section className="grid grid-cols-2 gap-4">
-            <StatCard
-                label="Total Anggota"
+            <MetricCard
+                label="Anggota Aktif"
                 value={formatNumber(stats.members)}
-                icon="people"
-                color="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                trend="+12%" // Mock trend for now
+                trendUp={true}
             />
-            <StatCard
-                label="Kegiatan"
+            <MetricCard
+                label="Total Kegiatan"
                 value={formatNumber(stats.activities)}
-                icon="event_available"
-                color="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                trend="+5"
+                trendUp={true}
             />
 
             {canViewFinance && (
-                <div className="col-span-2 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-3xl p-6 text-white shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/20 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate('/finance')}>
+                <div className="col-span-2 bg-primary-900 text-white rounded-2xl p-6 shadow-lg shadow-primary-900/20 relative overflow-hidden group cursor-pointer" onClick={() => navigate('/finance')}>
                     <div className="relative z-10 flex justify-between items-center">
                         <div>
-                            <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider mb-1">
-                                Saldo Kas Saat Ini
+                            <p className="text-primary-300 text-xs font-semibold uppercase tracking-wider mb-2">
+                                Saldo Kas
                             </p>
-                            <h3 className="text-3xl font-bold font-mono tracking-tight">{formatCurrency(stats.balance)}</h3>
+                            <h3 className="text-3xl font-bold font-mono tracking-tight text-white">{formatCurrency(stats.balance)}</h3>
                         </div>
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                        <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:bg-white/20 transition-colors">
                             <span className="material-icons-round text-white">arrow_forward</span>
                         </div>
                     </div>
-                    {/* Decorative Circles */}
-                    <div className="absolute -top-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-                    <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-black/10 rounded-full blur-xl"></div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
                 </div>
             )}
         </section>
 
-        {/* 5. Activities Feed */}
+        {/* 4. Recent Activity (Clean List) */}
          <section>
-             <div className="flex justify-between items-end mb-5">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Kegiatan Terbaru</h2>
-                <div className="flex items-center gap-3">
-                    {canManage && (
-                        <Link
-                            to="/activities/create"
-                            className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
-                            title="Tambah Kegiatan"
-                        >
-                            <span className="material-icons-round text-lg">add</span>
-                        </Link>
-                    )}
-                    <Link to="/activities" className="text-sm font-medium text-accent hover:text-accent-dark transition-colors">
-                        Lihat Semua
-                    </Link>
-                </div>
+             <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-primary-900 dark:text-white">Kegiatan Terbaru</h2>
+                <Link to="/activities" className="text-xs font-semibold text-accent hover:text-accent-hover transition-colors">
+                    Lihat Semua
+                </Link>
             </div>
 
-            <div className="flex overflow-x-auto gap-4 pb-6 -mx-6 px-6 no-scrollbar snap-x">
+            <div className="flex overflow-x-auto gap-4 pb-4 -mx-6 px-6 no-scrollbar snap-x">
                  {recentActivities.length > 0 ? (
                     recentActivities.map((act) => (
-                        <Link to={`/activities/${act.id}`} key={act.id} className="min-w-[260px] w-[260px] snap-center bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col active:scale-[0.98] transition-all h-full">
-                            <div className="h-36 bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+                        <Link to={`/activities/${act.id}`} key={act.id} className="min-w-[280px] w-[280px] snap-center bg-white dark:bg-surface-dark rounded-xl overflow-hidden shadow-card border border-border-light dark:border-border-dark flex flex-col group">
+                            <div className="h-40 bg-primary-100 dark:bg-primary-800 relative overflow-hidden">
                                 {act.image ? (
-                                    <img src={act.image} alt={act.title} className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
+                                    <img src={act.image} alt={act.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                 ) : (
-                                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                        <span className="material-icons-round text-4xl opacity-30">image</span>
+                                    <div className="absolute inset-0 flex items-center justify-center text-primary-300">
+                                        <span className="material-icons-round text-4xl opacity-50">image</span>
                                     </div>
                                 )}
-                                <div className="absolute top-3 right-3 bg-white/95 dark:bg-black/80 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[10px] font-bold text-gray-800 dark:text-gray-200 shadow-sm border border-gray-100/50">
+                                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-primary-900 shadow-sm">
                                     {formatDate(act.date)}
                                 </div>
                             </div>
                             <div className="p-4 flex flex-col flex-1">
-                                <h4 className="font-bold text-gray-900 dark:text-white text-base mb-1.5 line-clamp-1">{act.title}</h4>
-                                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mb-3">
-                                     <span className="material-icons-round text-[14px] text-accent">location_on</span>
+                                <h4 className="font-bold text-primary-900 dark:text-white text-sm mb-1 line-clamp-1">{act.title}</h4>
+                                <div className="flex items-center gap-1.5 text-xs text-primary-500 mb-3">
+                                     <span className="material-icons-round text-[14px]">location_on</span>
                                      <span className="truncate max-w-[180px]">{act.location || 'Lokasi belum diatur'}</span>
                                 </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">{act.description}</p>
                             </div>
                         </Link>
                     ))
                 ) : (
-                    <EmptyState message="Belum ada kegiatan." fullWidth />
+                    <div className="w-full text-center py-8 bg-white dark:bg-surface-dark rounded-xl border border-border-light border-dashed">
+                        <p className="text-sm text-primary-400">Belum ada kegiatan.</p>
+                    </div>
                 )}
             </div>
          </section>
 
-        {/* 6. Announcements List */}
+        {/* 5. Announcements (Structured List) */}
         <section className="pb-8">
-             <div className="flex justify-between items-end mb-4">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Info Terkini</h2>
-                <div className="flex items-center gap-3">
-                    {canManage && (
-                        <Link
-                            to="/announcements/create"
-                            className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors"
-                            title="Buat Pengumuman"
-                        >
-                            <span className="material-icons-round text-lg">add</span>
-                        </Link>
-                    )}
-                    <Link to="/announcements" className="text-sm font-medium text-accent hover:text-accent-dark transition-colors">
-                        Lihat Semua
-                    </Link>
-                </div>
+             <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-primary-900 dark:text-white">Pengumuman</h2>
+                <Link to="/announcements" className="text-xs font-semibold text-accent hover:text-accent-hover transition-colors">
+                    Lihat Semua
+                </Link>
             </div>
             <div className="space-y-3">
                 {announcements.length > 0 ? (
@@ -351,22 +268,24 @@ const Dashboard = () => {
                         <div
                             key={ann.id}
                             onClick={() => navigate(`/announcements/${ann.id}`)}
-                            className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex gap-4 items-start shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer active:scale-[0.99] transition-transform hover:shadow-md"
+                            className="bg-white dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex gap-4 cursor-pointer hover:border-accent/30 transition-colors group"
                         >
-                             <div className="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center flex-shrink-0">
+                             <div className="w-10 h-10 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                                 <span className="material-icons-round text-xl">campaign</span>
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-start mb-1">
-                                    <h4 className="font-bold text-gray-900 dark:text-white text-sm line-clamp-1 pr-2">{ann.title}</h4>
-                                    <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">{formatDate(ann.createdAt)}</span>
+                                    <h4 className="font-semibold text-primary-900 dark:text-white text-sm line-clamp-1">{ann.title}</h4>
+                                    <span className="text-[10px] text-primary-400 font-medium whitespace-nowrap">{formatDate(ann.createdAt)}</span>
                                 </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">{ann.content}</p>
+                                <p className="text-xs text-primary-500 dark:text-primary-400 line-clamp-2 leading-relaxed">{ann.content}</p>
                             </div>
                         </div>
                     ))
                 ) : (
-                    <EmptyState message="Belum ada pengumuman." />
+                    <div className="w-full text-center py-8 bg-white dark:bg-surface-dark rounded-xl border border-border-light border-dashed">
+                        <p className="text-sm text-primary-400">Belum ada pengumuman.</p>
+                    </div>
                 )}
             </div>
         </section>
@@ -379,51 +298,32 @@ const Dashboard = () => {
 
 // --- Sub-components ---
 
-const MenuButton = ({ to, icon, label, color, bg }) => (
-    <Link to={to} className="flex flex-col items-center gap-3 group cursor-pointer active:scale-95 transition-transform">
-        <div className={`w-16 h-16 rounded-[20px] flex items-center justify-center ${bg} ${color} shadow-sm border border-black/5 dark:border-white/5 transition-all group-hover:shadow-md`}>
-            <span className="material-icons-round text-[28px]">{icon}</span>
+const MetricCard = ({ label, value, trend, trendUp }) => (
+    <div className="bg-white dark:bg-surface-dark rounded-xl p-5 shadow-card border border-border-light dark:border-border-dark flex flex-col justify-between h-28">
+        <p className="text-xs font-semibold text-primary-500 uppercase tracking-wide">{label}</p>
+        <div className="mt-auto">
+            <h3 className="text-2xl font-bold text-primary-900 dark:text-white tracking-tight">{value}</h3>
+            {/* <div className={`flex items-center gap-1 text-[10px] font-bold mt-1 ${trendUp ? 'text-success' : 'text-danger'}`}>
+                <span className="material-icons-round text-xs">{trendUp ? 'trending_up' : 'trending_down'}</span>
+                <span>{trend}</span>
+            </div> */}
         </div>
-        <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 tracking-tight">{label}</span>
-    </Link>
-);
-
-const StatCard = ({ label, value, icon, color }) => (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between h-28 relative overflow-hidden group">
-        <div className="flex justify-between items-start z-10">
-            <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{label}</span>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${color}`}>
-                <span className="material-icons-round text-sm">{icon}</span>
-            </div>
-        </div>
-        <h3 className="text-3xl font-bold text-gray-900 dark:text-white z-10">{value}</h3>
-    </div>
-);
-
-const EmptyState = ({ message, fullWidth }) => (
-    <div className={`${fullWidth ? 'w-full' : ''} py-8 px-6 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-3xl flex flex-col items-center justify-center gap-3`}>
-        <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center">
-            <span className="material-icons-round text-gray-300 text-xl">inbox</span>
-        </div>
-        <p className="text-xs font-medium text-gray-500">{message}</p>
     </div>
 );
 
 const DashboardSkeleton = () => (
-    <div className="min-h-screen p-6 space-y-8 animate-pulse bg-gray-50 dark:bg-gray-900">
-         <div className="flex justify-between items-center">
+    <div className="min-h-screen p-6 space-y-8 animate-pulse bg-background-light dark:bg-background-dark">
+         <div className="flex justify-between items-center mt-4">
             <div className="space-y-3">
                 <Skeleton className="h-4 w-32 rounded-full" />
                 <Skeleton className="h-8 w-48 rounded-lg" />
             </div>
-            <Skeleton className="h-12 w-12 rounded-2xl" />
+            <Skeleton className="h-10 w-10 rounded-full" />
         </div>
-        <Skeleton className="h-56 w-full rounded-3xl shadow-sm" />
-        <div className="grid grid-cols-4 gap-4">
-            <Skeleton className="h-20 w-full rounded-2xl" />
-             <Skeleton className="h-20 w-full rounded-2xl" />
-             <Skeleton className="h-20 w-full rounded-2xl" />
-             <Skeleton className="h-20 w-full rounded-2xl" />
+        <Skeleton className="h-48 w-full rounded-2xl shadow-sm" />
+        <div className="grid grid-cols-2 gap-4">
+            <Skeleton className="h-28 w-full rounded-xl" />
+            <Skeleton className="h-28 w-full rounded-xl" />
         </div>
     </div>
 );
