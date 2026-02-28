@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,7 @@ import Skeleton from '../components/common/Skeleton';
 import BottomNav from '../components/layout/BottomNav';
 
 const Activities = () => {
+  const navigate = useNavigate();
   const { userRole } = useAuth();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,18 +45,58 @@ const Activities = () => {
     );
   }, [activities, search]);
 
+
+  const downloadCSV = () => {
+  const navigate = useNavigate();
+    if (activities.length === 0) return;
+
+    const headers = ['Tanggal', 'Judul Kegiatan', 'Deskripsi', 'Lokasi'];
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+
+    activities.forEach(act => {
+        const date = act.date || '';
+        const title = `"${(act.title || '').replace(/"/g, '""')}"`;
+        const desc = `"${(act.description || '').replace(/"/g, '""')}"`;
+        const loc = `"${(act.location || '').replace(/"/g, '""')}"`;
+
+        csvRows.push([date, title, desc, loc].join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Laporan_Kegiatan_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark pb-24 font-display">
        {/* Header */}
       <div className="sticky top-0 z-40 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex justify-between items-center border-b border-white/20 dark:border-white/10 shadow-sm">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-              Kegiatan
-          </h1>
-          {canCreate && (
-            <Link to="/activities/create" className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform active:scale-95">
-                <span className="material-icons text-xl">add</span>
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+              <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/50 dark:hover:bg-black/20 text-slate-600 dark:text-slate-300 transition-colors">
+                  <span className="material-icons text-xl">arrow_back</span>
+              </button>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                  Kegiatan
+              </h1>
+          </div>
+          <div className="flex gap-2 items-center">
+              <button onClick={downloadCSV} className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 p-2 flex items-center justify-center rounded-full shadow-sm transition-colors duration-200">
+                  <span className="material-icons-round text-xl">download</span>
+              </button>
+              {canCreate && (
+                <Link to="/activities/create" className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform active:scale-95">
+                    <span className="material-icons text-xl">add</span>
+                </Link>
+              )}
+          </div>
       </div>
 
       {/* Search & Filters */}

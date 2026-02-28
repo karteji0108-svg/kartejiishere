@@ -69,6 +69,44 @@ const Finance = () => {
     fetchData();
   }, [userRole, navigate, canView]);
 
+
+  const downloadCSV = () => {
+    if (transactions.length === 0) return;
+
+    const headers = ['Tanggal', 'Kategori', 'Judul', 'Jenis', 'Sumber/Tujuan Dana', 'Nominal', 'Keterangan'];
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+
+    transactions.forEach(trx => {
+        const date = new Date(trx.date).toLocaleDateString('id-ID');
+        const category = trx.category || '';
+        const title = `"${(trx.title || '').replace(/"/g, '""')}"`;
+        const type = trx.type === 'income' ? 'Pemasukan' : 'Pengeluaran';
+        const sourceFund = trx.sourceFund || '';
+        const amount = typeof trx.amount === 'string' ? parseFloat(trx.amount.replace(/[^\d.-]/g, '')) : (trx.amount || 0);
+        const desc = `"${(trx.description || '').replace(/"/g, '""')}"`;
+
+        csvRows.push([date, category, title, type, sourceFund, amount, desc].join(','));
+    });
+
+    // Add Summary Row
+    csvRows.push('');
+    csvRows.push(`"Total Pemasukan",${summary.income}`);
+    csvRows.push(`"Total Pengeluaran",${summary.expense}`);
+    csvRows.push(`"Saldo Akhir",${summary.balance}`);
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Laporan_Keuangan_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (!canView) return null;
 
   return (
@@ -76,14 +114,24 @@ const Finance = () => {
 
       {/* Header - Enterprise Grade */}
       <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center shadow-sm">
-          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
-              <span className="material-icons-round text-primary text-2xl">account_balance</span> Kas & Keuangan
-          </h1>
-          {canManage && (
-            <Link to="/finance/add" className="bg-primary hover:bg-primary-700 text-white px-4 py-2 flex items-center justify-center rounded-lg shadow-sm transition-colors duration-200 text-sm font-medium gap-2">
-                <span className="material-icons-round text-lg">add</span> Tambah
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+              <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+                  <span className="material-icons-round text-xl">arrow_back</span>
+              </button>
+              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                  <span className="material-icons-round text-primary text-2xl">account_balance</span> Kas & Keuangan
+              </h1>
+          </div>
+          <div className="flex gap-2">
+              <button onClick={downloadCSV} className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2 flex items-center justify-center rounded-lg shadow-sm transition-colors duration-200 text-sm font-medium gap-2">
+                  <span className="material-icons-round text-lg">download</span> <span className="hidden sm:inline">Laporan</span>
+              </button>
+              {canManage && (
+                <Link to="/finance/add" className="bg-primary hover:bg-primary-700 text-white px-3 py-2 flex items-center justify-center rounded-lg shadow-sm transition-colors duration-200 text-sm font-medium gap-2">
+                    <span className="material-icons-round text-lg">add</span> <span className="hidden sm:inline">Tambah</span>
+                </Link>
+              )}
+          </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">

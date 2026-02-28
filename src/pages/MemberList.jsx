@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, getDocs, where, orderBy } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import Skeleton from '../components/common/Skeleton';
 import BottomNav from '../components/layout/BottomNav';
 
 const MemberList = () => {
+  const navigate = useNavigate();
   const { userRole } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +48,35 @@ const MemberList = () => {
     fetchMembers();
   }, []);
 
+
+  const downloadCSV = () => {
+    if (members.length === 0) return;
+
+    const headers = ['Nama Lengkap', 'Email', 'Role', 'Status'];
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+
+    members.forEach(member => {
+        const name = `"${(member.fullName || member.displayName || '').replace(/"/g, '""')}"`;
+        const email = `"${(member.email || '').replace(/"/g, '""')}"`;
+        const role = member.role || 'anggota';
+        const status = member.status || 'active';
+
+        csvRows.push([name, email, role, status].join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Data_Anggota_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filteredMembers = useMemo(() => {
     const searchLower = search.toLowerCase();
     return members.filter(member => {
@@ -60,14 +90,24 @@ const MemberList = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 font-display">
        {/* Header */}
       <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex justify-between items-center shadow-sm transition-colors">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-              Anggota
-          </h1>
-          {canManage && (
-            <Link to="/members/add" className="bg-primary text-white w-9 h-9 flex items-center justify-center rounded-full shadow-lg shadow-primary/30 hover:scale-110 transition-transform active:scale-95">
-                <span className="material-icons-round text-lg">person_add</span>
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+              <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors">
+                  <span className="material-icons-round text-xl">arrow_back</span>
+              </button>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                  Anggota
+              </h1>
+          </div>
+          <div className="flex gap-2">
+              <button onClick={downloadCSV} className="bg-white dark:bg-gray-800 text-primary border border-primary/20 hover:bg-primary/5 w-9 h-9 flex items-center justify-center rounded-full shadow-sm transition-colors">
+                  <span className="material-icons-round text-lg">download</span>
+              </button>
+              {canManage && (
+                <Link to="/members/add" className="bg-primary text-white w-9 h-9 flex items-center justify-center rounded-full shadow-lg shadow-primary/30 hover:scale-110 transition-transform active:scale-95">
+                    <span className="material-icons-round text-lg">person_add</span>
+                </Link>
+              )}
+          </div>
       </div>
 
        {/* Search */}
