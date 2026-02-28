@@ -12,7 +12,7 @@ const Finance = () => {
   const { userRole } = useAuth();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
-  const [summary, setSummary] = useState({ balance: 0, income: 0, expense: 0 });
+  const [summary, setSummary] = useState({ balance: 0, income: 0, expense: 0, sources: {} });
   const [loading, setLoading] = useState(true);
 
   // Updated Roles
@@ -36,16 +36,27 @@ const Finance = () => {
         const allQ = query(collection(db, 'finance'));
         const allSnap = await getDocs(allQ);
         let inc = 0, exp = 0;
+        let sources = {};
         allSnap.forEach(doc => {
             const d = doc.data();
             const amt = typeof d.amount === 'string' ? parseFloat(d.amount.replace(/[^\d.-]/g, '')) : d.amount;
-            if (d.type === 'income') inc += amt;
-            else if (d.type === 'expense') exp += amt;
+            if (d.type === 'income') {
+                inc += amt;
+                if (d.category) {
+                    sources[d.category] = (sources[d.category] || 0) + amt;
+                }
+            } else if (d.type === 'expense') {
+                exp += amt;
+                if (d.sourceFund) {
+                    sources[d.sourceFund] = (sources[d.sourceFund] || 0) - amt;
+                }
+            }
         });
         setSummary({
             income: inc,
             expense: exp,
-            balance: inc - exp
+            balance: inc - exp,
+            sources: sources
         });
 
       } catch (err) {
@@ -98,6 +109,28 @@ const Finance = () => {
                     </h2>
                 )}
             </div>
+
+            {/* Rincian Kas */}
+            {Object.keys(summary.sources || {}).length > 0 && (
+                <div className="md:col-span-3 mt-2">
+                    <h3 className="font-bold text-sm text-gray-500 uppercase tracking-wider mb-3">Rincian Saldo</h3>
+                    <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x">
+                        {Object.entries(summary.sources).map(([source, amount]) => (
+                            <div key={source} className="snap-start min-w-[140px] bg-white dark:bg-surface-dark rounded-[1.5rem] p-4 border-2 border-border-light dark:border-border-dark shadow-sm shrink-0 flex flex-col justify-center">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                                        <span className="material-icons-round text-[14px]">account_balance_wallet</span>
+                                    </div>
+                                    <p className="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider truncate">{source}</p>
+                                </div>
+                                <h4 className={`text-lg font-black tracking-tight ${amount < 0 ? 'text-danger' : 'text-gray-900 dark:text-white'}`}>
+                                    {formatCurrency(amount)}
+                                </h4>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Income & Expense Row */}
             <div className="grid grid-cols-2 gap-4 md:col-span-2">
