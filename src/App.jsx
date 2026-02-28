@@ -22,7 +22,7 @@ const Activities = lazy(() => import('./pages/Activities'));
 const CreateActivity = lazy(() => import('./pages/CreateActivity'));
 const ActivityDetail = lazy(() => import('./pages/ActivityDetail'));
 const ActivityGallery = lazy(() => import('./pages/ActivityGallery'));
-const Gallery = lazy(() => import('./pages/Gallery'));
+
 const AddGalleryPhoto = lazy(() => import('./pages/AddGalleryPhoto'));
 const Announcements = lazy(() => import('./pages/Announcements'));
 const AnnouncementDetail = lazy(() => import('./pages/AnnouncementDetail')); // New Page
@@ -120,7 +120,7 @@ function App() {
               <Route path="/kegiatan" element={<Activities />} />
 
               <Route path="/activities/:id" element={<ActivityDetail />} />
-              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/gallery" element={<ActivityGallery />} />
 
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/pengumuman" element={<Announcements />} />
