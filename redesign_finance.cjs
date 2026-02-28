@@ -1,75 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore';
-import { db } from '../config/firebase';
-import { useAuth } from '../context/AuthContext';
-import { formatCurrency } from '../utils/currency';
-import { formatDate } from '../utils/date';
-import BottomNav from '../components/layout/BottomNav';
-import Skeleton from '../components/common/Skeleton';
+const fs = require('fs');
 
-const Finance = () => {
-  const { userRole } = useAuth();
-  const navigate = useNavigate();
-  const [transactions, setTransactions] = useState([]);
-  const [summary, setSummary] = useState({ balance: 0, income: 0, expense: 0, sources: {} });
-  const [loading, setLoading] = useState(true);
+let content = fs.readFileSync('src/pages/Finance.jsx', 'utf8');
 
-  // Updated Roles
-  const canManage = ['super_admin', 'bendahara'].includes(userRole);
-  const canView = ['super_admin', 'bendahara', 'ketua', 'wakil_ketua'].includes(userRole);
+// Replace everything from `if (!canView) return null;` to the end.
+const splitPoint = "if (!canView) return null;";
+const parts = content.split(splitPoint);
 
-  useEffect(() => {
-    if (!canView) {
-        navigate('/dashboard');
-        return;
-    }
-
-    const fetchData = async () => {
-      try {
-        const q = query(collection(db, 'finance'), orderBy('date', 'desc'), limit(50));
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setTransactions(data);
-
-        // Calculate Summary
-        const allQ = query(collection(db, 'finance'));
-        const allSnap = await getDocs(allQ);
-        let inc = 0, exp = 0;
-        let sources = {};
-        allSnap.forEach(doc => {
-            const d = doc.data();
-            const amt = typeof d.amount === 'string' ? parseFloat(d.amount.replace(/[^\d.-]/g, '')) : d.amount;
-            if (d.type === 'income') {
-                inc += amt;
-                if (d.category) {
-                    sources[d.category] = (sources[d.category] || 0) + amt;
-                }
-            } else if (d.type === 'expense') {
-                exp += amt;
-                if (d.sourceFund) {
-                    sources[d.sourceFund] = (sources[d.sourceFund] || 0) - amt;
-                }
-            }
-        });
-        setSummary({
-            income: inc,
-            expense: exp,
-            balance: inc - exp,
-            sources: sources
-        });
-
-      } catch (err) {
-        console.error("Error fetching finance:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [userRole, navigate, canView]);
-
-  if (!canView) return null;
+if (parts.length === 2) {
+    const header = parts[0] + splitPoint;
+    const newReturn = `
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-32 font-sans relative z-0">
@@ -138,7 +77,7 @@ const Finance = () => {
                     {Object.entries(summary.sources).map(([source, amount]) => (
                         <div key={source} className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 truncate" title={source}>{source}</p>
-                            <h4 className={`text-base font-bold ${amount < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
+                            <h4 className={\`text-base font-bold \${amount < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}\`}>
                                 {formatCurrency(amount)}
                             </h4>
                         </div>
@@ -171,11 +110,11 @@ const Finance = () => {
                 ) : transactions.length > 0 ? (
                     transactions.map((trx) => (
                         <Link
-                            to={`/finance/${trx.id}`}
+                            to={\`/finance/\${trx.id}\`}
                             key={trx.id}
                             className="px-6 py-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group cursor-pointer"
                         >
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${trx.type === 'income' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'}`}>
+                            <div className={\`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 \${trx.type === 'income' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'}\`}>
                                 <span className="material-icons-round text-xl">{trx.type === 'income' ? 'arrow_downward' : 'arrow_upward'}</span>
                             </div>
 
@@ -190,18 +129,18 @@ const Finance = () => {
                                         {trx.category}
                                     </span>
                                     {trx.sourceFund && (
-                                        <React.Fragment>
+                                        <>
                                             <span className="text-[10px] text-slate-300 dark:text-slate-600">•</span>
                                             <span className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">
                                                 Kas {trx.sourceFund}
                                             </span>
-                                        </React.Fragment>
+                                        </>
                                     )}
                                 </div>
                             </div>
 
                             <div className="text-right flex-shrink-0">
-                                <p className={`font-semibold text-sm ${trx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
+                                <p className={\`font-semibold text-sm \${trx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}\`}>
                                     {trx.type === 'income' ? '+' : '-'}{formatCurrency(trx.amount)}
                                 </p>
                             </div>
@@ -224,3 +163,6 @@ const Finance = () => {
 };
 
 export default Finance;
+`;
+    fs.writeFileSync('src/pages/Finance.jsx', header + newReturn);
+}
