@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+const fs = require('fs');
+
+const bottomNavCode = `import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -51,26 +53,26 @@ const BottomNav = () => {
   if (['/', '/register', '/login'].includes(location.pathname)) return null;
 
   return (
-    <React.Fragment>
+    <>
         {/* Overlay for Expanded Menu */}
         <div
-            className={`
+            className={\`
                 fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 transition-opacity duration-200
-                ${isExpanded ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
-            `}
+                \${isExpanded ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+            \`}
             onClick={() => setIsExpanded(false)}
         />
 
         {/* Floating Quick Action Menu (Enterprise Style) */}
         <div
-            className={`
+            className={\`
                 fixed bottom-24 right-6 z-50 w-64 origin-bottom-right
                 transition-all duration-200 ease-out
-                ${isExpanded
+                \${isExpanded
                     ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
                     : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
                 }
-            `}
+            \`}
         >
              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-2 overflow-hidden">
                  {quickActions.length > 0 ? (
@@ -103,7 +105,7 @@ const BottomNav = () => {
             <nav className="flex justify-around items-center h-[60px] max-w-md mx-auto px-4">
                 <NavLink
                     to="/dashboard"
-                    className={({isActive}) => `flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 ${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                    className={({isActive}) => \`flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 \${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}\`}
                 >
                     <span className="material-icons-round text-[22px]">dashboard</span>
                     <span className="text-[10px] font-medium mt-1">Beranda</span>
@@ -111,7 +113,7 @@ const BottomNav = () => {
 
                 <NavLink
                     to="/activities"
-                    className={({isActive}) => `flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 ${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                    className={({isActive}) => \`flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 \${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}\`}
                 >
                     <span className="material-icons-round text-[22px]">event_note</span>
                     <span className="text-[10px] font-medium mt-1">Kegiatan</span>
@@ -121,14 +123,14 @@ const BottomNav = () => {
                 <div className="relative flex justify-center w-14 h-full items-center">
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className={`
+                        className={\`
                             w-11 h-11 rounded-full flex items-center justify-center
                             shadow-sm transition-all duration-200 ease-out border border-transparent
-                            ${isExpanded
+                            \${isExpanded
                                 ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rotate-45 border-slate-300 dark:border-slate-600'
                                 : 'bg-primary text-white hover:bg-slate-800 dark:bg-accent dark:hover:bg-accent-hover rotate-0'
                             }
-                        `}
+                        \`}
                     >
                         <span className="material-icons-round text-[22px]">add</span>
                     </button>
@@ -137,7 +139,7 @@ const BottomNav = () => {
                 {canViewFinance ? (
                     <NavLink
                         to="/finance"
-                        className={({isActive}) => `flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 ${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                        className={({isActive}) => \`flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 \${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}\`}
                     >
                         <span className="material-icons-round text-[22px]">account_balance</span>
                         <span className="text-[10px] font-medium mt-1">Keuangan</span>
@@ -145,7 +147,7 @@ const BottomNav = () => {
                 ) : (
                     <NavLink
                         to="/announcements"
-                        className={({isActive}) => `flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 ${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                        className={({isActive}) => \`flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 \${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}\`}
                     >
                         <span className="material-icons-round text-[22px]">campaign</span>
                         <span className="text-[10px] font-medium mt-1">Info</span>
@@ -154,7 +156,7 @@ const BottomNav = () => {
 
                 <NavLink
                     to="/profile"
-                    className={({isActive}) => `flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 ${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                    className={({isActive}) => \`flex flex-col items-center justify-center w-14 h-full transition-colors duration-200 \${isActive ? 'text-accent dark:text-accent-400' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}\`}
                 >
                     <span className="material-icons-round text-[22px]">person</span>
                     <span className="text-[10px] font-medium mt-1">Profil</span>
@@ -162,8 +164,11 @@ const BottomNav = () => {
 
             </nav>
         </div>
-    </React.Fragment>
+    </>
   );
 };
 
 export default BottomNav;
+`;
+
+fs.writeFileSync('src/components/layout/BottomNav.jsx', bottomNavCode);

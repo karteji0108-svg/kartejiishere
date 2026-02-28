@@ -1,129 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, orderBy, limit, getCountFromServer, doc, getDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
-import { useAuth } from '../context/AuthContext';
-import Skeleton from '../components/common/Skeleton';
-import HeroCarousel from '../components/common/HeroCarousel';
-import BottomNav from '../components/layout/BottomNav';
-import { formatCurrency, formatNumber } from '../utils/currency';
-import { formatDate } from '../utils/date';
+const fs = require('fs');
 
-const Dashboard = () => {
-  const { currentUser, hasRole } = useAuth();
-  const navigate = useNavigate();
+let content = fs.readFileSync('src/pages/Dashboard.jsx', 'utf8');
 
-  const [stats, setStats] = useState({ members: 0, activities: 0, balance: 0 });
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState(null);
-  const [pendingCount, setPendingCount] = useState(0);
+// The split point remains consistent. We want to replace everything from `if (loading) return <DashboardSkeleton />;` onwards.
+const splitPoint = "if (loading) return <DashboardSkeleton />;";
+const parts = content.split(splitPoint);
 
-  const canManage = hasRole('super_admin') || hasRole('ketua') || hasRole('wakil_ketua');
-  const canViewFinance = hasRole('bendahara') || hasRole('ketua') || hasRole('wakil_ketua') || hasRole('super_admin');
-  const canApprove = hasRole('super_admin') || hasRole('ketua') || hasRole('wakil_ketua');
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch User Profile
-        if (currentUser?.uid) {
-            try {
-                const userDocRef = doc(db, 'users', currentUser.uid);
-                const userSnapshot = await getDoc(userDocRef);
-                if (userSnapshot.exists()) {
-                    setUserProfile(userSnapshot.data());
-                }
-            } catch (err) {
-                console.error("Error fetching user profile:", err);
-            }
-        }
-
-        // 1. Stats Counters
-        const usersColl = collection(db, 'users');
-        const totalUsersSnapshot = await getCountFromServer(usersColl);
-        const totalUsers = totalUsersSnapshot.data().count;
-
-        let pending = 0;
-        try {
-            const pendingQ = query(usersColl, where('status', '==', 'pending'));
-            const pendingSnap = await getCountFromServer(pendingQ);
-            pending = pendingSnap.data().count;
-        } catch (e) {
-             const pendingQ = query(usersColl, where('status', '==', 'pending'));
-             const snap = await getDocs(pendingQ);
-             pending = snap.size;
-        }
-        setPendingCount(pending);
-
-        let rejected = 0;
-        try {
-             const rejectedQ = query(usersColl, where('status', '==', 'rejected'));
-             const rejectedSnap = await getCountFromServer(rejectedQ);
-             rejected = rejectedSnap.data().count;
-        } catch (e) {
-             const rejectedQ = query(usersColl, where('status', '==', 'rejected'));
-             const snap = await getDocs(rejectedQ);
-             rejected = snap.size;
-        }
-
-        const activeMembers = Math.max(0, totalUsers - pending - rejected);
-
-        const activitiesColl = collection(db, 'activities');
-        const activitiesSnapshot = await getCountFromServer(activitiesColl);
-        const activitiesCount = activitiesSnapshot.data().count;
-
-        let balance = 0;
-        if (canViewFinance) {
-             const financeQ = query(collection(db, 'finance'));
-             const financeSnapshot = await getDocs(financeQ);
-             financeSnapshot.docs.forEach(doc => {
-                 const data = doc.data();
-                 const amount = typeof data.amount === 'string' ? parseFloat(data.amount.replace(/[^\d.-]/g, '')) : data.amount;
-                 if (data.type === 'income') balance += amount || 0;
-                 if (data.type === 'expense') balance -= amount || 0;
-             });
-        }
-
-        setStats({ members: activeMembers, activities: activitiesCount, balance });
-
-        const activitiesQ = query(
-          collection(db, 'activities'),
-          orderBy('date', 'desc'),
-          limit(5)
-        );
-        const actSnapshot = await getDocs(activitiesQ);
-        setRecentActivities(actSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-
-        const announcementsQ = query(
-            collection(db, 'announcements'),
-            orderBy('createdAt', 'desc'),
-            limit(3)
-        );
-        const annSnapshot = await getDocs(announcementsQ);
-        setAnnouncements(annSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                ...data,
-                createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
-            };
-        }));
-
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [currentUser, canViewFinance, canApprove]);
-
-  if (loading) return <DashboardSkeleton />;
+if (parts.length === 2) {
+    const header = parts[0] + splitPoint;
+    const newReturn = `
 
   const displayName = userProfile?.fullName || currentUser?.displayName || 'Pengguna';
   const photoURL = userProfile?.photoURL || currentUser?.photoURL;
@@ -224,7 +109,7 @@ const Dashboard = () => {
                 <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-700/50">
                      {recentActivities.length > 0 ? (
                         recentActivities.map((act) => (
-                            <Link to={`/activities/${act.id}`} key={act.id} className="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
+                            <Link to={\`/activities/\${act.id}\`} key={act.id} className="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
                                 <div className="w-16 h-16 rounded-md bg-slate-100 dark:bg-slate-700 overflow-hidden flex-shrink-0 border border-slate-200 dark:border-slate-600">
                                     {act.image ? (
                                         <img src={act.image} alt={act.title} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
@@ -269,7 +154,7 @@ const Dashboard = () => {
                         announcements.map((ann) => (
                             <div
                                 key={ann.id}
-                                onClick={() => navigate(`/announcements/${ann.id}`)}
+                                onClick={() => navigate(\`/announcements/\${ann.id}\`)}
                                 className="p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group"
                             >
                                 <div className="flex justify-between items-start mb-1 gap-2">
@@ -329,3 +214,6 @@ const DashboardSkeleton = () => (
 );
 
 export default Dashboard;
+`;
+    fs.writeFileSync('src/pages/Dashboard.jsx', header + newReturn);
+}
