@@ -5,7 +5,6 @@ import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { ROLES, hasPermission, PERMISSIONS } from '../constants/roles';
 import Skeleton from '../components/common/Skeleton';
-import DigitalCard from '../components/members/DigitalCard';
 import toast from 'react-hot-toast';
 
 const MemberDetail = () => {
@@ -15,7 +14,6 @@ const MemberDetail = () => {
 
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showCard, setShowCard] = useState(false);
   const [updatingRole, setUpdatingRole] = useState(false);
 
   useEffect(() => {
