@@ -1,4 +1,6 @@
-/** @type {import('tailwindcss').Config} */
+const fs = require('fs');
+
+const tailwindConfig = `/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./index.html",
@@ -112,3 +114,56 @@ export default {
   },
   plugins: [],
 }
+`;
+
+fs.writeFileSync('tailwind.config.js', tailwindConfig);
+
+const indexCss = `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
+  .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 24px);
+  }
+
+  /* Glassmorphism Utility - Subdued for Enterprise */
+  .glass {
+    @apply bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-sm;
+  }
+
+  /* Standard Card Style - Clean, structured */
+  .card {
+    @apply bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-200 hover:border-slate-300 dark:hover:border-slate-600;
+  }
+
+  /* Standard Input Style - Professional focus */
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-300 dark:border-slate-600 rounded-md focus:ring-2 focus:ring-accent-light dark:focus:ring-accent-900 focus:border-accent outline-none transition-colors duration-200 text-slate-900 dark:text-white placeholder-slate-400 font-normal text-sm;
+  }
+
+  /* Page Header Text - Clean */
+  .page-header {
+      @apply text-2xl font-semibold text-slate-900 dark:text-white tracking-tight;
+  }
+
+  /* Section Title */
+  .section-title {
+      @apply text-lg font-semibold text-slate-900 dark:text-white mb-4 tracking-tight;
+  }
+}
+
+body {
+  @apply bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-body antialiased selection:bg-accent-light selection:text-accent-hover transition-colors duration-300 ease-in-out;
+}
+`;
+
+fs.writeFileSync('src/index.css', indexCss);

@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+const fs = require('fs');
+
+const bottomNavCode = `import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -51,26 +53,26 @@ const BottomNav = () => {
   if (['/', '/register', '/login'].includes(location.pathname)) return null;
 
   return (
-    <React.Fragment>
+    <>
         {/* Overlay for Expanded Menu */}
         <div
-            className={`
+            className={\`
                 fixed inset-0 bg-slate-900/10 backdrop-blur-sm z-40 transition-opacity duration-300
-                ${isExpanded ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
-            `}
+                \${isExpanded ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+            \`}
             onClick={() => setIsExpanded(false)}
         />
 
         {/* Floating Quick Action Menu (Glassmorphism) */}
         <div
-            className={`
+            className={\`
                 fixed bottom-28 left-1/2 -translate-x-1/2 z-50 w-64 origin-bottom
                 transition-all duration-300 ease-out
-                ${isExpanded
+                \${isExpanded
                     ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
                     : 'opacity-0 scale-95 translate-y-8 pointer-events-none'
                 }
-            `}
+            \`}
         >
              <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/40 dark:border-white/10 p-2 overflow-hidden">
                  {quickActions.length > 0 ? (
@@ -106,14 +108,14 @@ const BottomNav = () => {
                 <div className="flex flex-1 justify-around items-center h-full">
                     <NavLink
                         to="/dashboard"
-                        className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        className={({isActive}) => \`relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 \${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}\`}
                     >
                         <span className="material-icons-round text-[22px]">dashboard</span>
                     </NavLink>
 
                     <NavLink
                         to="/activities"
-                        className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        className={({isActive}) => \`relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 \${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}\`}
                     >
                         <span className="material-icons-round text-[22px]">event_note</span>
                     </NavLink>
@@ -123,14 +125,14 @@ const BottomNav = () => {
                 <div className="relative flex justify-center items-center w-16 h-16 -mt-6">
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className={`
+                        className={\`
                             w-14 h-14 rounded-full flex items-center justify-center
                             shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out border border-white/40 dark:border-white/10 backdrop-blur-md
-                            ${isExpanded
+                            \${isExpanded
                                 ? 'bg-white/80 dark:bg-slate-700/80 text-slate-900 dark:text-white rotate-45 scale-95'
                                 : 'bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 hover:scale-105 active:scale-95'
                             }
-                        `}
+                        \`}
                     >
                         <span className="material-icons-round text-[24px]">add</span>
                     </button>
@@ -141,14 +143,14 @@ const BottomNav = () => {
                     {canViewFinance ? (
                         <NavLink
                             to="/finance"
-                            className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            className={({isActive}) => \`relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 \${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}\`}
                         >
                             <span className="material-icons-round text-[22px]">account_balance</span>
                         </NavLink>
                     ) : (
                         <NavLink
                             to="/announcements"
-                            className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            className={({isActive}) => \`relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 \${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}\`}
                         >
                             <span className="material-icons-round text-[22px]">campaign</span>
                         </NavLink>
@@ -156,7 +158,7 @@ const BottomNav = () => {
 
                     <NavLink
                         to="/profile"
-                        className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        className={({isActive}) => \`relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 \${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}\`}
                     >
                         <span className="material-icons-round text-[22px]">person</span>
                     </NavLink>
@@ -164,8 +166,11 @@ const BottomNav = () => {
 
             </nav>
         </div>
-    </React.Fragment>
+    </>
   );
 };
 
 export default BottomNav;
+`;
+
+fs.writeFileSync('src/components/layout/BottomNav.jsx', bottomNavCode);
