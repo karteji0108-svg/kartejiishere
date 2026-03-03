@@ -32,6 +32,11 @@ const UserApprovals = lazy(() => import('./pages/UserApprovals')); // New Page
 const PendingApproval = lazy(() => import('./pages/PendingApproval')); // New Page
 const AccountRejected = lazy(() => import('./pages/AccountRejected')); // New Page
 
+
+const DigitalCardPage = lazy(() => import('./pages/DigitalCardPage'));
+const AttendanceDashboard = lazy(() => import('./pages/AttendanceDashboard'));
+const AttendanceScan = lazy(() => import('./pages/AttendanceScan'));
+
 // New Features
 const Menu = lazy(() => import('./pages/Menu'));
 const Correspondence = lazy(() => import('./pages/Correspondence'));
@@ -115,6 +120,10 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profil" element={<Profile />} />
               <Route path="/profile" element={<Profile />} />
+              {/* Absensi & ID Card */}
+              <Route path="/kartu-digital" element={<DigitalCardPage />} />
+              <Route path="/absen" element={<AttendanceScan />} />
+
 
               <Route path="/activities" element={<Activities />} />
               <Route path="/kegiatan" element={<Activities />} />
@@ -153,6 +162,10 @@ function App() {
               <Route path="/finance/add" element={<AddTransaction />} />
               <Route path="/finance/edit/:id" element={<AddTransaction />} />
               <Route path="/gallery/add" element={<AddGalleryPhoto />} />
+
+              {/* Absensi Admin */}
+              <Route path="/absensi" element={<AttendanceDashboard />} />
+
 
               {/* New Add Pages */}
               <Route path="/correspondence/add" element={<AddCorrespondence />} />

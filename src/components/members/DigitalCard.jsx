@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+
+const generateNIA = (uid) => {
+    if (!uid) return 'KT-2024-000';
+    // Generate a deterministic NIA based on UID (KT-YYYY-XXX)
+    let hash = 0;
+    for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const num = Math.abs(hash) % 1000;
+    const paddedNum = num.toString().padStart(3, '0');
+    return `KT-2024-${paddedNum}`;
+};
 
 const DigitalCard = ({ member }) => {
-  // Safe default values
+  const uid = member?.uid || member?.id;
   const fullName = member?.fullName || member?.displayName || '__________________________';
-  const memberId = member?.memberId || member?.email?.split('@')[0] || '___________________';
+  const memberId = member?.memberId || member?.nia || generateNIA(uid);
   const rawRole = member?.role || 'anggota';
   const role = rawRole.replace('_', ' ').toUpperCase();
   const address = member?.address || '________________________________';
@@ -14,15 +26,11 @@ const DigitalCard = ({ member }) => {
   // Logic: Is Pengurus? (Admin, Ketua, Wakil, Sekretaris, Bendahara, dsb)
   const isPengurus = ['super_admin', 'admin', 'ketua', 'wakil_ketua', 'sekretaris', 'bendahara', 'humas', 'content_creator'].includes(rawRole.toLowerCase());
 
-  // Theme Colors based on Role
+  // Theme Colors based on Role - Red Maroon / Matte Black base as requested
   // Pengurus = Gold/Amber
-  // Anggota Biasa = Cyan/Purple/Emerald (Cyberpunk/Futuristic)
+  // Anggota = Cyan/Emerald
   const theme = isPengurus
     ? {
-        primary: 'amber',
-        primaryHex: '#f59e0b',
-        secondary: 'yellow',
-        tertiary: 'orange',
         gradientText: 'from-amber-300 via-yellow-200 to-orange-300',
         glowPrimary: 'bg-amber-500/20 group-hover:bg-amber-400/30',
         glowSecondary: 'bg-yellow-600/20 group-hover:bg-yellow-500/30',
@@ -39,10 +47,6 @@ const DigitalCard = ({ member }) => {
         scannerBeam: 'bg-amber-400/50 shadow-[0_0_8px_#facc15]'
       }
     : {
-        primary: 'cyan',
-        primaryHex: '#22d3ee',
-        secondary: 'purple',
-        tertiary: 'emerald',
         gradientText: 'from-cyan-300 via-purple-300 to-emerald-300',
         glowPrimary: 'bg-cyan-500/20 group-hover:bg-cyan-400/30',
         glowSecondary: 'bg-purple-600/20 group-hover:bg-purple-500/30',
@@ -62,7 +66,6 @@ const DigitalCard = ({ member }) => {
   // Logic: Is Expired?
   let isExpired = false;
   if (member?.validUntil && validUntil !== '__________________________') {
-    // Basic date parsing assumption: YYYY-MM-DD or parseable string
     const expiryDate = new Date(validUntil);
     if (!isNaN(expiryDate.getTime()) && expiryDate < new Date()) {
         isExpired = true;
@@ -72,11 +75,18 @@ const DigitalCard = ({ member }) => {
   // Logic: QR Status Active?
   const isQrActive = status === 'active';
 
+  // Generate Real QR URL pointing to the App's attendance page
+  // Assuming the app is accessed from window.location.origin
+  const appOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://karangtaruna.app';
+  // Use HashRouter format because the app uses HashRouter (as seen in App.jsx)
+  const scanUrl = `${appOrigin}/#/absen?nia=${memberId}&uid=${uid || ''}`;
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(scanUrl)}&margin=0&color=0f172a&bgcolor=ffffff`;
+
   return (
     <div className="relative w-full max-w-[340px] aspect-[1/1.586] mx-auto rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-slate-950 text-white font-sans font-display group perspective-1000">
 
-        {/* Holographic Base Layers */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-950 z-0"></div>
+        {/* Holographic Base Layers - Dark Matte / Maroon mix */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#110505] via-[#1f0b0b] to-slate-950 z-0"></div>
 
         {/* Animated Holographic Glows */}
         <div className={`absolute -top-32 -left-32 w-64 h-64 rounded-full blur-[80px] transition-colors duration-700 ${theme.glowPrimary}`}></div>
@@ -87,11 +97,11 @@ const DigitalCard = ({ member }) => {
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, #fff 2px, #fff 4px)' }}></div>
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 flex items-center justify-center overflow-hidden">
             <div className="text-[6px] tracking-widest text-white/50 w-[200%] text-center transform -rotate-45 leading-tight">
-                KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM<br/>
-                KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM<br/>
-                KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM<br/>
-                KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM<br/>
-                KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM • KARTEJI SECURE ID VALIDATION SYSTEM
+                KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM<br/>
+                KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM<br/>
+                KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM<br/>
+                KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM<br/>
+                KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM • KARANG TARUNA DIGITAL SYSTEM
             </div>
         </div>
 
@@ -103,7 +113,7 @@ const DigitalCard = ({ member }) => {
 
         {/* Large Transparent Watermark */}
         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.04] z-0 flex items-center justify-center ${isPengurus ? 'text-amber-500' : ''}`}>
-             <span className="material-icons-round text-[200px]">verified_user</span>
+             <img src="/assets/logo.png" alt="Watermark" className="w-[200px] h-[200px] object-contain grayscale" onError={(e) => e.target.style.display='none'} />
         </div>
 
         {/* Glossy Reflection Overlay */}
@@ -115,24 +125,22 @@ const DigitalCard = ({ member }) => {
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h1 className={`text-2xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r ${theme.gradientText} ${theme.dropShadow}`}>
-                        KARTEJI
+                    <h1 className={`text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r ${theme.gradientText} ${theme.dropShadow}`}>
+                        KARANG TARUNA
                     </h1>
                     <p className={`text-[8px] uppercase tracking-[0.2em] font-medium ${theme.textAccent}`}>
                         {isPengurus ? 'Executive Identity' : 'Smart Digital Identity'}
                     </p>
                 </div>
-                <div className={`w-10 h-10 rounded-full bg-slate-900/50 backdrop-blur-md border border-white/10 flex items-center justify-center ${theme.shadowAccent}`}>
-                    <span className={`material-icons-round text-xl ${isPengurus ? 'text-amber-400' : 'text-purple-400'}`}>
-                        {isPengurus ? 'stars' : 'admin_panel_settings'}
-                    </span>
+                <div className={`w-8 h-8 rounded-full bg-slate-900/50 backdrop-blur-md border border-white/10 flex items-center justify-center ${theme.shadowAccent} overflow-hidden`}>
+                    <img src="/assets/logo.png" alt="Logo" className="w-6 h-6 object-contain" onError={(e) => e.target.style.display='none'} />
                 </div>
             </div>
 
             {/* Middle: Photo & Info */}
             <div className="flex gap-4 mb-4 relative">
                 {/* Photo Frame */}
-                <div className="w-24 h-32 flex-shrink-0 rounded-lg bg-slate-800/50 backdrop-blur-md border border-white/10 relative overflow-hidden flex items-center justify-center group/photo">
+                <div className="w-24 h-32 flex-shrink-0 rounded-lg bg-slate-800/50 backdrop-blur-md border border-white/10 relative overflow-hidden flex items-center justify-center group/photo shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent z-10 pointer-events-none"></div>
 
                     {/* Scanner Line Effect */}
@@ -172,6 +180,12 @@ const DigitalCard = ({ member }) => {
                         <p className="text-[7px] text-slate-400 uppercase tracking-wider mb-0.5 font-semibold">Jabatan</p>
                         <p className={`text-[10px] uppercase font-bold drop-shadow-md ${theme.textSub}`}>{role}</p>
                     </div>
+                    <div className="mb-2">
+                        <p className="text-[7px] text-slate-400 uppercase tracking-wider mb-0.5 font-semibold">Status</p>
+                        <p className={`text-[9px] uppercase font-bold drop-shadow-md ${isQrActive ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {isQrActive ? 'Aktif' : 'Non-Aktif'}
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -202,24 +216,27 @@ const DigitalCard = ({ member }) => {
                 {/* QR Code Area */}
                 <div className="flex flex-col items-center relative">
                     <div className={`w-14 h-14 bg-white rounded-md p-1 mb-1 relative overflow-hidden group/qr ${!isQrActive ? 'opacity-50' : ''}`}>
-                         {/* Fake QR Pattern */}
-                        <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDQiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMDAwIi8+PHJlY3QgeD0iMiIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iIzAwMCIvPjxyZWN0IHg9IjEiIHk9IjIiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz48cmVjdCB4PSIzIiB5PSIzIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMDAwIi8+PC9zdmc+')] bg-repeat opacity-80" style={{ backgroundSize: '4px 4px' }}></div>
+                         {isQrActive && !isExpired ? (
+                             <img src={qrImageUrl} alt="QR Code Absen" className="w-full h-full object-cover mix-blend-multiply" />
+                         ) : (
+                             <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDQiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMDAwIi8+PHJlY3QgeD0iMiIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iIzAwMCIvPjxyZWN0IHg9IjEiIHk9IjIiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz48cmVjdCB4PSIzIiB5PSIzIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMDAwIi8+PC9zdmc+')] bg-repeat opacity-80" style={{ backgroundSize: '4px 4px' }}></div>
+                         )}
 
                         {/* Scanning beam (only if active) */}
-                        {isQrActive && (
+                        {isQrActive && !isExpired && (
                             <div className="absolute top-0 left-0 w-full h-[1px] bg-red-500 shadow-[0_0_5px_#ef4444] animate-[scan_2s_linear_infinite] opacity-0 group-hover/qr:opacity-100"></div>
                         )}
                     </div>
 
                     {/* Inactive Label Overlay */}
-                    {!isQrActive && (
+                    {(!isQrActive || isExpired) && (
                         <div className="absolute top-5 left-1/2 -translate-x-1/2 w-full text-center transform -rotate-12 bg-red-600 border border-red-400 text-white text-[7px] font-black uppercase tracking-widest px-1 py-0.5 shadow-lg z-10">
-                            Belum Aktif
+                            {isExpired ? 'Expired' : 'Belum Aktif'}
                         </div>
                     )}
 
-                    <p className={`text-[5px] text-center leading-tight uppercase font-bold tracking-widest w-16 ${isQrActive ? 'text-slate-400' : 'text-red-400'}`}>
-                        {isQrActive ? 'Scan Untuk Absen Kehadiran' : 'QR TIDAK AKTIF'}
+                    <p className={`text-[5px] text-center leading-tight uppercase font-bold tracking-widest w-16 ${isQrActive && !isExpired ? 'text-slate-400' : 'text-red-400'}`}>
+                        {isQrActive && !isExpired ? 'Scan Untuk Absen Kehadiran' : 'QR TIDAK AKTIF'}
                     </p>
                 </div>
 
