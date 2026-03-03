@@ -7,12 +7,14 @@ import { updateProfile } from 'firebase/auth';
 import { formatDate } from '../utils/date';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import BottomNav from '../components/layout/BottomNav';
+import DigitalCard from '../components/members/DigitalCard';
 import { toast } from 'react-hot-toast';
 
 const Profile = () => {
   const { currentUser, logout, userRole } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [showCard, setShowCard] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const fileInputRef = useRef(null);
