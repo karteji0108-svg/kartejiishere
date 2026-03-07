@@ -18,9 +18,27 @@ const DigitalCardPage = () => {
                 // Fetch Profile
                 const docRef = doc(db, 'users', currentUser.uid);
                 const docSnap = await getDoc(docRef);
+                let userData = {};
                 if (docSnap.exists()) {
-                    setProfile({ id: docSnap.id, ...docSnap.data() });
+                    userData = { id: docSnap.id, ...docSnap.data() };
                 }
+
+                // Get User Index for NIA Generation (Order by createdAt)
+                try {
+                    const usersQ = query(collection(db, 'users'), orderBy('createdAt', 'asc'));
+                    const usersSnap = await getDocs(usersQ);
+                    let index = 1;
+                    usersSnap.forEach(uDoc => {
+                        if (uDoc.id === currentUser.uid) {
+                            userData.memberIndex = index;
+                        }
+                        index++;
+                    });
+                } catch(e) {
+                    console.warn("Could not fetch user index", e);
+                }
+
+                setProfile(userData);
 
                 // Fetch Attendance History
                 const attQ = query(

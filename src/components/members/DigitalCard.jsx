@@ -1,13 +1,23 @@
 import React from 'react';
 
-const generateNIA = (uid, joinDate) => {
+const generateNIA = (uid, joinDate, index) => {
     if (!uid) return 'KT-2024-000';
     let year = '2024';
     if (joinDate) {
         try {
-            year = new Date(joinDate).getFullYear().toString();
+            // handle both Date objects and strings
+            const dateObj = typeof joinDate?.toDate === 'function' ? joinDate.toDate() : new Date(joinDate);
+            if (!isNaN(dateObj)) year = dateObj.getFullYear().toString();
         } catch(e) {}
     }
+
+    // If we have a specific index passed down, use it
+    if (index !== undefined && index !== null) {
+        const paddedNum = index.toString().padStart(3, '0');
+        return `KT-${year}-${paddedNum}`;
+    }
+
+    // Fallback if index isn't available yet
     let hash = 0;
     for (let i = 0; i < uid.length; i++) {
         hash = uid.charCodeAt(i) + ((hash << 5) - hash);
@@ -23,7 +33,7 @@ const DigitalCard = ({ member }) => {
   const rawRole = member?.role || 'anggota';
   const role = rawRole.replace('_', ' ').toUpperCase();
   const joinDate = member?.createdAt?.toDate ? member.createdAt.toDate().toLocaleDateString('id-ID') : (member?.createdAt || '________________');
-  const memberId = member?.memberId || member?.nia || generateNIA(uid, member?.createdAt);
+  const memberId = member?.memberId || member?.nia || generateNIA(uid, member?.createdAt, member?.memberIndex);
   const photoUrl = member?.photoURL || null;
   const status = member?.status || 'active';
 
