@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ members: 0, activities: 0, balance: 0 });
   const [recentActivities, setRecentActivities] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
@@ -98,6 +99,43 @@ const Dashboard = () => {
         const actSnapshot = await getDocs(activitiesQ);
         setRecentActivities(actSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
+
+        // Fetch recent gallery/activity photos
+        try {
+            const qGallery = query(collection(db, 'gallery'), orderBy('createdAt', 'desc'), limit(4));
+            const gallerySnap = await getDocs(qGallery);
+            const galleryData = gallerySnap.docs.map(doc => ({
+                id: doc.id,
+                source: 'gallery',
+                url: doc.data().imageURL,
+                createdAt: doc.data().createdAt
+            }));
+
+            const qActivities = query(collection(db, 'activities'), orderBy('date', 'desc'), limit(4));
+            const activitySnap = await getDocs(qActivities);
+            const activityData = [];
+            activitySnap.forEach((doc) => {
+                 const d = doc.data();
+                 if (d.imageURL || d.image) {
+                   activityData.push({
+                     id: doc.id,
+                     source: 'activity',
+                     url: d.imageURL || d.image,
+                     createdAt: d.createdAt || d.date
+                   });
+                 }
+            });
+
+            // Merge, sort, and get top 4
+            const combined = [...galleryData, ...activityData]
+                .filter(img => img.url)
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 4);
+            setGalleryPhotos(combined);
+        } catch (error) {
+            console.error("Error fetching gallery photos:", error);
+        }
+
         const announcementsQ = query(
             collection(db, 'announcements'),
             orderBy('createdAt', 'desc'),
@@ -129,7 +167,7 @@ const Dashboard = () => {
   const photoURL = userProfile?.photoURL || currentUser?.photoURL;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-32 font-sans relative z-0">
+    <div className="min-h-screen bg-slate-50 animate-fade-in dark:bg-slate-900 pb-32 font-sans relative z-0">
 
       {/* 1. Header (Clean & Professional) */}
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-40 shadow-sm">
@@ -182,11 +220,13 @@ const Dashboard = () => {
                 label="Total Members"
                 value={formatNumber(stats.members)}
                 icon="groups"
+                onClick={() => navigate('/members')}
             />
             <MetricCard
                 label="Total Activities"
                 value={formatNumber(stats.activities)}
                 icon="event_note"
+                onClick={() => navigate('/activities')}
             />
 
             {canViewFinance && (
@@ -212,12 +252,13 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Activity (List View instead of playful cards) */}
              <section className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-[400px]">
-                 <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-                    <h2 className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <span className="material-icons-round text-[18px] text-accent">local_activity</span> Recent Activities
+                 <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent"></div>
+                    <h2 className="text-base font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <span className="material-icons-round text-[20px] text-accent">local_activity</span> Kegiatan Terbaru
                     </h2>
-                    <Link to="/activities" className="text-xs font-medium text-accent hover:text-accent-hover transition-colors">
-                        View All
+                    <Link to="/activities" className="text-xs font-bold text-accent hover:text-accent-hover bg-accent/10 px-2 py-1 rounded-md transition-colors">
+                        Lihat Semua
                     </Link>
                 </div>
 
@@ -256,12 +297,13 @@ const Dashboard = () => {
 
             {/* 5. Announcements (Structured List) */}
             <section className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-[400px]">
-                 <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-                    <h2 className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <span className="material-icons-round text-[18px] text-amber-500">campaign</span> Internal Announcements
+                 <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
+                    <h2 className="text-base font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <span className="material-icons-round text-[20px] text-amber-500">campaign</span> Pengumuman
                     </h2>
-                    <Link to="/announcements" className="text-xs font-medium text-accent hover:text-accent-hover transition-colors">
-                        View All
+                    <Link to="/announcements" className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-md transition-colors">
+                        Lihat Semua
                     </Link>
                 </div>
                 <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -288,16 +330,51 @@ const Dashboard = () => {
                 </div>
             </section>
         </div>
+
+        {/* 6. Mini Gallery */}
+        <section className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden mb-6">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 relative overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500"></div>
+                <h2 className="text-base font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <span className="material-icons-round text-[20px] text-purple-500">collections</span> Galeri Terbaru
+                </h2>
+                <Link to="/gallery" className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded-md transition-colors">
+                    Lihat Semua
+                </Link>
+            </div>
+            <div className="p-4">
+                {galleryPhotos.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {galleryPhotos.map((photo, idx) => (
+                            <div key={idx} onClick={() => navigate(photo.source === 'activity' ? `/activities/${photo.id}` : '/gallery')} className="aspect-square rounded-lg overflow-hidden cursor-pointer group relative">
+                                <img src={photo.url} alt="Gallery" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center p-6 text-center text-slate-500">
+                        <span className="material-icons-round text-3xl mb-2 text-slate-300">image</span>
+                        <p className="text-sm font-medium">Belum ada foto.</p>
+                    </div>
+                )}
+            </div>
+        </section>
+
       </div>
 
+      <BottomNav />
     </div>
   );
 };
 
 // --- Sub-components ---
 
-const MetricCard = ({ label, value, icon }) => (
-    <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between h-28 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
+const MetricCard = ({ label, value, icon, onClick }) => (
+    <div
+        onClick={onClick}
+        className={`bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between h-28 hover:border-slate-300 dark:hover:border-slate-600 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+    >
         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
             <span className="material-icons-round text-[18px]">{icon}</span>
             <p className="text-[10px] font-medium uppercase tracking-wider truncate">{label}</p>
@@ -309,7 +386,7 @@ const MetricCard = ({ label, value, icon }) => (
 );
 
 const DashboardSkeleton = () => (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans pb-32">
+    <div className="min-h-screen bg-slate-50 animate-fade-in dark:bg-slate-900 font-sans pb-32">
         <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center">
             <div className="space-y-1">
                 <Skeleton className="h-3 w-20 rounded" />

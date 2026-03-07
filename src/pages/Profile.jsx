@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { db, auth } from '../config/firebase';
@@ -237,6 +238,18 @@ const Profile = () => {
       <div className="flex-1 overflow-y-auto pb-32 -mt-6 pt-10 relative z-0">
         <div className="px-5 space-y-5 max-w-lg mx-auto md:max-w-4xl">
             {/* Action Buttons */}
+
+           {/* Digital ID Card Link */}
+           <div className="flex justify-center mb-4">
+              <Link
+                  to="/kartu-anggota"
+                  className="w-full py-3.5 rounded-xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 transition-all font-semibold text-indigo-700 dark:text-indigo-300 shadow-sm flex items-center justify-center gap-2"
+              >
+                  <span className="material-icons-round text-xl">badge</span>
+                  Lihat Kartu Anggota Digital
+              </Link>
+           </div>
+
            <div className="flex gap-3">
               {isEditing ? (
                   <>

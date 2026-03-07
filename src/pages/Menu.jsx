@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/layout/BottomNav';
+import { useAuth } from '../context/AuthContext';
 
 const Menu = () => {
+  const { userRole } = useAuth();
+
 
   const sections = [
     {
@@ -11,6 +14,8 @@ const Menu = () => {
         { to: '/activities', icon: 'event', label: 'Kegiatan', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-900/30' },
         { to: '/gallery', icon: 'photo_library', label: 'Galeri', color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-100 dark:bg-pink-900/30' },
         { to: '/members', icon: 'groups', label: 'Anggota', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+        { to: '/kartu-anggota', icon: 'badge', label: 'Kartu Anggota', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-900/30' },
+
       ]
     },
     {
@@ -18,6 +23,10 @@ const Menu = () => {
       items: [
         { to: '/correspondence', icon: 'folder_shared', label: 'Surat & Adm', desc: 'Arsip & Dokumen', color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/30' },
         { to: '/inventory', icon: 'inventory_2', label: 'Inventaris', desc: 'Aset Organisasi', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30' },
+                { to: '/absensi', icon: 'history_toggle_off', label: 'Riwayat Absensi', color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-100 dark:bg-cyan-900/30', allowed: ['super_admin', 'sekretaris', 'admin'] },
+        { to: '/scan-barcode', icon: 'qr_code_scanner', label: 'Scan Barcode', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', allowed: ['super_admin', 'sekretaris', 'admin'] },
+
+
         { to: '/partners', icon: 'handshake', label: 'Kemitraan', desc: 'Sponsor & Relasi', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
       ]
     },
@@ -42,7 +51,7 @@ const Menu = () => {
           <div key={idx}>
             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 px-1">{section.title}</h3>
             <div className="grid grid-cols-2 gap-4">
-              {section.items.map((item) => (
+              {section.items.filter(item => !item.allowed || (userRole && item.allowed.includes(userRole))).map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}

@@ -69,6 +69,44 @@ const Finance = () => {
     fetchData();
   }, [userRole, navigate, canView]);
 
+
+  const downloadCSV = () => {
+    if (transactions.length === 0) return;
+
+    const headers = ['Tanggal', 'Kategori', 'Judul', 'Jenis', 'Sumber/Tujuan Dana', 'Nominal', 'Keterangan'];
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+
+    transactions.forEach(trx => {
+        const date = new Date(trx.date).toLocaleDateString('id-ID');
+        const category = trx.category || '';
+        const title = `"${(trx.title || '').replace(/"/g, '""')}"`;
+        const type = trx.type === 'income' ? 'Pemasukan' : 'Pengeluaran';
+        const sourceFund = trx.sourceFund || '';
+        const amount = typeof trx.amount === 'string' ? parseFloat(trx.amount.replace(/[^\d.-]/g, '')) : (trx.amount || 0);
+        const desc = `"${(trx.description || '').replace(/"/g, '""')}"`;
+
+        csvRows.push([date, category, title, type, sourceFund, amount, desc].join(','));
+    });
+
+    // Add Summary Row
+    csvRows.push('');
+    csvRows.push(`"Total Pemasukan",${summary.income}`);
+    csvRows.push(`"Total Pengeluaran",${summary.expense}`);
+    csvRows.push(`"Saldo Akhir",${summary.balance}`);
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Laporan_Keuangan_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (!canView) return null;
 
   return (
@@ -76,56 +114,88 @@ const Finance = () => {
 
       {/* Header - Enterprise Grade */}
       <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center shadow-sm">
-          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
-              <span className="material-icons-round text-primary text-2xl">account_balance</span> Kas & Keuangan
-          </h1>
-          {canManage && (
-            <Link to="/finance/add" className="bg-primary hover:bg-primary-700 text-white px-4 py-2 flex items-center justify-center rounded-lg shadow-sm transition-colors duration-200 text-sm font-medium gap-2">
-                <span className="material-icons-round text-lg">add</span> Tambah
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+              <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+                  <span className="material-icons-round text-xl">arrow_back</span>
+              </button>
+              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                  <span className="material-icons-round text-primary text-2xl">account_balance</span> Kas & Keuangan
+              </h1>
+          </div>
+          <div className="flex gap-2">
+              <button onClick={downloadCSV} className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2 flex items-center justify-center rounded-lg shadow-sm transition-colors duration-200 text-sm font-medium gap-2">
+                  <span className="material-icons-round text-lg">download</span> <span className="hidden sm:inline">Laporan</span>
+              </button>
+              {canManage && (
+                <Link to="/finance/add" className="bg-primary hover:bg-primary-700 text-white px-3 py-2 flex items-center justify-center rounded-lg shadow-sm transition-colors duration-200 text-sm font-medium gap-2">
+                    <span className="material-icons-round text-lg">add</span> <span className="hidden sm:inline">Tambah</span>
+                </Link>
+              )}
+          </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
 
-        {/* Top Summary Widget */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
-                    <span className="material-icons-round text-2xl">account_balance_wallet</span>
+        {/* Top Summary Widget - Enhanced */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col gap-6 animate-fade-in-up">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary border border-primary/20">
+                        <span className="material-icons-round text-3xl">account_balance_wallet</span>
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Total Saldo Kas</p>
+                        {loading ? <Skeleton className="h-8 w-40" /> : (
+                            <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                                {formatCurrency(summary.balance)}
+                            </h2>
+                        )}
+                    </div>
                 </div>
-                <div>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Saldo Kas</p>
-                    {loading ? <Skeleton className="h-8 w-40 mt-1" /> : (
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-                            {formatCurrency(summary.balance)}
-                        </h2>
-                    )}
+
+                <div className="flex gap-8 w-full md:w-auto border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700 pt-4 md:pt-0 md:pl-8">
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <span className="material-icons-round text-[14px] text-emerald-500">trending_up</span> Pemasukan
+                        </p>
+                        {loading ? <Skeleton className="h-6 w-24" /> : (
+                            <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                {formatCurrency(summary.income)}
+                            </h3>
+                        )}
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <span className="material-icons-round text-[14px] text-rose-500">trending_down</span> Pengeluaran
+                        </p>
+                        {loading ? <Skeleton className="h-6 w-24" /> : (
+                            <h3 className="text-lg font-bold text-rose-600 dark:text-rose-400">
+                                {formatCurrency(summary.expense)}
+                            </h3>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            <div className="flex gap-8 w-full md:w-auto border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700 pt-4 md:pt-0 md:pl-8">
-                <div>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                        <span className="material-icons-round text-[14px] text-emerald-500">trending_up</span> Pemasukan
-                    </p>
-                    {loading ? <Skeleton className="h-6 w-24" /> : (
-                        <h3 className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
-                            {formatCurrency(summary.income)}
-                        </h3>
-                    )}
+            {/* Visual Bar Chart */}
+            {!loading && summary.income + summary.expense > 0 && (
+                <div className="w-full mt-2">
+                    <div className="flex justify-between text-[10px] text-slate-500 font-bold mb-1 px-1">
+                        <span>Pemasukan ({Math.round((summary.income / (summary.income + summary.expense)) * 100)}%)</span>
+                        <span>Pengeluaran ({Math.round((summary.expense / (summary.income + summary.expense)) * 100)}%)</span>
+                    </div>
+                    <div className="w-full h-3 rounded-full flex overflow-hidden bg-slate-100 dark:bg-slate-700">
+                        <div
+                            className="h-full bg-emerald-500"
+                            style={{ width: `${(summary.income / (summary.income + summary.expense)) * 100}%` }}
+                        ></div>
+                        <div
+                            className="h-full bg-rose-500"
+                            style={{ width: `${(summary.expense / (summary.income + summary.expense)) * 100}%` }}
+                        ></div>
+                    </div>
                 </div>
-                <div>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                        <span className="material-icons-round text-[14px] text-rose-500">trending_down</span> Pengeluaran
-                    </p>
-                    {loading ? <Skeleton className="h-6 w-24" /> : (
-                        <h3 className="text-lg font-semibold text-rose-600 dark:text-rose-400">
-                            {formatCurrency(summary.expense)}
-                        </h3>
-                    )}
-                </div>
-            </div>
+            )}
         </div>
 
         {/* Rincian Kas Grid (Structured per source) */}
@@ -180,22 +250,18 @@ const Finance = () => {
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-slate-900 dark:text-slate-100 text-sm truncate">{trx.title}</h4>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm truncate group-hover:text-primary transition-colors">{trx.title}</h4>
+                                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                    <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded">
                                         {formatDate(trx.date)}
                                     </span>
-                                    <span className="text-[10px] text-slate-300 dark:text-slate-600">•</span>
-                                    <span className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">
+                                    <span className="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded capitalize">
                                         {trx.category}
                                     </span>
                                     {trx.sourceFund && (
-                                        <React.Fragment>
-                                            <span className="text-[10px] text-slate-300 dark:text-slate-600">•</span>
-                                            <span className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">
-                                                Kas {trx.sourceFund}
-                                            </span>
-                                        </React.Fragment>
+                                        <span className="text-[10px] font-bold bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded capitalize flex items-center gap-0.5">
+                                            <span className="material-icons-round text-[10px]">account_balance</span> Kas {trx.sourceFund}
+                                        </span>
                                     )}
                                 </div>
                             </div>
