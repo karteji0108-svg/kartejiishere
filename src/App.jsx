@@ -33,6 +33,10 @@ const PendingApproval = lazy(() => import('./pages/PendingApproval')); // New Pa
 const AccountRejected = lazy(() => import('./pages/AccountRejected')); // New Page
 
 
+
+const DigitalCardPage = lazy(() => import('./pages/DigitalCardPage'));
+const AttendanceCheckIn = lazy(() => import('./pages/AttendanceCheckIn'));
+
 // New Features
 const Menu = lazy(() => import('./pages/Menu'));
 const Correspondence = lazy(() => import('./pages/Correspondence'));
@@ -116,6 +120,10 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profil" element={<Profile />} />
               <Route path="/profile" element={<Profile />} />
+              {/* Absensi & ID Card */}
+              <Route path="/kartu-anggota" element={<DigitalCardPage />} />
+              <Route path="/absen" element={<AttendanceCheckIn />} />
+
 
               <Route path="/activities" element={<Activities />} />
               <Route path="/kegiatan" element={<Activities />} />
