@@ -87,7 +87,7 @@ const MemberList = () => {
   }, [members, search]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 font-display">
+    <div className="min-h-screen bg-gray-50 animate-fade-in dark:bg-gray-900 pb-24 font-display">
        {/* Header */}
       <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex justify-between items-center shadow-sm transition-colors">
           <div className="flex items-center gap-2">

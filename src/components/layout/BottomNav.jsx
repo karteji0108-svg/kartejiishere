@@ -50,12 +50,20 @@ const BottomNav = () => {
   // Hide BottomNav on Auth pages or standalone pages
   if (['/', '/register', '/login'].includes(location.pathname)) return null;
 
+  // Active state styling helper
+  const getNavClass = (isActive) => `
+    relative flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 ease-out
+    ${isActive
+        ? 'text-primary bg-primary/10 dark:bg-primary/20 scale-105'
+        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}
+  `;
+
   return (
     <React.Fragment>
         {/* Overlay for Expanded Menu */}
         <div
             className={`
-                fixed inset-0 bg-slate-900/10 backdrop-blur-sm z-40 transition-opacity duration-300
+                fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 transition-opacity duration-300
                 ${isExpanded ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
             `}
             onClick={() => setIsExpanded(false)}
@@ -72,7 +80,7 @@ const BottomNav = () => {
                 }
             `}
         >
-             <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/40 dark:border-white/10 p-2 overflow-hidden">
+             <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-2xl rounded-3xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-2 overflow-hidden">
                  {quickActions.length > 0 ? (
                      <div className="flex flex-col gap-1">
                          {quickActions.map((action, idx) => (
@@ -82,17 +90,19 @@ const BottomNav = () => {
                                     setIsExpanded(false);
                                     navigate(action.to);
                                 }}
-                                className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/50 dark:hover:bg-slate-700/50 transition-colors w-full text-left"
+                                className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors w-full text-left group"
                              >
-                                 <span className="material-icons-round text-slate-600 dark:text-slate-300 text-[20px]">{action.icon}</span>
-                                 <span className="text-sm font-medium text-slate-800 dark:text-slate-100">{action.label}</span>
+                                 <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                                     <span className="material-icons-round text-[20px]">{action.icon}</span>
+                                 </div>
+                                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{action.label}</span>
                              </button>
                          ))}
                      </div>
                  ) : (
-                     <div className="text-center py-4">
-                         <span className="material-icons-round text-slate-400 text-3xl mb-1">block</span>
-                         <p className="text-xs text-slate-500 font-medium">No actions available.</p>
+                     <div className="text-center py-6">
+                         <span className="material-icons-round text-slate-300 dark:text-slate-600 text-4xl mb-2">lock</span>
+                         <p className="text-xs text-slate-500 font-medium">Akses Tambah Data Dibatasi</p>
                      </div>
                  )}
              </div>
@@ -100,65 +110,59 @@ const BottomNav = () => {
 
         {/* Liquid Glass Bottom Navigation */}
         <div className="fixed bottom-6 left-0 right-0 z-40 flex justify-center pb-safe px-4 pointer-events-none">
-            <nav className="pointer-events-auto w-full max-w-[360px] h-[64px] bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl rounded-full shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] border border-white/50 dark:border-white/10 flex justify-between items-center px-2 relative">
+            <nav className="pointer-events-auto w-full max-w-[380px] h-[72px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-full shadow-lg border border-slate-200/50 dark:border-slate-700/50 flex justify-between items-center px-3 relative">
 
                 {/* Left side links */}
                 <div className="flex flex-1 justify-around items-center h-full">
-                    <NavLink
-                        to="/dashboard"
-                        className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                    >
-                        <span className="material-icons-round text-[22px]">dashboard</span>
+                    <NavLink to="/dashboard" className={({isActive}) => getNavClass(isActive)}>
+                        <span className="material-icons-round text-[24px]">dashboard</span>
+                        <span className="text-[10px] font-medium mt-0.5 tracking-wide">Beranda</span>
                     </NavLink>
 
-                    <NavLink
-                        to="/activities"
-                        className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                    >
-                        <span className="material-icons-round text-[22px]">event_note</span>
+                    <NavLink to="/activities" className={({isActive}) => getNavClass(isActive)}>
+                        <span className="material-icons-round text-[24px]">event_note</span>
+                        <span className="text-[10px] font-medium mt-0.5 tracking-wide">Kegiatan</span>
                     </NavLink>
                 </div>
 
                 {/* FAB - Morphing Liquid Center */}
-                <div className="relative flex justify-center items-center w-16 h-16 -mt-6">
+                <div className="relative flex justify-center items-center w-20 h-20 -mt-8">
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
                         className={`
                             w-14 h-14 rounded-full flex items-center justify-center
-                            shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-all duration-300 ease-out border border-white/40 dark:border-white/10 backdrop-blur-md
+                            shadow-xl transition-all duration-300 ease-out backdrop-blur-md border-4 border-white dark:border-slate-900
                             ${isExpanded
-                                ? 'bg-white/80 dark:bg-slate-700/80 text-slate-900 dark:text-white rotate-45 scale-95'
-                                : 'bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 hover:scale-105 active:scale-95'
+                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rotate-45 scale-95'
+                                : 'bg-primary text-white hover:scale-105 active:scale-95'
                             }
                         `}
                     >
-                        <span className="material-icons-round text-[24px]">add</span>
+                        <span className="material-icons-round text-[26px]">add</span>
                     </button>
                 </div>
 
                 {/* Right side links */}
                 <div className="flex flex-1 justify-around items-center h-full">
                     {canViewFinance ? (
-                        <NavLink
-                            to="/finance"
-                            className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <span className="material-icons-round text-[22px]">account_balance</span>
+                        <NavLink to="/finance" className={({isActive}) => getNavClass(isActive)}>
+                            <span className="material-icons-round text-[24px]">account_balance_wallet</span>
+                            <span className="text-[10px] font-medium mt-0.5 tracking-wide">Keuangan</span>
                         </NavLink>
                     ) : (
-                        <NavLink
-                            to="/announcements"
-                            className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            <span className="material-icons-round text-[22px]">campaign</span>
+                        <NavLink to="/announcements" className={({isActive}) => getNavClass(isActive)}>
+                            <div className="relative">
+                                <span className="material-icons-round text-[24px]">campaign</span>
+                                {/* Notification Badge */}
+                                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                            </div>
+                            <span className="text-[10px] font-medium mt-0.5 tracking-wide">Info</span>
                         </NavLink>
                     )}
 
-                    <NavLink
-                        to="/profile"
-                        className={({isActive}) => `relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${isActive ? 'text-slate-900 dark:text-white bg-white/50 dark:bg-white/10 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                    >
-                        <span className="material-icons-round text-[22px]">person</span>
+                    <NavLink to="/profile" className={({isActive}) => getNavClass(isActive)}>
+                        <span className="material-icons-round text-[24px]">person</span>
+                        <span className="text-[10px] font-medium mt-0.5 tracking-wide">Profil</span>
                     </NavLink>
                 </div>
 
