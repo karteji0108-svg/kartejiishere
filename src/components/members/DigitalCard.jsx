@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const generateNIA = (uid, joinDate, index) => {
     if (!uid) return 'KT-2024-000';
@@ -28,6 +28,7 @@ const generateNIA = (uid, joinDate, index) => {
 };
 
 const DigitalCard = ({ member }) => {
+  const [showQRModal, setShowQRModal] = useState(false);
   const uid = member?.uid || member?.id;
   const fullName = member?.fullName || member?.displayName || '__________________________';
   const rawRole = member?.role || 'anggota';
@@ -150,7 +151,7 @@ const DigitalCard = ({ member }) => {
                 <div className="flex flex-col items-center relative">
                     <div className={`w-14 h-14 bg-white rounded-md p-1 mb-1 relative overflow-hidden group/qr ${!isQrActive ? 'opacity-50' : ''}`}>
                          {isQrActive ? (
-                             <img src={qrImageUrl} alt="QR Code Member" className="w-full h-full object-cover mix-blend-multiply" />
+                             <img src={qrImageUrl} alt="QR Code Member" className="w-full h-full object-cover mix-blend-multiply cursor-pointer" onClick={() => setShowQRModal(true)} />
                          ) : (
                              <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDQiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMDAwIi8+PHJlY3QgeD0iMiIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iIzAwMCIvPjxyZWN0IHg9IjEiIHk9IjIiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz48cmVjdCB4PSIzIiB5PSIzIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMDAwIi8+PC9zdmc+')] bg-repeat opacity-80" style={{ backgroundSize: '4px 4px' }}></div>
                          )}
@@ -196,6 +197,21 @@ const DigitalCard = ({ member }) => {
 
             </div>
         </div>
+
+        {/* QR Code Fullscreen Modal */}
+        {showQRModal && isQrActive && (
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm p-6" onClick={() => setShowQRModal(false)}>
+                <div className="bg-white p-4 rounded-3xl shadow-2xl relative w-full max-w-[300px] animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={() => setShowQRModal(false)} className="absolute -top-4 -right-4 w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white hover:bg-slate-800 transition-colors">
+                        <span className="material-icons-round">close</span>
+                    </button>
+                    <img src={qrImageUrl} alt="QR Code Enlarged" className="w-full h-auto object-contain rounded-xl" />
+                    <p className="text-center text-slate-800 font-bold mt-4 tracking-widest">{memberId}</p>
+                    <p className="text-center text-slate-500 text-xs mt-1">Gunakan untuk validasi kehadiran.</p>
+                </div>
+            </div>
+        )}
+
     </div>
   );
 };

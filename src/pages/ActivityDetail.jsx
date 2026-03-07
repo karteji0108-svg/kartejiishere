@@ -17,6 +17,7 @@ const ActivityDetail = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const canManage = ['super_admin', 'admin', 'ketua', 'wakil_ketua', 'sekretaris', 'content_creator'].includes(userRole);
+  const canManageAttendance = ['super_admin', 'sekretaris'].includes(userRole);
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -31,7 +32,7 @@ const ActivityDetail = () => {
           navigate('/activities');
         }
 
-        if (canManage) {
+        if (canManageAttendance) {
             const attQ = query(collection(db, 'attendance'), where('activity_id', '==', id));
             const attSnap = await getDocs(attQ);
             setAttendance(attSnap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -45,7 +46,7 @@ const ActivityDetail = () => {
     };
 
     fetchActivity();
-  }, [id, navigate, canManage]);
+  }, [id, navigate, canManage, canManageAttendance]);
 
   const handleDelete = async () => {
       if (window.confirm('Hapus kegiatan ini? Tindakan ini tidak dapat dibatalkan.')) {
@@ -205,7 +206,7 @@ const ActivityDetail = () => {
           </div>
 
           {/* Attendance Management (Admin Only) */}
-          {canManage && (
+          {canManageAttendance && (
               <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in-up">
                   <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div>

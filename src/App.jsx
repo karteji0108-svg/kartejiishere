@@ -36,6 +36,8 @@ const AccountRejected = lazy(() => import('./pages/AccountRejected')); // New Pa
 
 const DigitalCardPage = lazy(() => import('./pages/DigitalCardPage'));
 const AttendanceCheckIn = lazy(() => import('./pages/AttendanceCheckIn'));
+const AdminScanPage = lazy(() => import('./pages/AdminScanPage'));
+
 
 // New Features
 const Menu = lazy(() => import('./pages/Menu'));
@@ -123,6 +125,8 @@ function App() {
               {/* Absensi & ID Card */}
               <Route path="/kartu-anggota" element={<DigitalCardPage />} />
               <Route path="/absen" element={<AttendanceCheckIn />} />
+              <Route path="/scan-barcode" element={<AdminScanPage />} />
+
 
 
               <Route path="/activities" element={<Activities />} />
