@@ -104,5 +104,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isSuperAdmin() || isKetua() || isWakil();
     }
+
+    // Attendance Collection
+    match /attendance/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
   }
 }
