@@ -289,7 +289,7 @@ const Dashboard = () => {
             </section>
         </div>
       </div>
-
+      <BottomNav />
     </div>
   );
 };

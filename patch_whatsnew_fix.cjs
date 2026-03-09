@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+const fs = require('fs');
+
+const content = `import React, { useState, useEffect } from 'react';
 
 const CURRENT_VERSION = '3.0.0';
 
@@ -106,4 +108,6 @@ const WhatsNewModal = () => {
   );
 };
 
-export default WhatsNewModal;
+export default WhatsNewModal;`;
+
+fs.writeFileSync('src/components/common/WhatsNewModal.jsx', content);
