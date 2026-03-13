@@ -56,10 +56,10 @@ service cloud.firestore {
       // 1. Owner can update their own profile
       // 2. Super Admin can update anyone
       // 3. Sekretaris can update members (for management)
-      allow update: if isOwner(userId) || isSuperAdmin() || isSekretaris();
+      allow update: if isOwner(userId) || isSuperAdmin() || isSekretaris() || isKetua() || isWakil();
 
-      // Delete: Only Super Admin
-      allow delete: if isSuperAdmin();
+      // Delete: Super Admin, Ketua, Wakil Ketua
+      allow delete: if isSuperAdmin() || isKetua() || isWakil();
     }
 
     // Finance Collection
@@ -69,7 +69,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
 
       // Write: Bendahara and Super Admin only
-      allow write: if isBendahara() || isSuperAdmin();
+      allow write: if isBendahara() || isSuperAdmin() || isKetua() || isWakil();
     }
 
     // Activities Collection
@@ -89,20 +89,26 @@ service cloud.firestore {
     match /announcements/{document=**} {
       allow read: if true;
       // Write: Sekretaris, Ketua, Wakil, Super Admin
-      allow write: if isSuperAdmin() || isKetua() || isWakil() || isSekretaris();
+      allow write: if isAuthenticated();
     }
 
     // Gallery Collection
     match /gallery/{document=**} {
       allow read: if true;
       // Write: Ketua, Wakil , Super Admin
-      allow write: if isSuperAdmin() || isSekretaris();
+      allow write: if isAuthenticated();
     }
 
     // Hero Slides Collection
     match /hero_slides/{document=**} {
       allow read: if true;
       allow write: if isSuperAdmin() || isKetua() || isWakil();
+    }
+
+    // Attendance Collection
+    match /attendance/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
   }
 }
