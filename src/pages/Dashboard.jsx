@@ -5,6 +5,8 @@ import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import Skeleton from '../components/common/Skeleton';
 import HeroCarousel from '../components/common/HeroCarousel';
+import NotificationsBell from '../components/layout/NotificationsBell';
+import FinanceChart from '../components/charts/FinanceChart';
 import BottomNav from '../components/layout/BottomNav';
 import { formatCurrency, formatNumber } from '../utils/currency';
 import { formatDate } from '../utils/date';
@@ -140,7 +142,9 @@ const Dashboard = () => {
                 {displayName}
             </h1>
         </div>
-        <Link to="/profile" className="flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <NotificationsBell />
+          <Link to="/profile" className="flex-shrink-0">
             <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:ring-2 hover:ring-accent-light transition-all duration-200">
                 {photoURL ? (
                     <img src={photoURL} alt="Profile" className="w-full h-full object-cover" />
@@ -151,6 +155,7 @@ const Dashboard = () => {
                 )}
             </div>
         </Link>
+        </div>
       </header>
 
       <div className="max-w-5xl mx-auto px-6 py-6 space-y-6 relative z-10">
@@ -210,6 +215,12 @@ const Dashboard = () => {
                 </div>
             )}
         </section>
+
+        {canViewFinance && (
+          <section className="mt-6">
+            <FinanceChart />
+          </section>
+        )}
 
         {/* 4. Recent Activity & Announcements Section (Grid for larger screens) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

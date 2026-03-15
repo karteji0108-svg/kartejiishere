@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const CURRENT_VERSION = '3.0.0';
+const CURRENT_VERSION = '4.5.0';
 
 const WhatsNewModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,54 +37,54 @@ const WhatsNewModal = () => {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto pr-2 space-y-5 custom-scrollbar">
 
-            {/* UI Redesign */}
+            {/* Dashboard Statistik */}
             <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center shrink-0 text-indigo-600 dark:text-indigo-400">
-                    <span className="material-icons-round">update</span>
+                    <span className="material-icons-round">analytics</span>
                 </div>
                 <div>
-                    <h3 className="font-bold text-sm mb-1">Versi 3.0.0 Telah Rilis!</h3>
+                    <h3 className="font-bold text-sm mb-1">Dashboard Statistik</h3>
                     <p className="text-xs opacity-70 leading-relaxed">
-                        Kami telah melakukan banyak perbaikan bug, pengoptimalan kinerja aplikasi, dan peningkatan pengalaman pengguna.
+                        Pantau grafik keuangan, kegiatan, dan partisipasi anggota langsung dari beranda Anda.
                     </p>
                 </div>
             </div>
 
-            {/* Platform Adaptive */}
+            {/* Iuran & Keuangan */}
+            <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center shrink-0 text-green-600 dark:text-green-400">
+                    <span className="material-icons-round">payments</span>
+                </div>
+                <div>
+                    <h3 className="font-bold text-sm mb-1">Sistem Iuran Anggota</h3>
+                    <p className="text-xs opacity-70 leading-relaxed">
+                        Manajemen iuran bulanan kini lebih mudah dengan indikator lunas/belum lunas otomatis.
+                    </p>
+                </div>
+            </div>
+
+            {/* QR Attendance */}
             <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center shrink-0 text-blue-600 dark:text-blue-400">
-                    <span className="material-icons-round">file_download</span>
+                    <span className="material-icons-round">qr_code_scanner</span>
                 </div>
                 <div>
-                    <h3 className="font-bold text-sm mb-1">Fitur Download Laporan</h3>
+                    <h3 className="font-bold text-sm mb-1">QR Absensi Kegiatan</h3>
                     <p className="text-xs opacity-70 leading-relaxed">
-                        Kini Anda dapat mengunduh laporan Keuangan dan daftar Anggota langsung ke dalam format CSV.
+                        Catat kehadiran anggota di kegiatan hanya dengan melakukan scan kode QR.
                     </p>
                 </div>
             </div>
 
-            {/* New Modules */}
+            {/* Notifications */}
             <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center shrink-0 text-orange-600 dark:text-orange-400">
-                    <span className="material-icons-round">image</span>
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400">
+                    <span className="material-icons-round">notifications_active</span>
                 </div>
                 <div>
-                    <h3 className="font-bold text-sm mb-1">Galeri Terbaru di Dashboard</h3>
+                    <h3 className="font-bold text-sm mb-1">Sistem Notifikasi</h3>
                     <p className="text-xs opacity-70 leading-relaxed">
-                        Lihat foto-foto kegiatan terbaru langsung dari halaman Dashboard utama Anda.
-                    </p>
-                </div>
-            </div>
-
-            {/* Content Creator */}
-            <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center shrink-0 text-pink-600 dark:text-pink-400">
-                    <span className="material-icons-round">navigation</span>
-                </div>
-                <div>
-                    <h3 className="font-bold text-sm mb-1">Navigasi Lebih Mudah</h3>
-                    <p className="text-xs opacity-70 leading-relaxed">
-                        Tombol kembali telah ditambahkan di setiap halaman untuk mempermudah Anda berpindah halaman.
+                        Dapatkan peringatan instan untuk pengumuman penting dan pembaruan kas organisasi.
                     </p>
                 </div>
             </div>
